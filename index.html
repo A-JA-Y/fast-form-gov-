@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GovForms — Auto Document Formatter (Offline)</title>
+  <meta name="description" content="Upload exam documents, auto-resize & convert, then download as ZIP. All processing in your browser." />
+  <!-- JSZip CDN for creation -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    :root{
+      --primary:#0f4c81;
+      --accent:#f59e0b;
+      --card:#fff;
+      --bg:#f3f6fb;
+      --muted:#6b7280;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, Arial, sans-serif;background:var(--bg);margin:0;color:#0b1220}
+    header{background:var(--primary);color:white;padding:1rem 1.25rem;text-align:center;font-weight:700}
+    .wrap{max-width:980px;margin:24px auto;padding:18px}
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(12,24,40,0.06);margin-bottom:16px}
+    h1{margin:0 0 6px;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:14px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+    label{display:block;margin-top:10px;font-weight:600;font-size:13px}
+    select,input[type=file],button,input[type=range],input[type=number]{width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;margin-top:6px}
+    .small{font-size:13px;color:var(--muted);margin-top:6px}
+    .row{display:flex;gap:8px;align-items:center}
+    .preview-box{background:#fafafa;border:1px dashed #e6eef9;border-radius:8px;padding:10px;text-align:center;min-height:150px;display:flex;align-items:center;justify-content:center;flex-direction:column}
+    img.preview{max-width:100%;max-height:160px;border-radius:6px;border:1px solid #e8eef6}
+    button.primary{background:var(--primary);color:white;border:none;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid #cbd5e1;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .spec{background:#eef6ff;color:var(--primary);padding:6px 10px;border-radius:8px;font-weight:600;display:inline-block;margin-right:6px;font-size:13px}
+    .help{font-size:12px;color:var(--muted)}
+    footer{font-size:13px;color:var(--muted);text-align:center;padding:12px}
+    .status{margin-top:10px;font-size:14px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .chip{background:#fff;border:1px solid #eef2f7;padding:6px 8px;border-radius:8px;font-size:13px}
+  </style>
+</head>
+<body>
+  <header>GovForms — Auto Document Formatter (Offline)</header>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>Prepare documents for government exams — fast</h1>
+      <p class="lead">Pick the exam template, upload your photo, signature and ID, adjust a couple of settings and download a ZIP with ready-to-upload files. Everything runs in your browser. Files are not uploaded to any server.</p>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: main controls -->
+      <div>
+        <div class="card" aria-labelledby="templateHeading">
+          <div id="templateHeading" style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong>Select Template</strong>
+              <div class="small">Templates contain target pixel sizes and preferred format.</div>
+            </div>
+            <div class="chip" id="privacyChip">Client-side only</div>
+          </div>
+
+          <label for="template">Choose exam / template</label>
+          <select id="template" title="Choose template">
+            <option value="">-- Select template --</option>
+            <option value="ssc">SSC — Photo 100×120 px (jpg), Signature 140×60 px (png)</option>
+            <option value="railway">Railway — Photo 200×230 px (png), Signature 150×50 px (png)</option>
+            <option value="bank">Bank — Photo 140×160 px (jpg), Signature 120×60 px (jpg)</option>
+            <option value="bpsc">BPSC — Photo 150×180 px (png), Signature 120×60 px (png)</option>
+            <option value="custom">Custom — provide pixel size</option>
+          </select>
+
+          <div id="customSize" style="display:none;margin-top:8px">
+            <div class="row">
+              <div style="flex:1">
+                <label for="customW">Width (px)</label>
+                <input id="customW" type="number" min="1" value="100" />
+              </div>
+              <div style="width:120px">
+                <label for="customH">Height (px)</label>
+                <input id="customH" type="number" min="1" value="120" />
+              </div>
+            </div>
+            <div class="small">Use only if you chose Custom template.</div>
+          </div>
+
+          <label for="formatSelect">Output Format (override)</label>
+          <select id="formatSelect">
+            <option value="auto">Auto (per template)</option>
+            <option value="jpeg">JPEG / JPG</option>
+            <option value="png">PNG</option>
+            <option value="webp">WEBP (smaller size)</option>
+          </select>
+
+          <label for="quality">Quality (for JPEG / WEBP)</label>
+          <input id="quality" type="range" min="30" max="100" value="90" />
+
+          <div class="row" style="margin-top:12px;align-items:center">
+            <input id="whiteBg" type="checkbox" checked />
+            <label for="whiteBg" style="margin:0;font-weight:600">Force white background (useful for passport photos)</label>
+          </div>
+
+          <div style="margin-top:12px">
+            <label for="files">Upload documents</label>
+            <div class="small">Supported: JPG, PNG. You can upload multiple files separately.</div>
+
+            <label class="small" style="margin-top:8px">Passport / Photo</label>
+            <input id="photoFile" type="file" accept="image/*" />
+
+            <label class="small" style="margin-top:8px">Signature</label>
+            <input id="signFile" type="file" accept="image/*" />
+
+            <label class="small" style="margin-top:8px">ID / Certificate (optional)</label>
+            <input id="idFile" type="file" accept="image/*,.pdf" />
+          </div>
+
+          <div style="margin-top:12px" class="controls">
+            <button class="primary" id="processBtn">Process & Download ZIP</button>
+            <button class="secondary" id="previewBtn">Quick Preview</button>
+            <button class="secondary" id="clearBtn">Clear</button>
+            <div class="small" style="align-self:center;margin-left:auto" id="status">Ready</div>
+          </div>
+        </div>
+
+        <!-- FAQ / tips -->
+        <div class="card" aria-live="polite">
+          <strong>Tips</strong>
+          <ul class="small">
+            <li>Use high-resolution original images (avoid tiny images).</li>
+            <li>White background helps meet passport-photo rules for many exams.</li>
+            <li>All processing happens locally — no upload to server.</li>
+            <li>If a file is PDF (in ID), it will be included unchanged inside ZIP.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- RIGHT: previews -->
+      <div>
+        <div class="card">
+          <strong>Previews</strong>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+            <div>
+              <div class="small">Original Photo</div>
+              <div class="preview-box" id="photoPreviewBox">
+                <div class="small" style="color:var(--muted)">No file</div>
+                <img id="photoPreview" class="preview" style="display:none" alt="Photo preview" />
+                <div id="photoInfo" class="small" style="margin-top:6px"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="small">Original Signature</div>
+              <div class="preview-box" id="signPreviewBox">
+                <div class="small" style="color:var(--muted)">No file</div>
+                <img id="signPreview" class="preview" style="display:none" alt="Signature preview" />
+                <div id="signInfo" class="small" style="margin-top:6px"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="small">Processed preview (click Preview to generate)</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <div class="preview-box" style="flex:1">
+                <div class="small">Processed Photo</div>
+                <img id="procPhoto" class="preview" style="display:none;margin-top:6px" alt="Processed photo" />
+                <div id="procPhotoInfo" class="small"></div>
+              </div>
+              <div class="preview-box" style="width:130px">
+                <div class="small">Processed Sign</div>
+                <img id="procSign" class="preview" style="display:none;margin-top:6px" alt="Processed sign" />
+                <div id="procSignInfo" class="small"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>Template quick specs</strong>
+          <div style="margin-top:8px">
+            <span class="spec">SSC 100×120 jpg</span>
+            <span class="spec">Railway 200×230 png</span>
+            <span class="spec">Bank 140×160 jpg</span>
+            <span class="spec">BPSC 150×180 png</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>GovForms • Offline prototype — Krishna</footer>
+  </div>
+
+  <script>
+    // Simple utility helpers
+    const $ = id => document.getElementById(id);
+    const templates = {
+      ssc: { photo:{w:100,h:120,format:'jpeg'}, sign:{w:140,h:60,format:'png'} },
+      railway: { photo:{w:200,h:230,format:'png'}, sign:{w:150,h:50,format:'png'} },
+      bank: { photo:{w:140,h:160,format:'jpeg'}, sign:{w:120,h:60,format:'jpeg'} },
+      bpsc: { photo:{w:150,h:180,format:'png'}, sign:{w:120,h:60,format:'png'} },
+    };
+
+    // Elements
+    const templateSel = $('template');
+    const customSize = $('customSize');
+    const customW = $('customW'); const customH = $('customH');
+    const formatSel = $('formatSelect');
+    const qualityRange = $('quality');
+    const whiteBgChk = $('whiteBg');
+    const photoFile = $('photoFile');
+    const signFile = $('signFile');
+    const idFile = $('idFile');
+    const processBtn = $('processBtn');
+    const previewBtn = $('previewBtn');
+    const clearBtn = $('clearBtn');
+    const statusEl = $('status');
+    const photoPreview = $('photoPreview'); const signPreview = $('signPreview');
+    const procPhoto = $('procPhoto'); const procSign = $('procSign');
+    const photoInfo = $('photoInfo'); const signInfo = $('signInfo');
+    const procPhotoInfo = $('procPhotoInfo'); const procSignInfo = $('procSignInfo');
+
+    // show/hide custom fields
+    templateSel.addEventListener('change', e=>{
+      if (templateSel.value==='custom') customSize.style.display='block'; else customSize.style.display='none';
+    });
+
+    // show file previews
+    function showImagePreview(file, imgEl, infoEl){
+      if (!file){ imgEl.style.display='none'; infoEl.innerText='No file'; return; }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        imgEl.src = ev.target.result;
+        imgEl.style.display = 'block';
+        // load natural dimensions
+        const tmp = new Image();
+        tmp.onload = ()=> infoEl.innerText = `${tmp.naturalWidth} × ${tmp.naturalHeight} px • ${(file.size/1024).toFixed(1)} KB`;
+        tmp.src = ev.target.result;
+      };
+      if (file.type==='application/pdf') {
+        imgEl.style.display='none';
+        infoEl.innerText = `PDF • ${(file.size/1024).toFixed(1)} KB`;
+      } else reader.readAsDataURL(file);
+    }
+
+    photoFile.addEventListener('change', ()=> showImagePreview(photoFile.files[0], photoPreview, photoInfo));
+    signFile.addEventListener('change', ()=> showImagePreview(signFile.files[0], signPreview, signInfo));
+    idFile.addEventListener('change', ()=> {
+      const f = idFile.files[0];
+      if (!f) { /* nothing */ } else {
+        if (f.type==='application/pdf') {
+          // show text in preview
+          // just update status
+          status('ID uploaded (PDF) — will be included in ZIP unchanged', 'info');
+        } else {
+          showImagePreview(f, procPhoto, procPhotoInfo); // temporary show in processed area for quick check
+          status('ID image uploaded (will be included)', 'info');
+        }
+      }
+    });
+
+    // status helper
+    function status(text, type='ok'){ statusEl.style.color = type==='error' ? 'crimson' : (type==='info' ? '#374151' : 'green'); statusEl.innerText = text; }
+
+    // core: resize and return blob
+    async function processImageFile(file, targetW, targetH, outFormat, quality=0.9, forceWhite=false){
+      if (!file) throw new Error('Missing file');
+      // read image
+      if (file.type==='application/pdf') return file; // pass-through
+      const dataUrl = await new Promise((res, rej)=>{
+        const r=new FileReader(); r.onload=ev=>res(ev.target.result); r.onerror=rej; r.readAsDataURL(file);
+      });
+
+      const img = await new Promise((res, rej)=>{
+        const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=dataUrl;
+      });
+
+      // create canvas with target size
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW; canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+
+      // fill white background if requested or image has alpha
+      if (forceWhite) { ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); } else { ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+      // compute aspect fit & center
+      const srcW = img.naturalWidth; const srcH = img.naturalHeight;
+      const srcRatio = srcW / srcH; const destRatio = targetW / targetH;
+      let dw, dh, dx, dy;
+      if (srcRatio > destRatio) {
+        // fit width
+        dw = targetW;
+        dh = Math.round(targetW / srcRatio);
+        dx = 0; dy = Math.round((targetH - dh)/2);
+      } else {
+        dh = targetH;
+        dw = Math.round(targetH * srcRatio);
+        dy = 0; dx = Math.round((targetW - dw)/2);
+      }
+
+      // draw with smoothing
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, dx, dy, dw, dh);
+
+      // convert to blob
+      const mime = outFormat==='jpeg' ? 'image/jpeg' : (outFormat==='png' ? 'image/png' : 'image/webp');
+      const blob = await new Promise(res => canvas.toBlob(res, mime, quality));
+      // return a File so zip name suggestions easier
+      const ext = mime.split('/')[1].replace('jpeg','jpg');
+      const filename = `image_${targetW}x${targetH}.${ext}`;
+      return new File([blob], filename, { type: mime });
+    }
+
+    // create processed previews
+    async function generatePreview(){
+      try{
+        const tplKey = templateSel.value;
+        if (!tplKey){ status('Please select a template (or choose Custom).','error'); return; }
+        let photoSpec, signSpec;
+        if (tplKey==='custom'){
+          const w = Math.max(1, parseInt(customW.value||100)); const h = Math.max(1, parseInt(customH.value||120));
+          photoSpec = {w,h,format:'jpeg'}; signSpec = {w:Math.max(1,Math.round(w*0.6)),h:Math.max(1,Math.round(h*0.3)),format:'png'};
+        } else {
+          photoSpec = templates[tplKey].photo; signSpec = templates[tplKey].sign;
+        }
+
+        // override format if user forced a format
+        const forced = formatSel.value;
+        if (forced!=='auto'){ photoSpec.format = forced; signSpec.format = forced; }
+
+        const q = Math.max(0.3, Math.min(1, qualityRange.value/100));
+        const fw = whiteBgChk.checked;
+
+        if (!photoFile.files[0] || !signFile.files[0]) { status('Upload both photo and signature to preview.','error'); return; }
+
+        status('Generating preview...', 'info');
+        const pBlob = await processImageFile(photoFile.files[0], photoSpec.w, photoSpec.h, photoSpec.format, q, fw);
+        const sBlob = await processImageFile(signFile.files[0], signSpec.w, signSpec.h, signSpec.format, q, fw);
+
+        // show processed images
+        const pUrl = URL.createObjectURL(pBlob); procPhoto.src = pUrl; procPhoto.style.display='block'; procPhotoInfo.innerText = `${photoSpec.w} × ${photoSpec.h} • ${pBlob.size ? (pBlob.size/1024).toFixed(1)+' KB' : ''}`;
+        const sUrl = URL.createObjectURL(sBlob); procSign.src = sUrl; procSign.style.display='block'; procSignInfo.innerText = `${signSpec.w} × ${signSpec.h} • ${sBlob.size ? (sBlob.size/1024).toFixed(1)+' KB' : ''}`;
+
+        status('Preview ready — if OK, click \"Process & Download ZIP\".');
+      }catch(err){
+        console.error(err); status('Preview failed: '+err.message,'error');
+      }
+    }
+
+    previewBtn.addEventListener('click', generatePreview);
+
+    // Process & create ZIP
+    processBtn.addEventListener('click', async ()=>{
+      try{
+        // validations
+        const tplKey = templateSel.value;
+        if (!tplKey){ status('Select a template first.','error'); return; }
+        if (!photoFile.files[0] || !signFile.files[0]){ status('Please upload both photo and signature.','error'); return; }
+
+        // determine specs
+        let photoSpec, signSpec;
+        if (tplKey==='custom'){
+          const w = Math.max(1, parseInt(customW.value||100)); const h = Math.max(1, parseInt(customH.value||120));
+          photoSpec = {w,h,format:'jpeg'}; signSpec = {w:Math.max(1,Math.round(w*0.6)),h:Math.max(1,Math.round(h*0.3)),format:'png'};
+        } else {
+          photoSpec = templates[tplKey].photo; signSpec = templates[tplKey].sign;
+        }
+        // override with user format
+        const forced = formatSel.value;
+        if (forced!=='auto'){ photoSpec.format = forced; signSpec.format = forced; }
+
+        const q = Math.max(0.3, Math.min(1, qualityRange.value/100));
+        const fw = whiteBgChk.checked;
+
+        status('Processing files — please wait...', 'info');
+        processBtn.disabled = true;
+
+        const procPhotoFile = await processImageFile(photoFile.files[0], photoSpec.w, photoSpec.h, photoSpec.format, q, fw);
+        const procSignFile = await processImageFile(signFile.files[0], signSpec.w, signSpec.h, signSpec.format, q, fw);
+
+        // prepare zip
+        const zip = new JSZip();
+        zip.file(procPhotoFile.name, procPhotoFile);
+        zip.file(procSignFile.name, procSignFile);
+
+        // include ID file if present (pass-through PDF or processed image)
+        if (idFile.files[0]){
+          const idF = idFile.files[0];
+          if (idF.type === 'application/pdf') {
+            zip.file(idF.name || 'id_document.pdf', idF);
+          } else {
+            // process ID image to reasonable size (max 1200x1600)
+            const maxW = 1200, maxH = 1600;
+            // simple resize preserving aspect
+            const tmpImg = await new Promise((res,rej)=>{
+              const r=new FileReader(); r.onload=ev=>{
+                const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=ev.target.result;
+              }; r.readAsDataURL(idF);
+            });
+            // scale
+            let tw = tmpImg.naturalWidth, th = tmpImg.naturalHeight;
+            const ratio = Math.min(1, Math.min(maxW/tw, maxH/th));
+            tw = Math.max(1, Math.round(tw*ratio)); th = Math.max(1, Math.round(th*ratio));
+            const idBlobFile = await processImageFile(idF, tw, th, 'jpeg', 0.85, false);
+            zip.file(idBlobFile.name || 'id_image.jpg', idBlobFile);
+          }
+        }
+
+        // build zip and trigger download
+        const content = await zip.generateAsync({type:'blob'});
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        const tname = templateSel.value || 'custom';
+        a.download = `govforms_${tname}_${Date.now()}.zip`;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+
+        status('ZIP downloaded. Files are processed offline in your browser.');
+      }catch(err){
+        console.error(err); status('Processing failed: '+err.message,'error');
+      } finally {
+        processBtn.disabled = false;
+      }
+    });
+
+    // clear inputs & previews
+    clearBtn.addEventListener('click', ()=>{
+      [photoFile, signFile, idFile].forEach(inp=>{ inp.value = ''; });
+      [photoPreview, signPreview, procPhoto, procSign].forEach(img=>{ img.src=''; img.style.display='none'; });
+      [photoInfo, signInfo, procPhotoInfo, procSignInfo].forEach(el=>el.innerText='');
+      status('Cleared files. Ready.');
+    });
+
+    // initial state
+    status('Ready — choose template & upload files.');
+  </script>
+</body>
+</html>
