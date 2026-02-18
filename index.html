@@ -1,185 +1,1094 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GovForms — Auto Document Formatter</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GovForms — Auto Document Formatter</title>
+    
+    <!-- jsPDF Library for PDF conversion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<style>
-body{font-family:Arial;margin:0;background:#f3f6fb}
-header{background:#0f4c81;color:#fff;padding:15px;text-align:center;font-weight:bold}
-.wrap{max-width:900px;margin:20px auto;padding:20px}
-.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px}
-label{display:block;margin-top:10px;font-weight:bold;font-size:13px}
-input,select,button{width:100%;padding:8px;margin-top:5px}
-button{cursor:pointer;background:#0f4c81;color:#fff;border:none;border-radius:6px}
-.status{margin-top:10px;font-weight:bold}
-</style>
-</head>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-<body>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0f4c81 0%, #1a5ba8 50%, #0d3a5c 100%);
+        color: #333;
+        overflow-x: hidden;
+      }
 
-<header>GovForms — Auto Document Formatter</header>
+      /* HEADER / NAV */
+      header {
+        background: rgba(15, 76, 129, 0.95);
+        backdrop-filter: blur(10px);
+        color: #fff;
+        padding: 15px 20px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 24px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        animation: slideDown 0.6s ease-out;
+      }
 
-<div class="wrap">
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-<div class="card">
-<label>Select Template</label>
-<select id="template">
-<option value="">-- Select --</option>
-<option value="ssc">SSC (100x120)</option>
-<option value="railway">Railway (200x230)</option>
-<option value="bank">Bank (140x160)</option>
-<option value="bpsc">BPSC (150x180)</option>
-<option value="custom">Custom</option>
-</select>
+      /* HERO SECTION */
+      .hero {
+        text-align: center;
+        color: #fff;
+        padding: 80px 20px;
+        background: linear-gradient(135deg, rgba(15, 76, 129, 0.9) 0%, rgba(26, 91, 168, 0.9) 100%),
+                    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%23ffffff" opacity="0.05" width="1200" height="600"/><circle cx="200" cy="150" r="80" fill="%23ffffff" opacity="0.1"/><circle cx="1000" cy="500" r="120" fill="%23ffffff" opacity="0.08"/></svg>');
+        background-size: cover;
+        position: relative;
+        overflow: hidden;
+      }
 
-<div id="customBox" style="display:none">
-<label>Width</label>
-<input type="number" id="customW" value="100">
-<label>Height</label>
-<input type="number" id="customH" value="120">
-</div>
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+        animation: float 20s ease-in-out infinite;
+      }
 
-<label>Photo</label>
-<input type="file" id="photoFile" accept="image/*">
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(20px); }
+      }
 
-<label>Signature</label>
-<input type="file" id="signFile" accept="image/*">
+      .hero h1 {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+        position: relative;
+        z-index: 1;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
 
-<label>ID (optional)</label>
-<input type="file" id="idFile">
+      .hero p {
+        font-size: 18px;
+        margin-bottom: 30px;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+        position: relative;
+        z-index: 1;
+        opacity: 0.95;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-<button id="processBtn">Process & Download Files</button>
-<div class="status" id="status">Ready</div>
-</div>
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-</div>
+      /* FEATURES SECTION */
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        max-width: 1100px;
+        margin: -60px auto 60px;
+        padding: 0 20px;
+        position: relative;
+        z-index: 10;
+      }
 
-<script>
+      .feature-card {
+        background: #fff;
+        padding: 35px 25px;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: fadeInUp 0.8s ease-out forwards;
+        opacity: 0;
+      }
 
-const templates = {
-ssc:{photo:{w:100,h:120,format:'jpeg'},sign:{w:140,h:60,format:'png'}},
-railway:{photo:{w:200,h:230,format:'png'},sign:{w:150,h:50,format:'png'}},
-bank:{photo:{w:140,h:160,format:'jpeg'},sign:{w:120,h:60,format:'jpeg'}},
-bpsc:{photo:{w:150,h:180,format:'png'},sign:{w:120,h:60,format:'png'}}
-};
+      .feature-card:nth-child(1) { animation-delay: 0.5s; }
+      .feature-card:nth-child(2) { animation-delay: 0.6s; }
+      .feature-card:nth-child(3) { animation-delay: 0.7s; }
 
-const templateSel = document.getElementById("template");
-const customBox = document.getElementById("customBox");
-const customW = document.getElementById("customW");
-const customH = document.getElementById("customH");
-const photoFile = document.getElementById("photoFile");
-const signFile = document.getElementById("signFile");
-const idFile = document.getElementById("idFile");
-const processBtn = document.getElementById("processBtn");
-const statusEl = document.getElementById("status");
+      .feature-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+      }
 
-templateSel.addEventListener("change",()=>{
-customBox.style.display = templateSel.value==="custom"?"block":"none";
-});
+      .feature-icon {
+        font-size: 40px;
+        margin-bottom: 15px;
+      }
 
-function status(text,color="green"){
-statusEl.style.color=color;
-statusEl.innerText=text;
-}
+      .feature-card h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #0f4c81;
+      }
 
-function downloadFile(file){
-const url = URL.createObjectURL(file);
-const a = document.createElement("a");
-a.href=url;
-a.download=file.name;
-document.body.appendChild(a);
-a.click();
-a.remove();
-URL.revokeObjectURL(url);
-}
+      .feature-card p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+      }
 
-async function processImage(file,targetW,targetH,format){
+      /* MAIN WRAPPER */
+      .wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
 
-const dataUrl = await new Promise(res=>{
-const r=new FileReader();
-r.onload=e=>res(e.target.result);
-r.readAsDataURL(file);
-});
+      /* SECTION TITLE */
+      .section-title {
+        text-align: center;
+        color: #fff;
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 50px;
+        animation: fadeInUp 0.8s ease-out;
+      }
 
-const img = await new Promise(res=>{
-const i=new Image();
-i.onload=()=>res(i);
-i.src=dataUrl;
-});
+      /* CARD */
+      .card {
+        background: #fff;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        animation: fadeInUp 0.8s ease-out 0.3s both;
+      }
 
-const canvas=document.createElement("canvas");
-canvas.width=targetW;
-canvas.height=targetH;
-const ctx=canvas.getContext("2d");
+      /* FORM ELEMENTS */
+      label {
+        display: block;
+        margin-top: 20px;
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #0f4c81;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-ctx.fillStyle="#fff";
-ctx.fillRect(0,0,targetW,targetH);
+      input,
+      select {
+        width: 100%;
+        padding: 12px 15px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        border: 2px solid #e0e7ff;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: #f8f9fc;
+      }
 
-/* CROP MODE (NO DISTORTION) */
-const scale=Math.max(targetW/img.naturalWidth,targetH/img.naturalHeight);
-const newW=img.naturalWidth*scale;
-const newH=img.naturalHeight*scale;
-const dx=(targetW-newW)/2;
-const dy=(targetH-newH)/2;
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #0f4c81;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.1);
+        transform: scale(1.01);
+      }
 
-ctx.drawImage(img,dx,dy,newW,newH);
+      input::placeholder {
+        color: #aaa;
+      }
 
-const mime=format==="png"?"image/png":"image/jpeg";
-const blob=await new Promise(res=>canvas.toBlob(res,mime,0.9));
-const ext=format==="png"?"png":"jpg";
-return new File([blob],`image_${targetW}x${targetH}.${ext}`,{type:mime});
-}
+      /* BUTTON */
+      button {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #0f4c81 0%, #1a5ba8 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 8px 20px rgba(15, 76, 129, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
 
-processBtn.addEventListener("click",async()=>{
+      button:disabled {
+        background: linear-gradient(135deg, #999 0%, #777 100%);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
 
-try{
+      button:disabled:hover {
+        transform: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
 
-if(!templateSel.value){
-status("Select template","crimson");
-return;
-}
+      button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
 
-if(!photoFile.files[0] || !signFile.files[0]){
-status("Upload photo & signature","crimson");
-return;
-}
+      button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(15, 76, 129, 0.4);
+      }
 
-let photoSpec,signSpec;
+      button:hover::before {
+        width: 300px;
+        height: 300px;
+      }
 
-if(templateSel.value==="custom"){
-const w=parseInt(customW.value);
-const h=parseInt(customH.value);
-photoSpec={w,h,format:"jpeg"};
-signSpec={w:Math.round(w*0.6),h:Math.round(h*0.3),format:"png"};
-}else{
-photoSpec={...templates[templateSel.value].photo};
-signSpec={...templates[templateSel.value].sign};
-}
+      button:active {
+        transform: translateY(-1px);
+      }
 
-status("Processing...","blue");
+      /* CUSTOM BOX */
+      #customBox {
+        background: #f8f9fc;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #0f4c81;
+        animation: slideIn 0.3s ease-out;
+      }
 
-const processedPhoto=await processImage(photoFile.files[0],photoSpec.w,photoSpec.h,photoSpec.format);
-const processedSign=await processImage(signFile.files[0],signSpec.w,signSpec.h,signSpec.format);
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          max-height: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          max-height: 200px;
+          transform: translateY(0);
+        }
+      }
 
-downloadFile(processedPhoto);
-downloadFile(processedSign);
+      /* STATUS MESSAGE */
+      .status {
+        margin-top: 20px;
+        padding: 15px;
+        font-weight: 600;
+        border-radius: 8px;
+        text-align: center;
+        background: #e8f5e9;
+        color: #2e7d32;
+        animation: fadeIn 0.4s ease;
+        transition: all 0.3s ease;
+      }
 
-if(idFile.files[0]){
-downloadFile(idFile.files[0]);
-}
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
 
-status("Files downloaded successfully");
+      /* FILE INPUT STYLING */
+      input[type="file"] {
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+      }
 
-}catch(err){
-console.error(err);
-status("Error: "+err.message,"crimson");
-}
+      input[type="file"]::file-selector-button {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #0f4c81 0%, #1a5ba8 100%);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+      }
 
-});
+      input[type="file"]::file-selector-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(15, 76, 129, 0.3);
+      }
 
-</script>
+      /* FOOTER */
+      footer {
+        background: rgba(0, 0, 0, 0.8);
+        color: #fbfbfb;
+        text-align: center;
+        padding: 30px 20px;
+        margin-top: 60px;
+        font-size: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
 
-</body>
+      footer p {
+        margin: 5px 0;
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 36px;
+        }
+
+        .hero p {
+          font-size: 16px;
+        }
+
+        .section-title {
+          font-size: 28px;
+        }
+
+        .card {
+          padding: 25px;
+        }
+
+        input[type="file"]::file-selector-button {
+          margin-bottom: 8px;
+          display: block;
+        }
+
+        .features {
+          margin: -40px 20px 40px;
+        }
+      }
+
+      /* LOADING ANIMATION */
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .status.loading::before {
+        content: '⟳';
+        display: inline-block;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      }
+
+      /* PREVIEW SECTION */
+      .preview-section {
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 0 20px;
+      }
+
+      .preview-section h2 {
+        text-align: center;
+        color: #fff;
+        font-size: 32px;
+        margin-bottom: 40px;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+      }
+
+      .preview-card {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        animation: fadeInUp 0.8s ease-out forwards;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .preview-card:nth-child(1) { animation-delay: 0.2s; }
+      .preview-card:nth-child(2) { animation-delay: 0.3s; }
+      .preview-card:nth-child(3) { animation-delay: 0.4s; }
+
+      .preview-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+      }
+
+      .preview-card.hidden {
+        display: none;
+      }
+
+      .preview-image {
+        width: 100%;
+        height: 250px;
+        background: linear-gradient(135deg, #f0f4f8 0%, #e8eef5 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 14px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .preview-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .preview-image.empty {
+        color: #ccc;
+      }
+
+      .preview-info {
+        padding: 20px;
+      }
+
+      .preview-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #0f4c81;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .size-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+      }
+
+      .size-row:last-child {
+        border-bottom: none;
+      }
+
+      .size-label {
+        color: #666;
+        font-weight: 500;
+      }
+
+      .size-value {
+        color: #0f4c81;
+        font-weight: 600;
+      }
+
+      .size-reduction {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 10px;
+        border-radius: 6px;
+        text-align: center;
+        margin-top: 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .size-reduction.negative {
+        background: #fff3e0;
+        color: #e65100;
+      }
+
+      .preview-empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #bbb;
+      }
+
+      .preview-empty-state p {
+        font-size: 14px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>✨ GovForms — Auto Document Formatter</header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+      <h1>Automate Your Document Formatting</h1>
+      <p>
+        Transform your photos and signatures into perfectly formatted government documents. 
+        Support for SSC, Railway, Bank, BPSC templates and more!
+      </p>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Lightning Fast</h3>
+        <p>Process images in seconds with zero quality loss</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Precise Templates</h3>
+        <p>Support for all major government forms</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>100% Private</h3>
+        <p>All processing happens in your browser securely</p>
+      </div>
+    </section>
+
+    <!-- MAIN SECTION -->
+    <div class="wrap">
+      <h2 class="section-title">Get Started Now</h2>
+      <div class="card">
+        <label>Select Template</label>
+        <select id="template">
+          <option value="">-- Select --</option>
+          <option value="ssc">SSC (100x120)</option>
+          <option value="railway">Railway (200x230)</option>
+          <option value="bank">Bank (140x160)</option>
+          <option value="bpsc">BPSC (150x180)</option>
+          <option value="custom">Custom</option>
+        </select>
+
+        <div id="customBox" style="display: none">
+          <label>Width</label>
+          <input type="number" id="customW" value="100" />
+          <label>Height</label>
+          <input type="number" id="customH" value="120" />
+        </div>
+
+        <label>Photo</label>
+        <input type="file" id="photoFile" accept="image/*" />
+        <label>Photo Format (for download)</label>
+        <select id="photoFormat">
+          <option value="jpeg">JPEG</option>
+          <option value="png">PNG</option>
+          <option value="jpg">JPG</option>
+          <option value="pdf">PDF</option>
+        </select>
+
+        <label>Signature</label>
+        <input type="file" id="signFile" accept="image/*" />
+        <label>Signature Format (for download)</label>
+        <select id="signFormat">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="jpg">JPG</option>
+          <option value="pdf">PDF</option>
+        </select>
+
+        <label>ID (optional)</label>
+        <input type="file" id="idFile" />
+        <label>ID Format (for download)</label>
+        <select id="idFormat">
+          <option value="original">Keep Original</option>
+          <option value="pdf">Convert to PDF</option>
+        </select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+          <button id="processBtn">Process</button>
+          <button id="downloadBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Download Files</button>
+        </div>
+        <div class="status" id="status">Ready</div>
+      </div>
+    </div>
+
+    <!-- PREVIEW SECTION -->
+    <section class="preview-section">
+      <h2>File Preview & Sizes</h2>
+      <div class="preview-grid" id="previewGrid">
+        <div class="preview-card" id="photoPreview" style="display: none;">
+          <div class="preview-image" id="photoPreviewImage" class="empty">
+            <span>No photo selected</span>
+          </div>
+          <div class="preview-info">
+            <div class="preview-title">📷 Photo</div>
+            <div class="size-row">
+              <span class="size-label">Original Size:</span>
+              <span class="size-value" id="photoSizeBefore">—</span>
+            </div>
+            <div class="size-row">
+              <span class="size-label">After Processing:</span>
+              <span class="size-value" id="photoSizeAfter">—</span>
+            </div>
+            <div class="size-reduction" id="photoReduction" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div class="preview-card" id="signPreview" style="display: none;">
+          <div class="preview-image" id="signPreviewImage" class="empty">
+            <span>No signature selected</span>
+          </div>
+          <div class="preview-info">
+            <div class="preview-title">✍️ Signature</div>
+            <div class="size-row">
+              <span class="size-label">Original Size:</span>
+              <span class="size-value" id="signSizeBefore">—</span>
+            </div>
+            <div class="size-row">
+              <span class="size-label">After Processing:</span>
+              <span class="size-value" id="signSizeAfter">—</span>
+            </div>
+            <div class="size-reduction" id="signReduction" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div class="preview-card" id="idPreview" style="display: none;">
+          <div class="preview-image" id="idPreviewImage" class="empty">
+            <span>No ID selected</span>
+          </div>
+          <div class="preview-info">
+            <div class="preview-title">📄 ID Document</div>
+            <div class="size-row">
+              <span class="size-label">File Size:</span>
+              <span class="size-value" id="idSize">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-empty-state" id="previewEmptyState">
+        <p>📥 Upload files to see preview and size information</p>
+      </div>
+    </section>
+
+    <footer>
+      <p>✨ GovForms — Transforming Document Formatting</p>
+      <p>Fast • Secure • Professional</p>
+      <p style="margin-top: 15px; opacity: 0.7; font-size: 12px;">© 2026 GovForms. All processing happens locally in your browser.</p>
+    </footer>
+
+    <script>
+      const templates = {
+        ssc: {
+          photo: { w: 100, h: 120, format: "jpeg" },
+          sign: { w: 140, h: 60, format: "png" },
+        },
+        railway: {
+          photo: { w: 200, h: 230, format: "png" },
+          sign: { w: 150, h: 50, format: "png" },
+        },
+        bank: {
+          photo: { w: 140, h: 160, format: "jpeg" },
+          sign: { w: 120, h: 60, format: "jpeg" },
+        },
+        bpsc: {
+          photo: { w: 150, h: 180, format: "png" },
+          sign: { w: 120, h: 60, format: "png" },
+        },
+      };
+
+      const templateSel = document.getElementById("template");
+      const customBox = document.getElementById("customBox");
+      const customW = document.getElementById("customW");
+      const customH = document.getElementById("customH");
+      const photoFile = document.getElementById("photoFile");
+      const signFile = document.getElementById("signFile");
+      const idFile = document.getElementById("idFile");
+      const processBtn = document.getElementById("processBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const statusEl = document.getElementById("status");
+
+      // Store processed files
+      let processedFiles = {
+        photo: null,
+        sign: null,
+        id: null,
+      };
+
+      // Preview elements
+      const previewEmptyState = document.getElementById("previewEmptyState");
+      const photoPreview = document.getElementById("photoPreview");
+      const signPreview = document.getElementById("signPreview");
+      const idPreview = document.getElementById("idPreview");
+      const photoPreviewImage = document.getElementById("photoPreviewImage");
+      const signPreviewImage = document.getElementById("signPreviewImage");
+      const idPreviewImage = document.getElementById("idPreviewImage");
+
+      templateSel.addEventListener("change", () => {
+        customBox.style.display =
+          templateSel.value === "custom" ? "block" : "none";
+      });
+
+      // Helper function to format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return (bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i];
+      }
+
+      // Update preview visibility based on file selections
+      function updatePreviewVisibility() {
+        const hasPhoto = photoFile.files[0];
+        const hasSign = signFile.files[0];
+        const hasId = idFile.files[0];
+
+        photoPreview.style.display = hasPhoto ? "block" : "none";
+        signPreview.style.display = hasSign ? "block" : "none";
+        idPreview.style.display = hasId ? "block" : "none";
+
+        if (hasPhoto || hasSign || hasId) {
+          previewEmptyState.style.display = "none";
+        } else {
+          previewEmptyState.style.display = "block";
+        }
+      }
+
+      // Update photo preview
+      photoFile.addEventListener("change", () => {
+        if (photoFile.files[0]) {
+          const file = photoFile.files[0];
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            photoPreviewImage.innerHTML = `<img src="${e.target.result}" alt="Photo preview">`;
+            photoPreviewImage.classList.remove("empty");
+          };
+          reader.readAsDataURL(file);
+
+          // Display original size
+          document.getElementById("photoSizeBefore").textContent =
+            formatFileSize(file.size);
+          document.getElementById("photoSizeAfter").textContent = "—";
+          document.getElementById("photoReduction").style.display = "none";
+        }
+        updatePreviewVisibility();
+      });
+
+      // Update signature preview
+      signFile.addEventListener("change", () => {
+        if (signFile.files[0]) {
+          const file = signFile.files[0];
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            signPreviewImage.innerHTML = `<img src="${e.target.result}" alt="Signature preview">`;
+            signPreviewImage.classList.remove("empty");
+          };
+          reader.readAsDataURL(file);
+
+          // Display original size
+          document.getElementById("signSizeBefore").textContent =
+            formatFileSize(file.size);
+          document.getElementById("signSizeAfter").textContent = "—";
+          document.getElementById("signReduction").style.display = "none";
+        }
+        updatePreviewVisibility();
+      });
+
+      // Update ID preview
+      idFile.addEventListener("change", () => {
+        if (idFile.files[0]) {
+          const file = idFile.files[0];
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            if (file.type.startsWith("image/")) {
+              idPreviewImage.innerHTML = `<img src="${e.target.result}" alt="ID preview">`;
+              idPreviewImage.classList.remove("empty");
+            } else {
+              idPreviewImage.innerHTML = `<span>📄 ${file.name}</span>`;
+            }
+          };
+          reader.readAsDataURL(file);
+
+          // Display file size
+          document.getElementById("idSize").textContent = formatFileSize(file.size);
+        }
+        updatePreviewVisibility();
+      });
+
+      function status(text, color = "green") {
+        statusEl.style.color = color;
+        statusEl.innerText = text;
+      }
+
+      function downloadFile(file) {
+        const url = URL.createObjectURL(file);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      async function processImage(file, targetW, targetH, format) {
+        const dataUrl = await new Promise((res) => {
+          const r = new FileReader();
+          r.onload = (e) => res(e.target.result);
+          r.readAsDataURL(file);
+        });
+
+        const img = await new Promise((res) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.src = dataUrl;
+        });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d");
+
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, targetW, targetH);
+
+        /* CROP MODE (NO DISTORTION) */
+        const scale = Math.max(
+          targetW / img.naturalWidth,
+          targetH / img.naturalHeight,
+        );
+        const newW = img.naturalWidth * scale;
+        const newH = img.naturalHeight * scale;
+        const dx = (targetW - newW) / 2;
+        const dy = (targetH - newH) / 2;
+
+        ctx.drawImage(img, dx, dy, newW, newH);
+
+        const mime = format === "png" ? "image/png" : "image/jpeg";
+        const blob = await new Promise((res) => canvas.toBlob(res, mime, 0.9));
+        const ext = format === "png" ? "png" : format === "jpg" ? "jpg" : "jpeg";
+        return { canvas, blob, ext, mime };
+      }
+
+      // Function to convert canvas to PDF
+      async function canvasToPDF(canvas, filename) {
+        return new Promise((resolve, reject) => {
+          try {
+            // Wait for jsPDF to be available
+            let attempts = 0;
+            const checkJsPDF = () => {
+              if (window.jspdf && window.jspdf.jsPDF) {
+                const jsPDF = window.jspdf.jsPDF;
+                const imgData = canvas.toDataURL("image/jpeg", 0.95);
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                // Create PDF with custom dimensions (in mm at 96 DPI)
+                const mmWidth = (width / 96) * 25.4;
+                const mmHeight = (height / 96) * 25.4;
+                
+                try {
+                  const pdf = new jsPDF({
+                    orientation: width > height ? "l" : "p",
+                    unit: "mm",
+                    format: [mmWidth, mmHeight],
+                  });
+                  
+                  pdf.addImage(imgData, "JPEG", 0, 0, mmWidth, mmHeight);
+                  
+                  // Get PDF as blob (synchronous in jsPDF UMD)
+                  const pdfBlob = pdf.output("blob");
+                  const file = new File([pdfBlob], filename, { type: "application/pdf" });
+                  resolve(file);
+                } catch (err) {
+                  reject(new Error("PDF generation error: " + err.message));
+                }
+              } else if (attempts > 100) {
+                reject(new Error("jsPDF not loaded after waiting"));
+              } else {
+                attempts++;
+                setTimeout(checkJsPDF, 50);
+              }
+            };
+            checkJsPDF();
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+
+      function updateSizeReduction(beforeSize, afterSize, elementId, reduceElementId) {
+        const reduction = beforeSize - afterSize;
+        const percentage = ((reduction / beforeSize) * 100).toFixed(1);
+        const reduceEl = document.getElementById(reduceElementId);
+
+        if (percentage > 0) {
+          reduceEl.textContent = `✓ Reduced by ${percentage}% (${formatFileSize(reduction)} saved)`;
+          reduceEl.classList.remove("negative");
+          reduceEl.style.display = "block";
+        } else if (percentage < 0) {
+          reduceEl.textContent = `Increased by ${Math.abs(percentage)}% (${formatFileSize(Math.abs(reduction))} added)`;
+          reduceEl.classList.add("negative");
+          reduceEl.style.display = "block";
+        } else {
+          reduceEl.style.display = "none";
+        }
+      }
+
+      // Process button listener
+      processBtn.addEventListener("click", async () => {
+        try {
+          if (!templateSel.value) {
+            status("Select template", "crimson");
+            return;
+          }
+
+          if (!photoFile.files[0] || !signFile.files[0]) {
+            status("Upload photo & signature", "crimson");
+            return;
+          }
+
+          let photoSpec, signSpec;
+
+          if (templateSel.value === "custom") {
+            const w = parseInt(customW.value);
+            const h = parseInt(customH.value);
+            photoSpec = { w, h, format: "jpeg" };
+            signSpec = {
+              w: Math.round(w * 0.6),
+              h: Math.round(h * 0.3),
+              format: "png",
+            };
+          } else {
+            photoSpec = { ...templates[templateSel.value].photo };
+            signSpec = { ...templates[templateSel.value].sign };
+          }
+
+          status("Processing...", "blue");
+
+          const photoFormatSelect = document.getElementById("photoFormat").value;
+          const processedPhotoData = await processImage(
+            photoFile.files[0],
+            photoSpec.w,
+            photoSpec.h,
+            photoFormatSelect === "pdf" ? "jpeg" : photoFormatSelect,
+          );
+
+          let processedPhoto;
+          if (photoFormatSelect === "pdf") {
+            processedPhoto = await canvasToPDF(processedPhotoData.canvas, `image_${photoSpec.w}x${photoSpec.h}.pdf`);
+          } else {
+            processedPhoto = new File(
+              [processedPhotoData.blob],
+              `image_${photoSpec.w}x${photoSpec.h}.${processedPhotoData.ext}`,
+              { type: processedPhotoData.mime }
+            );
+          }
+
+          const processedSignData = await processImage(
+            signFile.files[0],
+            signSpec.w,
+            signSpec.h,
+            signSpec.format,
+          );
+
+          const signFormatSelect = document.getElementById("signFormat").value;
+          let processedSign;
+          if (signFormatSelect === "pdf") {
+            processedSign = await canvasToPDF(processedSignData.canvas, `signature_${signSpec.w}x${signSpec.h}.pdf`);
+          } else {
+            processedSign = new File(
+              [processedSignData.blob],
+              `signature_${signSpec.w}x${signSpec.h}.${signFormatSelect === "jpg" ? "jpg" : signFormatSelect}`,
+              { type: signFormatSelect === "png" ? "image/png" : "image/jpeg" }
+            );
+          }
+
+          // Handle ID file format conversion if selected
+          let processedIdFile = null;
+          if (idFile.files[0]) {
+            const idFormatSelect = document.getElementById("idFormat").value;
+            if (idFormatSelect === "pdf" && idFile.files[0].type.startsWith("image/")) {
+              // Convert image ID to PDF
+              const tempCanvas = document.createElement("canvas");
+              const tempImg = new Image();
+              tempImg.src = URL.createObjectURL(idFile.files[0]);
+              await new Promise((res) => (tempImg.onload = res));
+              
+              tempCanvas.width = tempImg.naturalWidth;
+              tempCanvas.height = tempImg.naturalHeight;
+              const tempCtx = tempCanvas.getContext("2d");
+              tempCtx.drawImage(tempImg, 0, 0);
+              
+              processedIdFile = await canvasToPDF(tempCanvas, `id_document.pdf`);
+            } else {
+              processedIdFile = idFile.files[0];
+            }
+          }
+
+          // Store processed files
+          processedFiles.photo = processedPhoto;
+          processedFiles.sign = processedSign;
+          processedFiles.id = processedIdFile;
+
+          // Update preview with processed file sizes
+          const photoBefore = photoFile.files[0].size;
+          const photoAfter = processedPhoto.size;
+          document.getElementById("photoSizeAfter").textContent =
+            formatFileSize(photoAfter);
+          updateSizeReduction(photoBefore, photoAfter, "photoSizeBefore", "photoReduction");
+
+          const signBefore = signFile.files[0].size;
+          const signAfter = processedSign.size;
+          document.getElementById("signSizeAfter").textContent =
+            formatFileSize(signAfter);
+          updateSizeReduction(signBefore, signAfter, "signSizeBefore", "signReduction");
+
+          // Enable download button
+          downloadBtn.disabled = false;
+          downloadBtn.style.opacity = "1";
+          downloadBtn.style.cursor = "pointer";
+
+          status("Processing complete! Ready to download.");
+        } catch (err) {
+          console.error(err);
+          status("Error: " + err.message, "crimson");
+        }
+      });
+
+      // Download button listener
+      downloadBtn.addEventListener("click", () => {
+        try {
+          if (processedFiles.photo) {
+            downloadFile(processedFiles.photo);
+          }
+          if (processedFiles.sign) {
+            downloadFile(processedFiles.sign);
+          }
+          if (processedFiles.id) {
+            downloadFile(processedFiles.id);
+          }
+          status("Files downloaded successfully");
+        } catch (err) {
+          console.error(err);
+          status("Error: " + err.message, "crimson");
+        }
+      });
+    </script>
+  </body>
 </html>
