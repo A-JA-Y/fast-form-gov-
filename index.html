@@ -556,10 +556,10 @@
         <label>Select Exam</label>
         <select id="template">
           <option value="">-- Select --</option>
-          <option value="ssc">SSC (100x120)</option>
           <option value="railway">Railway (200x230)</option>
           <option value="bank">Bank (140x160)</option>
           <option value="bpsc">BPSC (150x180)</option>
+          <option value="sscexams">SSC GD/CGL/CHSL/MTS (200x240)</option>
           <option value="custom">Custom</option>
         </select>
 
@@ -691,10 +691,6 @@
 
     <script>
       const templates = {
-        ssc: {
-          photo: { w: 100, h: 120, format: "jpeg" },
-          sign: { w: 140, h: 60, format: "png" },
-        },
         railway: {
           photo: { w: 200, h: 230, format: "png" },
           sign: { w: 150, h: 50, format: "png" },
@@ -706,6 +702,10 @@
         bpsc: {
           photo: { w: 150, h: 180, format: "png" },
           sign: { w: 120, h: 60, format: "png" },
+        },
+        sscexams: {
+          photo: { w: 200, h: 240, format: "jpeg" },
+          sign: { w: 240, h: 80, format: "png" },
         },
       };
 
