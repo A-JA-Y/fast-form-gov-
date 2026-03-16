@@ -7,6 +7,8 @@
     
     <!-- jsPDF Library for PDF conversion -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- pdf-lib for merging PDFs and embedding images -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 
     <style>
       * {
@@ -532,6 +534,66 @@
         font-size: 14px;
         margin: 10px 0;
       }
+
+      /* MERGE SECTION */
+      .merge-section {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .merge-section h2 {
+        text-align: center;
+        color: #fff;
+        font-size: 32px;
+        margin-bottom: 30px;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .merge-list {
+        margin-top: 15px;
+        border: 1px solid rgba(15, 76, 129, 0.25);
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .merge-item {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(15, 76, 129, 0.12);
+      }
+
+      .merge-item:last-child {
+        border-bottom: none;
+      }
+
+      .merge-item span {
+        font-size: 14px;
+        color: #0f4c81;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .merge-item button {
+        padding: 6px 10px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+
+      .merge-item button:hover {
+        opacity: 0.95;
+      }
+
+      .merge-empty {
+        margin: 0;
+        font-size: 14px;
+        color: #666;
+      }
     </style>
   </head>
 
@@ -664,6 +726,24 @@
         <p>📥 Upload files to see preview and size information</p>
       </div>
     </section>
+
+    <!-- MERGE SECTION -->
+    <section class="merge-section">
+      <h2>Merge Files into one PDF</h2>
+
+      <div class="card">
+        <label for="mergeFiles">Select files (images or PDFs)</label>
+        <input type="file" id="mergeFiles" accept=".pdf,image/*" multiple />
+
+        <div id="mergeList" class="merge-list">
+          <p class="merge-empty">No files selected. Add files to start merging.</p>
+        </div>
+
+        <button id="mergeBtn" disabled style="margin-top: 20px;">Merge into one PDF</button>
+        <div class="status" id="mergeStatus">Select files to merge.</div>
+      </div>
+    </section>
+
     <!-- FEATURES SECTION -->
     <section class="features">
       <div class="feature-card">
@@ -736,6 +816,13 @@
       const signPreviewImage = document.getElementById("signPreviewImage");
       const idPreviewImage = document.getElementById("idPreviewImage");
 
+      // Merge files UI
+      const mergeFilesInput = document.getElementById("mergeFiles");
+      const mergeListEl = document.getElementById("mergeList");
+      const mergeBtn = document.getElementById("mergeBtn");
+      const mergeStatus = document.getElementById("mergeStatus");
+      const mergeItems = [];
+
       templateSel.addEventListener("change", () => {
         customBox.style.display =
           templateSel.value === "custom" ? "block" : "none";
@@ -766,6 +853,140 @@
           previewEmptyState.style.display = "block";
         }
       }
+
+      // Merge list helpers
+      function setMergeStatus(text, color = "green") {
+        mergeStatus.style.color = color;
+        mergeStatus.innerText = text;
+      }
+
+      function renderMergeList() {
+        mergeListEl.innerHTML = "";
+
+        if (!mergeItems.length) {
+          mergeListEl.innerHTML = '<p class="merge-empty">No files selected. Add files to start merging.</p>';
+          mergeBtn.disabled = true;
+          return;
+        }
+
+        mergeItems.forEach((item, index) => {
+          const row = document.createElement("div");
+          row.className = "merge-item";
+
+          const name = document.createElement("span");
+          name.textContent = item.file.name;
+          row.appendChild(name);
+
+          const up = document.createElement("button");
+          up.textContent = "↑";
+          up.title = "Move up";
+          up.disabled = index === 0;
+          up.addEventListener("click", () => {
+            if (index === 0) return;
+            const tmp = mergeItems[index - 1];
+            mergeItems[index - 1] = mergeItems[index];
+            mergeItems[index] = tmp;
+            renderMergeList();
+          });
+          row.appendChild(up);
+
+          const down = document.createElement("button");
+          down.textContent = "↓";
+          down.title = "Move down";
+          down.disabled = index === mergeItems.length - 1;
+          down.addEventListener("click", () => {
+            if (index === mergeItems.length - 1) return;
+            const tmp = mergeItems[index + 1];
+            mergeItems[index + 1] = mergeItems[index];
+            mergeItems[index] = tmp;
+            renderMergeList();
+          });
+          row.appendChild(down);
+
+          const remove = document.createElement("button");
+          remove.textContent = "✕";
+          remove.title = "Remove";
+          remove.addEventListener("click", () => {
+            mergeItems.splice(index, 1);
+            renderMergeList();
+          });
+          row.appendChild(remove);
+
+          mergeListEl.appendChild(row);
+        });
+
+        mergeBtn.disabled = false;
+      }
+
+      mergeFilesInput.addEventListener("change", () => {
+        const files = Array.from(mergeFilesInput.files || []);
+        files.forEach((file) => {
+          mergeItems.push({ file });
+        });
+        renderMergeList();
+        setMergeStatus("Ready to merge", "green");
+      });
+
+      async function mergeFilesToPdf(items) {
+        const mergedPdf = await PDFLib.PDFDocument.create();
+
+        for (const item of items) {
+          const file = item.file;
+
+          if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
+            const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+            copiedPages.forEach((page) => {
+              mergedPdf.addPage(page);
+            });
+          } else if (file.type.startsWith("image/") || /\.(png|jpe?g)$/i.test(file.name)) {
+            const imageBytes = await file.arrayBuffer();
+            let img;
+            if (file.type === "image/png" || file.name.toLowerCase().endsWith(".png")) {
+              img = await mergedPdf.embedPng(imageBytes);
+            } else {
+              img = await mergedPdf.embedJpg(imageBytes);
+            }
+
+            const { width, height } = img.scale(1);
+            const page = mergedPdf.addPage([width, height]);
+            page.drawImage(img, {
+              x: 0,
+              y: 0,
+              width,
+              height,
+            });
+          } else {
+            // Unsupported file type - ignore
+          }
+        }
+
+        const mergedBytes = await mergedPdf.save();
+        return new File([mergedBytes], `merged_${Date.now()}.pdf`, { type: "application/pdf" });
+      }
+
+      mergeBtn.addEventListener("click", async () => {
+        try {
+          if (!mergeItems.length) {
+            setMergeStatus("Add files to merge first", "crimson");
+            return;
+          }
+
+          setMergeStatus("Merging files...", "blue");
+          mergeBtn.disabled = true;
+
+          const mergedFile = await mergeFilesToPdf(mergeItems);
+          downloadFile(mergedFile);
+
+          setMergeStatus("Merged PDF downloaded", "green");
+        } catch (err) {
+          console.error(err);
+          setMergeStatus("Error merging files: " + err.message, "crimson");
+        } finally {
+          mergeBtn.disabled = false;
+        }
+      });
 
       // Update photo preview
       photoFile.addEventListener("change", () => {
