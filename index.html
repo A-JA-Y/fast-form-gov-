@@ -536,6 +536,79 @@
         margin: 10px 0;
       }
 
+      /* VIEWER MODAL */
+      .viewer-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 500;
+      }
+
+      .viewer-modal.active {
+        display: flex;
+      }
+
+      .viewer-content {
+        width: min(95vw, 900px);
+        max-height: 90vh;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .viewer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #0f4c81;
+        color: #fff;
+        padding: 12px 16px;
+      }
+
+      .viewer-body {
+        flex: 1;
+        padding: 12px;
+        overflow: auto;
+      }
+
+      .viewer-body img,
+      .viewer-body iframe,
+      .viewer-body object {
+        width: 100%;
+        height: 100%;
+      }
+
+      .viewer-close {
+        border: 0;
+        background: #fde047;
+        color: #0f4c81;
+        font-weight: 700;
+        border-radius: 6px;
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+
+      .icon-button {
+        width: auto !important;
+        min-width: 40px;
+        max-width: 40px;
+        padding: 8px;
+        font-size: 14px;
+        line-height: 1;
+        text-transform: none;
+      }
+
+      .preview-action {
+        width: auto !important;
+      }
+
       /* MERGE SECTION */
       .merge-section {
         max-width: 900px;
@@ -561,7 +634,7 @@
 
       .merge-item {
         display: grid;
-        grid-template-columns: 1fr auto auto auto;
+        grid-template-columns: 1fr auto auto auto auto;
         gap: 8px;
         align-items: center;
         padding: 10px 12px;
@@ -634,7 +707,10 @@
         </div>
 
         <label>Photo</label>
-        <input type="file" id="photoFile" accept="image/*" />
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="file" id="photoFile" accept="image/*" style="flex:1;" />
+          <button type="button" id="viewPhotoBtn" class="icon-button preview-action" disabled title="Preview photo">👁</button>
+        </div>
         <label>Photo Format (for download)</label>
         <select id="photoFormat">
           <option value="jpeg">JPEG</option>
@@ -644,7 +720,10 @@
         </select>
 
         <label>Signature</label>
-        <input type="file" id="signFile" accept="image/*" />
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="file" id="signFile" accept="image/*" style="flex:1;" />
+          <button type="button" id="viewSignBtn" class="icon-button preview-action" disabled title="Preview signature">👁</button>
+        </div>
         <label>Signature Format (for download)</label>
         <select id="signFormat">
           <option value="png">PNG</option>
@@ -654,7 +733,10 @@
         </select>
 
         <label>ID (optional)</label>
-        <input type="file" id="idFile" />
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="file" id="idFile" style="flex:1;" />
+          <button type="button" id="viewIdBtn" class="icon-button preview-action" disabled title="Preview ID">👁</button>
+        </div>
         <label>ID Format (for download)</label>
         <select id="idFormat">
           <option value="original">Keep Original</option>
@@ -770,6 +852,18 @@
       <p style="margin-top: 15px; opacity: 0.7; font-size: 12px;">© 2026 GovForms. All processing happens locally in your browser.</p>
     </footer>
 
+    <div id="viewerModal" class="viewer-modal" role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
+      <div class="viewer-content">
+        <div class="viewer-header">
+          <div id="viewerTitle">Document Preview</div>
+          <button id="closeViewerBtn" class="viewer-close" type="button">Close</button>
+        </div>
+        <div class="viewer-body" id="viewerBody">
+          <p style="text-align:center; color:#666;">Select a file to preview.</p>
+        </div>
+      </div>
+    </div>
+
     <script>
       const templates = {
         railway: {
@@ -824,6 +918,13 @@
       const mergeStatus = document.getElementById("mergeStatus");
       const mergeItems = [];
 
+      const viewPhotoBtn = document.getElementById("viewPhotoBtn");
+      const viewSignBtn = document.getElementById("viewSignBtn");
+      const viewIdBtn = document.getElementById("viewIdBtn");
+      const viewerModal = document.getElementById("viewerModal");
+      const viewerBody = document.getElementById("viewerBody");
+      const closeViewerBtn = document.getElementById("closeViewerBtn");
+
       templateSel.addEventListener("change", () => {
         customBox.style.display =
           templateSel.value === "custom" ? "block" : "none";
@@ -854,6 +955,68 @@
           previewEmptyState.style.display = "block";
         }
       }
+
+      function openViewer(file, title = "Document Preview") {
+        if (!file) {
+          return;
+        }
+
+        viewerBody.innerHTML = "";
+        document.getElementById("viewerTitle").textContent = title;
+
+        if (file.type.startsWith("image/")) {
+          const imgEl = document.createElement("img");
+          imgEl.src = URL.createObjectURL(file);
+          imgEl.alt = file.name;
+          imgEl.onload = () => URL.revokeObjectURL(imgEl.src);
+          viewerBody.appendChild(imgEl);
+        } else if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+          const objectEl = document.createElement("object");
+          objectEl.data = URL.createObjectURL(file);
+          objectEl.type = "application/pdf";
+          objectEl.width = "100%";
+          objectEl.height = "100%";
+          objectEl.innerHTML = "<p>Preview not available. <a target=\"_blank\" href=\"" + objectEl.data + "\">Open in new tab</a></p>";
+          viewerBody.appendChild(objectEl);
+        } else if (file.type.startsWith("text/") || file.name.match(/\.(txt|md|csv)$/i)) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const pre = document.createElement("pre");
+            pre.textContent = e.target.result;
+            pre.style.whiteSpace = "pre-wrap";
+            viewerBody.appendChild(pre);
+          };
+          reader.readAsText(file);
+        } else {
+          const p = document.createElement("p");
+          p.textContent = `Preview not supported for file type "${file.type || 'unknown'}". Use download to verify.`;
+          viewerBody.appendChild(p);
+        }
+
+        viewerModal.classList.add("active");
+      }
+
+      function closeViewer() {
+        const objects = viewerBody.querySelectorAll("object, img, iframe");
+        objects.forEach((node) => {
+          if (node.tagName === "IMG" || node.tagName === "OBJECT" || node.tagName === "IFRAME") {
+            URL.revokeObjectURL(node.src || node.data);
+          }
+        });
+        viewerBody.innerHTML = "";
+        viewerModal.classList.remove("active");
+      }
+
+      closeViewerBtn.addEventListener("click", closeViewer);
+      viewerModal.addEventListener("click", (evt) => {
+        if (evt.target === viewerModal) {
+          closeViewer();
+        }
+      });
+
+      viewPhotoBtn.addEventListener("click", () => openViewer(photoFile.files[0], "Photo Preview"));
+      viewSignBtn.addEventListener("click", () => openViewer(signFile.files[0], "Signature Preview"));
+      viewIdBtn.addEventListener("click", () => openViewer(idFile.files[0], "ID Preview"));
 
       // Merge list helpers
       function setMergeStatus(text, color = "green") {
@@ -903,6 +1066,15 @@
             renderMergeList();
           });
           row.appendChild(down);
+
+          const viewBtn = document.createElement("button");
+          viewBtn.textContent = "👁";
+          viewBtn.className = "icon-button";
+          viewBtn.title = "View file";
+          viewBtn.addEventListener("click", () => {
+            openViewer(item.file, `Merge item: ${item.file.name}`);
+          });
+          row.appendChild(viewBtn);
 
           const remove = document.createElement("button");
           remove.textContent = "✕";
@@ -991,6 +1163,8 @@
 
       // Update photo preview
       photoFile.addEventListener("change", () => {
+        viewPhotoBtn.disabled = !photoFile.files.length;
+
         if (photoFile.files[0]) {
           const file = photoFile.files[0];
           const reader = new FileReader();
@@ -1012,6 +1186,8 @@
 
       // Update signature preview
       signFile.addEventListener("change", () => {
+        viewSignBtn.disabled = !signFile.files.length;
+
         if (signFile.files[0]) {
           const file = signFile.files[0];
           const reader = new FileReader();
@@ -1033,6 +1209,8 @@
 
       // Update ID preview
       idFile.addEventListener("change", () => {
+        viewIdBtn.disabled = !idFile.files.length;
+
         if (idFile.files[0]) {
           const file = idFile.files[0];
           const reader = new FileReader();
