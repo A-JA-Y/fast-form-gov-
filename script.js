@@ -252,6 +252,31 @@ mergeFilesInput.addEventListener("change", () => {
   setMergeStatus("Ready to merge", "green");
 });
 
+// Helper function to convert WebP to PNG using Canvas
+async function convertWebPToPNG(file) {
+  const dataUrl = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.src = dataUrl;
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  return new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/png");
+  });
+}
+
 async function mergeFilesToPdf(items) {
   const mergedPdf = await PDFLib.PDFDocument.create();
 
@@ -270,27 +295,40 @@ async function mergeFilesToPdf(items) {
       });
     } else if (
       file.type.startsWith("image/") ||
-      /\.(png|jpe?g)$/i.test(file.name)
+      /\.(png|jpe?g|webp)$/i.test(file.name)
     ) {
-      const imageBytes = await file.arrayBuffer();
-      let img;
-      if (
-        file.type === "image/png" ||
-        file.name.toLowerCase().endsWith(".png")
-      ) {
-        img = await mergedPdf.embedPng(imageBytes);
-      } else {
-        img = await mergedPdf.embedJpg(imageBytes);
-      }
+      try {
+        const imageBytes = await file.arrayBuffer();
+        let img;
+        if (
+          file.type === "image/png" ||
+          file.name.toLowerCase().endsWith(".png")
+        ) {
+          img = await mergedPdf.embedPng(imageBytes);
+        } else if (
+          file.type === "image/webp" ||
+          file.name.toLowerCase().endsWith(".webp")
+        ) {
+          // Convert WebP to PNG first
+          const pngBlob = await convertWebPToPNG(file);
+          const pngBytes = await pngBlob.arrayBuffer();
+          img = await mergedPdf.embedPng(pngBytes);
+        } else {
+          // Assume JPEG
+          img = await mergedPdf.embedJpg(imageBytes);
+        }
 
-      const { width, height } = img.scale(1);
-      const page = mergedPdf.addPage([width, height]);
-      page.drawImage(img, {
-        x: 0,
-        y: 0,
-        width,
-        height,
-      });
+        const { width, height } = img.scale(1);
+        const page = mergedPdf.addPage([width, height]);
+        page.drawImage(img, {
+          x: 0,
+          y: 0,
+          width,
+          height,
+        });
+      } catch (err) {
+        throw new Error(`Failed to embed image ${file.name}: ${err.message}`);
+      }
     } else {
       // Unsupported file type - ignore
     }
