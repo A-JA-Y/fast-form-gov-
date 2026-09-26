@@ -17,14 +17,46 @@
     </script>
 
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
     <meta
       name="description"
-      content="GovForms formats exam photos, signatures and ID documents to exact pixel sizes and KB limits, entirely in your browser."
+      content="GovForms formats exam photos, signatures and ID documents to exact pixel sizes and KB limits for SSC, Railways, Banking, UPSC, Defence and entrance exams — entirely in your browser."
     />
-    <meta name="theme-color" content="#050915" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#050915"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#f3f6fc"
+    />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="application-name" content="GovForms" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="GovForms" />
+    <meta property="og:title" content="GovForms — Auto Document Formatter" />
+    <meta
+      property="og:description"
+      content="Exact-size exam photos, signatures and PDFs in seconds. 100% on-device."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="icons/icon-512.png" />
 
     <title>GovForms — Auto Document Formatter</title>
+
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 
     <script>
       document.documentElement.classList.add("js");
@@ -33,44 +65,101 @@
         if (t === "light" || t === "dark")
           document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
+      // boot progress for the intro (counts the deferred libraries as they land)
+      window.__boot = {
+        total: 8,
+        loaded: 0,
+        tick: function () {
+          this.loaded++;
+          document.documentElement.style.setProperty(
+            "--boot",
+            Math.min(1, this.loaded / this.total),
+          );
+          document.dispatchEvent(new CustomEvent("govforms:boot"));
+        },
+      };
     </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin />
+    <!-- fonts load asynchronously so a slow font CDN never blocks scripts or first paint -->
     <link
       href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet"
+      media="print"
+      crossorigin="anonymous"
+      onload="this.media = 'all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <link rel="stylesheet" href="./gov.css" />
 
     <!-- jsPDF for single-image PDF output -->
     <script
       defer
+      crossorigin="anonymous"
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
       src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
     ></script>
     <!-- pdf-lib for merging PDFs and embedding images -->
     <script
       defer
+      crossorigin="anonymous"
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
       src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"
     ></script>
     <!-- JSZip for bundled downloads -->
     <script
       defer
+      crossorigin="anonymous"
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
       src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
     ></script>
     <!-- GSAP + ScrollTrigger for scroll-driven cinematics -->
     <script
       defer
-      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+      crossorigin="anonymous"
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"
     ></script>
     <script
       defer
-      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
+      crossorigin="anonymous"
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"
+    ></script>
+    <!-- Lenis for buttery smooth scrolling -->
+    <script
+      defer
+      crossorigin="anonymous"
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
+      src="https://cdn.jsdelivr.net/npm/lenis@1.3.4/dist/lenis.min.js"
     ></script>
     <!-- Three.js for the 3D hero scene -->
     <script
       defer
+      crossorigin="anonymous"
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
       src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+    ></script>
+    <script
+      defer
+      onload="__boot.tick()"
+      onerror="__boot.tick()"
+      src="./templates.js"
     ></script>
     <script defer src="./script.js"></script>
     <script defer src="./fx.js"></script>
@@ -130,6 +219,20 @@
       >
         <path d="M3 20c3-1 4-3 5-6s3-4 4-2-1 5 1 5 3-3 4-3 1 2 4 2" />
         <path d="m14 5 3-3 3 3-3 3z" />
+      </symbol>
+      <symbol
+        id="i-thumb"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 2c3.5 0 6 3 6 7.5V15a6 6 0 0 1-12 0V9.5C6 5 8.5 2 12 2z" />
+        <path
+          d="M9 9c1-1.5 5-1.5 6 0M8.5 12c1.5-2 5.5-2 7 0M9 15c1-1.5 5-1.5 6 0"
+        />
       </symbol>
       <symbol
         id="i-id"
@@ -414,7 +517,7 @@
         <path d="m15 17 3 3 3-3" />
       </symbol>
       <symbol
-        id="i-paste"
+        id="i-home"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -422,18 +525,176 @@
         stroke-linecap="round"
         stroke-linejoin="round"
       >
-        <rect x="5" y="4" width="14" height="17" rx="2" />
-        <path d="M9 4V2h6v2M9 12h6M9 16h4" />
+        <path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
+      </symbol>
+      <symbol
+        id="i-news"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z" />
+        <path d="M19 8h1a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2" />
+        <path d="M7 9h6M7 13h9M7 17h9" />
+      </symbol>
+      <symbol
+        id="i-search"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.9"
+        stroke-linecap="round"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
+      </symbol>
+      <symbol
+        id="i-install"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="6" y="2" width="12" height="20" rx="3" />
+        <path d="M12 7v7m0 0 3-3m-3 3-3-3M10 18h4" />
+      </symbol>
+      <symbol
+        id="i-share"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 3v12m0-12-4 4m4-4 4 4" />
+        <path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8" />
+      </symbol>
+      <symbol
+        id="i-plus-square"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="4" />
+        <path d="M12 8v8m-4-4h8" />
+      </symbol>
+      <symbol
+        id="i-external"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.9"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M14 4h6v6M20 4l-9 9" />
+        <path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" />
+      </symbol>
+      <symbol
+        id="i-calendar"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      >
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M3 10h18M8 3v4m8-4v4" />
+      </symbol>
+      <symbol
+        id="i-chevron"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </symbol>
+      <symbol
+        id="i-tools"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="m14.5 6.5 3 3L7 20H4v-3z" />
+        <path d="m13 8 3-3a2.1 2.1 0 0 1 3 3l-3 3" />
+        <path d="M4 20h16" />
+      </symbol>
+      <symbol
+        id="i-heart"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"
+        />
+      </symbol>
+      <symbol
+        id="i-info"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v5m0-8h.01" />
+      </symbol>
+      <symbol
+        id="i-image-off"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="3" y="4" width="18" height="16" rx="3" />
+        <path d="m3 20 7-7 4 4 3-3 4 4" />
       </symbol>
     </svg>
 
-    <!-- Intro curtain -->
+    <!-- Intro -->
     <div id="intro" class="intro" aria-hidden="true">
-      <div class="intro-mark">
-        <span class="intro-glyph"></span>
-        <span class="intro-word">GovForms</span>
+      <div class="intro-inner">
+        <svg class="intro-logo" viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="introRing" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#4f8cff" />
+              <stop offset=".55" stop-color="#22d3ee" />
+              <stop offset="1" stop-color="#ffb547" />
+            </linearGradient>
+          </defs>
+          <circle class="il-ring" cx="60" cy="60" r="44" />
+          <rect class="il-sheet" x="42" y="34" width="36" height="46" rx="6" />
+          <circle class="il-head" cx="60" cy="50" r="7.5" />
+          <path class="il-body" d="M47 72c2-8 8-12 13-12s11 4 13 12v2H47z" />
+          <path class="il-sig" d="M46 88c7-9 10 7 17 0s10 6 15-2" />
+        </svg>
+        <div class="intro-word" aria-hidden="true">
+          <span>G</span><span>o</span><span>v</span><span class="hi">F</span
+          ><span class="hi">o</span><span class="hi">r</span
+          ><span class="hi">m</span><span class="hi">s</span>
+        </div>
+        <div class="intro-tag">Frame it. Fit it. Ship it.</div>
+        <div class="intro-bar"><i></i></div>
       </div>
-      <div class="intro-line"><i></i></div>
     </div>
 
     <div class="cursor-glow" aria-hidden="true"></div>
@@ -453,13 +714,23 @@
         </a>
         <nav class="nav-links" aria-label="Sections">
           <a href="#how" data-nav="how">How it works</a>
-          <a href="#templates" data-nav="templates">Templates</a>
+          <a href="#templates" data-nav="templates">Exams</a>
           <a href="#studio" data-nav="studio">Studio</a>
           <a href="#tools" data-nav="tools">Tools</a>
-          <a href="#merge" data-nav="merge">Merge PDF</a>
+          <a href="#news" data-nav="news">News</a>
           <a href="#faq" data-nav="faq">FAQ</a>
         </nav>
         <div class="nav-actions">
+          <button
+            class="icon-btn"
+            id="installBtn"
+            type="button"
+            hidden
+            aria-label="Install GovForms as an app"
+            title="Install app"
+          >
+            <svg class="ic"><use href="#i-install" /></svg>
+          </button>
           <button
             class="icon-btn"
             id="themeToggle"
@@ -470,11 +741,39 @@
             <svg class="ic ic-sun"><use href="#i-sun" /></svg>
             <svg class="ic ic-moon"><use href="#i-moon" /></svg>
           </button>
-          <a class="btn btn-primary btn-sm" href="#studio">Open Studio</a>
+          <a class="btn btn-primary btn-sm nav-cta" href="#studio"
+            >Open Studio</a
+          >
         </div>
       </div>
       <div class="scroll-progress" id="scrollProgress"></div>
     </header>
+
+    <!-- MOBILE DOCK -->
+    <nav class="dock" id="dock" aria-label="Quick navigation">
+      <a class="dock-item" href="#top" data-dock="hero">
+        <svg class="ic"><use href="#i-home" /></svg><span>Home</span>
+      </a>
+      <a class="dock-item" href="#templates" data-dock="templates">
+        <svg class="ic"><use href="#i-grid" /></svg><span>Exams</span>
+      </a>
+      <button
+        class="dock-cta"
+        id="dockCta"
+        type="button"
+        aria-label="Open the Studio"
+      >
+        <span class="dock-cta-ring"></span>
+        <svg class="ic" id="dockCtaIcon"><use href="#i-sparkle" /></svg>
+        <span class="dock-cta-label" id="dockCtaLabel">Studio</span>
+      </button>
+      <a class="dock-item" href="#tools" data-dock="tools">
+        <svg class="ic"><use href="#i-tools" /></svg><span>Tools</span>
+      </a>
+      <a class="dock-item" href="#news" data-dock="news">
+        <svg class="ic"><use href="#i-news" /></svg><span>News</span>
+      </a>
+    </nav>
 
     <main id="top">
       <!-- HERO -->
@@ -486,30 +785,30 @@
             100% on-device · nothing is uploaded
           </span>
           <h1 class="hero-title" data-split>
-            Format exam photos &amp; signatures <em>exactly right,</em> in
-            seconds.
+            Exam photos &amp; signatures, <em>exactly right,</em> in seconds.
           </h1>
           <p class="hero-sub" data-reveal="up" data-delay="0.35">
-            Drop a photo, drag it into frame, hit process. GovForms crops to the
-            exact pixel size, compresses under the KB limit and hands you a
-            ready-to-upload file for SSC, Railway, Bank, BPSC and more.
+            Pick your exam, drop a photo, drag it into frame. GovForms crops to
+            the exact pixels, squeezes under the KB limit and hands you a
+            ready-to-upload file for SSC, Railways, Banking, UPSC, Defence and
+            every major entrance test.
           </p>
           <div class="hero-cta" data-reveal="up" data-delay="0.5">
             <a class="btn btn-primary btn-lg magnetic" href="#studio">
               Open the Studio
               <svg class="ic"><use href="#i-arrow" /></svg>
             </a>
-            <a class="btn btn-ghost btn-lg magnetic" href="#how"
-              >See how it works</a
+            <a class="btn btn-ghost btn-lg magnetic" href="#templates"
+              >Browse exams</a
             >
           </div>
           <div class="hero-stats" data-reveal-stagger>
             <div class="stat">
               <div class="stat-num">
-                <span data-count="7" id="statTemplates">0</span
+                <span data-count="40" id="statTemplates">0</span
                 ><span class="stat-suffix">+</span>
               </div>
-              <div class="stat-label">exam templates</div>
+              <div class="stat-label">exam &amp; document templates</div>
             </div>
             <div class="stat">
               <div class="stat-num">
@@ -527,7 +826,7 @@
             </div>
           </div>
         </div>
-        <a class="scroll-cue" href="#how" aria-label="Scroll to how it works">
+        <a class="scroll-cue" href="#showcase" aria-label="Scroll down">
           <span></span>
         </a>
       </section>
@@ -535,24 +834,105 @@
       <!-- MARQUEE -->
       <div class="marquee" aria-hidden="true">
         <div class="marquee-track">
-          <span>SSC CGL</span><span>SSC CHSL</span><span>SSC MTS</span
-          ><span>SSC GD</span><span>RRB NTPC</span><span>RRB Group D</span
-          ><span>IBPS PO</span><span>SBI Clerk</span><span>BPSC</span
-          ><span>UPSC</span><span>Passport</span><span>PAN</span
-          ><span>Aadhaar</span><span>NEET</span><span>JEE</span>
-          <span>SSC CGL</span><span>SSC CHSL</span><span>SSC MTS</span
-          ><span>SSC GD</span><span>RRB NTPC</span><span>RRB Group D</span
-          ><span>IBPS PO</span><span>SBI Clerk</span><span>BPSC</span
-          ><span>UPSC</span><span>Passport</span><span>PAN</span
-          ><span>Aadhaar</span><span>NEET</span><span>JEE</span>
+          <span>SSC CGL</span><span>SSC CHSL</span><span>RRB NTPC</span
+          ><span>IBPS PO</span><span>SBI Clerk</span><span>UPSC CSE</span
+          ><span>NDA</span><span>Agniveer</span><span>NEET</span
+          ><span>JEE Main</span><span>CUET</span><span>GATE</span
+          ><span>CTET</span><span>BPSC</span><span>Passport</span
+          ><span>PAN</span> <span>SSC CGL</span><span>SSC CHSL</span
+          ><span>RRB NTPC</span><span>IBPS PO</span><span>SBI Clerk</span
+          ><span>UPSC CSE</span><span>NDA</span><span>Agniveer</span
+          ><span>NEET</span><span>JEE Main</span><span>CUET</span
+          ><span>GATE</span><span>CTET</span><span>BPSC</span
+          ><span>Passport</span><span>PAN</span>
         </div>
       </div>
+
+      <!-- SHOWCASE (photo bento) -->
+      <section class="section showcase" id="showcase">
+        <div class="container">
+          <div class="section-head" data-reveal="up">
+            <span class="kicker">01 — Every board, one workflow</span>
+            <h2>From the notice board to the upload button.</h2>
+            <p>
+              Seven categories, forty-plus templates. Tap a board to jump
+              straight to its exams.
+            </p>
+          </div>
+          <div class="bento" data-reveal-stagger>
+            <a class="tile tile-lg" href="#templates" data-cat="railway">
+              <img data-img="railway" alt="" loading="lazy" decoding="async" />
+              <span class="tile-body"
+                ><span class="tile-kicker">Railways</span
+                ><span class="tile-title"
+                  >RRB NTPC · Group D · ALP · RPF</span
+                ></span
+              >
+            </a>
+            <a class="tile" href="#templates" data-cat="banking">
+              <img data-img="banking" alt="" loading="lazy" decoding="async" />
+              <span class="tile-body"
+                ><span class="tile-kicker">Banking &amp; Insurance</span
+                ><span class="tile-title">IBPS · SBI · RBI · LIC</span></span
+              >
+            </a>
+            <a class="tile" href="#templates" data-cat="defence">
+              <img data-img="defence" alt="" loading="lazy" decoding="async" />
+              <span class="tile-body"
+                ><span class="tile-kicker">Defence &amp; Police</span
+                ><span class="tile-title">Agniveer · AFCAT · CAPF</span></span
+              >
+            </a>
+            <a class="tile tile-tall" href="#templates" data-cat="ssc">
+              <img data-img="ssc" alt="" loading="lazy" decoding="async" />
+              <span class="tile-body"
+                ><span class="tile-kicker">SSC</span
+                ><span class="tile-title"
+                  >CGL · CHSL · MTS · GD · CPO</span
+                ></span
+              >
+            </a>
+            <a class="tile" href="#templates" data-cat="upsc">
+              <img data-img="upsc" alt="" loading="lazy" decoding="async" />
+              <span class="tile-body"
+                ><span class="tile-kicker">UPSC &amp; State PSC</span
+                ><span class="tile-title"
+                  >CSE · NDA · CDS · BPSC · UPPSC</span
+                ></span
+              >
+            </a>
+            <a class="tile" href="#templates" data-cat="documents">
+              <img
+                data-img="documents"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="tile-body"
+                ><span class="tile-kicker">Passport, PAN &amp; Visa</span
+                ><span class="tile-title"
+                  >Passport Seva · DS-160 · Schengen</span
+                ></span
+              >
+            </a>
+            <a class="tile" href="#templates" data-cat="entrance">
+              <img data-img="entrance" alt="" loading="lazy" decoding="async" />
+              <span class="tile-body"
+                ><span class="tile-kicker">Entrance &amp; Teaching</span
+                ><span class="tile-title"
+                  >NEET · JEE · CUET · GATE · CTET</span
+                ></span
+              >
+            </a>
+          </div>
+        </div>
+      </section>
 
       <!-- HOW IT WORKS -->
       <section class="section how" id="how">
         <div class="container">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">01 — The pipeline</span>
+            <span class="kicker">02 — The pipeline</span>
             <h2>Three steps. No guesswork.</h2>
             <p>
               Every document goes through the same on-device pipeline: frame it,
@@ -595,7 +975,8 @@
                 <h3>Drop your files</h3>
                 <p>
                   Drag &amp; drop, click, or paste from the clipboard. Photos,
-                  signatures and ID scans in JPG, PNG or WEBP.
+                  signatures, thumb impressions and ID scans in JPG, PNG or
+                  WEBP.
                 </p>
                 <div class="step-vis vis-upload"><i></i><i></i><i></i></div>
               </article>
@@ -628,10 +1009,10 @@
                   PDF, or merge everything into a single document.
                 </p>
                 <div class="step-vis vis-download">
-                  <span class="vd-bar"><i></i></span>
-                  <span class="vd-chip">photo.jpg</span>
-                  <span class="vd-chip">sign.png</span>
-                  <span class="vd-chip">id.pdf</span>
+                  <span class="vd-bar"><i></i></span
+                  ><span class="vd-chip">photo.jpg</span
+                  ><span class="vd-chip">sign.png</span
+                  ><span class="vd-chip">id.pdf</span>
                 </div>
               </article>
             </div>
@@ -644,7 +1025,7 @@
         <div class="container anatomy-grid">
           <div class="anatomy-copy">
             <div class="section-head left" data-reveal="right">
-              <span class="kicker">02 — Anatomy of a compliant photo</span>
+              <span class="kicker">03 — Anatomy of a compliant photo</span>
               <h2>What the portal actually checks.</h2>
               <p>
                 Most rejections come down to four things: wrong pixel size, file
@@ -686,7 +1067,6 @@
                   <stop offset="1" stop-color="#22d3ee" stop-opacity=".15" />
                 </linearGradient>
               </defs>
-              <!-- Photo frame -->
               <rect
                 class="a-draw frame"
                 x="140"
@@ -704,8 +1084,6 @@
               <text class="a-text" x="334" y="118" text-anchor="end">
                 eye line
               </text>
-
-              <!-- width dimension -->
               <line class="a-draw dim" x1="140" y1="22" x2="340" y2="22" />
               <line class="a-draw tick" x1="140" y1="14" x2="140" y2="30" />
               <line class="a-draw tick" x1="340" y1="14" x2="340" y2="30" />
@@ -718,34 +1096,26 @@
               >
                 200 px
               </text>
-
-              <!-- height dimension -->
               <line class="a-draw dim" x1="362" y1="40" x2="362" y2="280" />
               <line class="a-draw tick" x1="354" y1="40" x2="370" y2="40" />
               <line class="a-draw tick" x1="354" y1="280" x2="370" y2="280" />
               <text class="a-text mono" x="380" y="164" id="anHeight">
                 240 px
               </text>
-
-              <!-- head bracket -->
               <line class="a-draw dim" x1="118" y1="70" x2="118" y2="194" />
               <line class="a-draw tick" x1="110" y1="70" x2="126" y2="70" />
               <line class="a-draw tick" x1="110" y1="194" x2="126" y2="194" />
               <text class="a-text" x="104" y="136" text-anchor="end">
                 70–80% face
               </text>
-
-              <!-- callouts -->
               <path class="a-draw leader" d="M 300 62 L 400 62 L 420 48" />
               <text class="a-text callout" x="426" y="52">
                 plain, light background
               </text>
               <path class="a-draw leader" d="M 340 250 L 400 250 L 420 262" />
-              <text class="a-text callout" x="426" y="266">
+              <text class="a-text callout" x="426" y="266" id="anKb">
                 ≤ 50 KB as JPEG
               </text>
-
-              <!-- signature strip -->
               <rect
                 class="a-draw frame sig"
                 x="140"
@@ -786,11 +1156,11 @@
         <div class="container stack-grid" id="stackPin">
           <div class="stack-copy">
             <div class="section-head left">
-              <span class="kicker">03 — One upload, four deliverables</span>
+              <span class="kicker">04 — One upload, four deliverables</span>
               <h2>Every layer, separated.</h2>
               <p>
                 Scroll to pull the stack apart. Each sheet is a file GovForms
-                can hand back to you, all built from the same three inputs.
+                can hand back to you, all built from the same inputs.
               </p>
             </div>
             <ol class="layer-list" id="layerList">
@@ -813,9 +1183,9 @@
               <div class="layer layer-photo" style="--i: 0">
                 <div class="layer-inner">
                   <span class="lp-frame"
-                    ><span class="lp-head"></span><span class="lp-body"></span
-                  ></span>
-                  <span class="layer-tag">photo_200x240.jpg</span>
+                    ><span class="lp-head"></span
+                    ><span class="lp-body"></span></span
+                  ><span class="layer-tag">photo_200x240.jpg</span>
                 </div>
               </div>
               <div class="layer layer-sign" style="--i: 1">
@@ -823,21 +1193,20 @@
                   <svg viewBox="0 0 240 80" class="lp-sig">
                     <path
                       d="M 20 52 C 40 10, 55 80, 75 42 S 105 10, 122 52 S 160 80, 178 32 S 210 30, 222 50"
-                    />
-                  </svg>
-                  <span class="layer-tag">signature_240x80.png</span>
+                    /></svg
+                  ><span class="layer-tag">signature_240x80.png</span>
                 </div>
               </div>
               <div class="layer layer-id" style="--i: 2">
                 <div class="layer-inner">
-                  <span class="lp-card"><i></i><i></i><i></i></span>
-                  <span class="layer-tag">id_document.pdf</span>
+                  <span class="lp-card"><i></i><i></i><i></i></span
+                  ><span class="layer-tag">id_document.pdf</span>
                 </div>
               </div>
               <div class="layer layer-pdf" style="--i: 3">
                 <div class="layer-inner">
-                  <span class="lp-pdf">PDF</span>
-                  <span class="layer-tag">merged.pdf</span>
+                  <span class="lp-pdf">PDF</span
+                  ><span class="layer-tag">merged.pdf</span>
                 </div>
               </div>
               <div class="stack-shadow"></div>
@@ -850,19 +1219,48 @@
       <section class="section templates" id="templates">
         <div class="container">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">04 — Templates</span>
-            <h2>Pick an exam. Dimensions are pre-filled.</h2>
+            <span class="kicker">05 — Exams &amp; documents</span>
+            <h2>Find your exam. Dimensions are pre-filled.</h2>
             <p>
-              Each card shows the photo and signature frames to scale. Click one
-              to load it into the Studio. Always cross-check with the official
-              notification — portals change their rules.
+              Search by name, board or abbreviation, or browse by category.
+              Click a card to load it into the Studio.
             </p>
           </div>
-          <div
-            class="template-grid"
-            id="templateGrid"
-            data-reveal-stagger
-          ></div>
+          <div class="finder" data-reveal="up" data-delay="0.1">
+            <label class="search" for="templateSearch">
+              <svg class="ic"><use href="#i-search" /></svg>
+              <input
+                type="search"
+                id="templateSearch"
+                placeholder="Search SSC, IBPS, NEET, passport…"
+                autocomplete="off"
+              />
+              <kbd>/</kbd>
+            </label>
+            <div
+              class="chips"
+              id="catChips"
+              role="tablist"
+              aria-label="Categories"
+            ></div>
+          </div>
+          <div class="finder-meta">
+            <span id="templateCount" class="mono"></span
+            ><span class="hint"
+              >Sizes follow official notifications — always re-check the current
+              one.</span
+            >
+          </div>
+          <div class="template-grid" id="templateGrid"></div>
+          <div class="finder-empty card" id="templateEmpty" hidden>
+            <svg class="ic"><use href="#i-search" /></svg>
+            <p>
+              No template matches that. Try a shorter word, or use
+              <button type="button" class="linklike" id="useCustomBtn">
+                Custom dimensions</button
+              >.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -870,7 +1268,7 @@
       <section class="section studio" id="studio">
         <div class="container">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">05 — The Studio</span>
+            <span class="kicker">06 — The Studio</span>
             <h2>Frame it. Fit it. Ship it.</h2>
             <p>
               Everything below runs on this device. Drag inside a frame to pan,
@@ -878,14 +1276,71 @@
             </p>
           </div>
 
+          <ol class="stepper" id="stepper" data-reveal="up" data-delay="0.1">
+            <li class="step" data-step="1">
+              <span class="step-dot">1</span
+              ><span class="step-text"
+                ><b>Template</b><small>Pick the exam</small></span
+              >
+            </li>
+            <li class="step" data-step="2">
+              <span class="step-dot">2</span
+              ><span class="step-text"
+                ><b>Upload</b><small>Photo &amp; signature</small></span
+              >
+            </li>
+            <li class="step" data-step="3">
+              <span class="step-dot">3</span
+              ><span class="step-text"
+                ><b>Adjust</b><small>Frame, format, KB</small></span
+              >
+            </li>
+            <li class="step" data-step="4">
+              <span class="step-dot">4</span
+              ><span class="step-text"
+                ><b>Export</b><small>Process &amp; download</small></span
+              >
+            </li>
+          </ol>
+
           <div class="studio-grid">
             <div class="studio-controls card" data-reveal="up">
-              <div class="field">
-                <label for="template">Exam / template</label>
-                <div class="select-wrap">
-                  <select id="template">
-                    <option value="">Choose a template…</option>
-                  </select>
+              <div class="field" id="templateField">
+                <label for="templateBtn">Exam / template</label>
+                <div class="picker">
+                  <button
+                    type="button"
+                    class="picker-btn"
+                    id="templateBtn"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  >
+                    <span class="picker-main"
+                      ><span id="templateBtnLabel">Choose a template…</span
+                      ><small id="templateBtnSub"
+                        >Search 40+ exams and documents</small
+                      ></span
+                    >
+                    <svg class="ic"><use href="#i-chevron" /></svg>
+                  </button>
+                  <div class="picker-pop" id="templatePop" hidden>
+                    <label class="search sm">
+                      <svg class="ic"><use href="#i-search" /></svg>
+                      <input
+                        type="search"
+                        id="templatePopSearch"
+                        placeholder="Type to filter…"
+                        autocomplete="off"
+                        aria-label="Filter templates"
+                      />
+                    </label>
+                    <div
+                      class="picker-list"
+                      id="templatePopList"
+                      role="listbox"
+                      aria-label="Templates"
+                    ></div>
+                  </div>
                 </div>
                 <div class="hint" id="templateHint">
                   Select a template to pre-fill dimensions and size limits.
@@ -895,8 +1350,8 @@
               <div id="customBox" class="custom-box" hidden>
                 <div class="row-4">
                   <div class="field">
-                    <label for="customW">Photo width</label>
-                    <input
+                    <label for="customW">Photo width</label
+                    ><input
                       type="number"
                       id="customW"
                       value="200"
@@ -905,8 +1360,8 @@
                     />
                   </div>
                   <div class="field">
-                    <label for="customH">Photo height</label>
-                    <input
+                    <label for="customH">Photo height</label
+                    ><input
                       type="number"
                       id="customH"
                       value="240"
@@ -915,8 +1370,8 @@
                     />
                   </div>
                   <div class="field">
-                    <label for="customSW">Sign width</label>
-                    <input
+                    <label for="customSW">Sign width</label
+                    ><input
                       type="number"
                       id="customSW"
                       value="240"
@@ -925,8 +1380,8 @@
                     />
                   </div>
                   <div class="field">
-                    <label for="customSH">Sign height</label>
-                    <input
+                    <label for="customSH">Sign height</label
+                    ><input
                       type="number"
                       id="customSH"
                       value="80"
@@ -938,333 +1393,15 @@
                 <div class="hint">Values are in pixels.</div>
               </div>
 
-              <!-- PHOTO -->
-              <div class="upload-block" data-slot="photo">
-                <div class="upload-head">
-                  <div class="upload-title">
-                    <svg class="ic"><use href="#i-photo" /></svg>
-                    <span>Photo</span>
-                  </div>
-                  <span class="badge req">required</span>
-                </div>
-                <div
-                  class="dropzone"
-                  id="photoDrop"
-                  tabindex="0"
-                  role="button"
-                  aria-label="Upload photo"
-                >
-                  <input type="file" id="photoFile" accept="image/*" hidden />
-                  <div class="dz-inner">
-                    <span class="dz-icon"
-                      ><svg class="ic"><use href="#i-upload" /></svg
-                    ></span>
-                    <span class="dz-text"
-                      ><b>Drop a photo</b> or click to browse</span
-                    >
-                    <span class="dz-sub"
-                      >JPG · PNG · WEBP · or paste with Ctrl/⌘+V</span
-                    >
-                  </div>
-                  <div class="dz-file" id="photoMeta" hidden>
-                    <img class="dz-thumb" id="photoThumb" alt="" />
-                    <div class="dz-meta">
-                      <span class="dz-name" id="photoName"></span>
-                      <span class="dz-size mono" id="photoSize"></span>
-                    </div>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      data-view="photo"
-                      title="Preview original"
-                      aria-label="Preview original photo"
-                    >
-                      <svg class="ic"><use href="#i-eye" /></svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn danger"
-                      data-clear="photo"
-                      title="Remove"
-                      aria-label="Remove photo"
-                    >
-                      <svg class="ic"><use href="#i-x" /></svg>
-                    </button>
-                  </div>
-                </div>
+              <!-- dynamic image slots (photo, signature, template extras) -->
+              <div id="slotsHost"></div>
 
-                <div class="editor" id="photoEditor" hidden>
-                  <div class="editor-stage">
-                    <div class="editor-frame">
-                      <canvas
-                        class="editor-canvas"
-                        id="photoEditorCanvas"
-                      ></canvas>
-                      <div class="editor-guides">
-                        <span class="g-head"></span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="editor-tools">
-                    <label class="range-label" for="photoZoom">Zoom</label>
-                    <input
-                      type="range"
-                      id="photoZoom"
-                      min="1"
-                      max="3"
-                      step="0.01"
-                      value="1"
-                    />
-                    <div class="seg" role="group" aria-label="Fit mode">
-                      <button
-                        type="button"
-                        class="seg-btn active"
-                        data-mode="fill"
-                        data-slot="photo"
-                      >
-                        Fill
-                      </button>
-                      <button
-                        type="button"
-                        class="seg-btn"
-                        data-mode="fit"
-                        data-slot="photo"
-                      >
-                        Fit
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      data-rotate="photo"
-                      title="Rotate 90°"
-                      aria-label="Rotate photo 90 degrees"
-                    >
-                      <svg class="ic"><use href="#i-rotate" /></svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      data-resetslot="photo"
-                      title="Reset"
-                      aria-label="Reset photo framing"
-                    >
-                      <svg class="ic"><use href="#i-reset" /></svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="row-3">
-                  <div class="field">
-                    <label for="photoFormat">Output format</label>
-                    <div class="select-wrap">
-                      <select id="photoFormat">
-                        <option value="jpeg">JPEG</option>
-                        <option value="jpg">JPG</option>
-                        <option value="png">PNG</option>
-                        <option value="pdf">PDF</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label for="photoMaxKb">Max size (KB)</label>
-                    <input
-                      type="number"
-                      id="photoMaxKb"
-                      min="2"
-                      max="10240"
-                      placeholder="auto"
-                    />
-                  </div>
-                  <div class="field">
-                    <label>Background</label>
-                    <div class="swatches" data-bg="photo">
-                      <button
-                        type="button"
-                        class="swatch active"
-                        data-color="#ffffff"
-                        style="--c: #ffffff"
-                        title="White"
-                        aria-label="White background"
-                      ></button>
-                      <button
-                        type="button"
-                        class="swatch"
-                        data-color="#dbeafe"
-                        style="--c: #dbeafe"
-                        title="Light blue"
-                        aria-label="Light blue background"
-                      ></button>
-                      <button
-                        type="button"
-                        class="swatch"
-                        data-color="#f1f5f9"
-                        style="--c: #f1f5f9"
-                        title="Light grey"
-                        aria-label="Light grey background"
-                      ></button>
-                      <label class="swatch custom" title="Custom colour"
-                        ><input type="color" id="photoBgCustom" value="#ffffff"
-                      /></label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- SIGNATURE -->
-              <div class="upload-block" data-slot="sign">
-                <div class="upload-head">
-                  <div class="upload-title">
-                    <svg class="ic"><use href="#i-pen" /></svg>
-                    <span>Signature</span>
-                  </div>
-                  <span class="badge req">required</span>
-                </div>
-                <div
-                  class="dropzone"
-                  id="signDrop"
-                  tabindex="0"
-                  role="button"
-                  aria-label="Upload signature"
-                >
-                  <input type="file" id="signFile" accept="image/*" hidden />
-                  <div class="dz-inner">
-                    <span class="dz-icon"
-                      ><svg class="ic"><use href="#i-upload" /></svg
-                    ></span>
-                    <span class="dz-text"
-                      ><b>Drop a signature</b> or click to browse</span
-                    >
-                    <span class="dz-sub"
-                      >Photograph it on white paper, we clean it up</span
-                    >
-                  </div>
-                  <div class="dz-file" id="signMeta" hidden>
-                    <img class="dz-thumb" id="signThumb" alt="" />
-                    <div class="dz-meta">
-                      <span class="dz-name" id="signName"></span>
-                      <span class="dz-size mono" id="signSize"></span>
-                    </div>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      data-view="sign"
-                      title="Preview original"
-                      aria-label="Preview original signature"
-                    >
-                      <svg class="ic"><use href="#i-eye" /></svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn danger"
-                      data-clear="sign"
-                      title="Remove"
-                      aria-label="Remove signature"
-                    >
-                      <svg class="ic"><use href="#i-x" /></svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="editor" id="signEditor" hidden>
-                  <div class="editor-stage">
-                    <div class="editor-frame">
-                      <canvas
-                        class="editor-canvas"
-                        id="signEditorCanvas"
-                      ></canvas>
-                    </div>
-                  </div>
-                  <div class="editor-tools">
-                    <label class="range-label" for="signZoom">Zoom</label>
-                    <input
-                      type="range"
-                      id="signZoom"
-                      min="1"
-                      max="3"
-                      step="0.01"
-                      value="1"
-                    />
-                    <div class="seg" role="group" aria-label="Fit mode">
-                      <button
-                        type="button"
-                        class="seg-btn"
-                        data-mode="fill"
-                        data-slot="sign"
-                      >
-                        Fill
-                      </button>
-                      <button
-                        type="button"
-                        class="seg-btn active"
-                        data-mode="fit"
-                        data-slot="sign"
-                      >
-                        Fit
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      data-rotate="sign"
-                      title="Rotate 90°"
-                      aria-label="Rotate signature 90 degrees"
-                    >
-                      <svg class="ic"><use href="#i-rotate" /></svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      data-resetslot="sign"
-                      title="Reset"
-                      aria-label="Reset signature framing"
-                    >
-                      <svg class="ic"><use href="#i-reset" /></svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="row-3">
-                  <div class="field">
-                    <label for="signFormat">Output format</label>
-                    <div class="select-wrap">
-                      <select id="signFormat">
-                        <option value="png">PNG</option>
-                        <option value="jpeg">JPEG</option>
-                        <option value="jpg">JPG</option>
-                        <option value="pdf">PDF</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label for="signMaxKb">Max size (KB)</label>
-                    <input
-                      type="number"
-                      id="signMaxKb"
-                      min="2"
-                      max="10240"
-                      placeholder="auto"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="signClean">Clean-up</label>
-                    <label class="toggle">
-                      <input type="checkbox" id="signClean" checked />
-                      <span class="toggle-track"
-                        ><span class="toggle-thumb"></span
-                      ></span>
-                      <span class="toggle-text">Remove paper background</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ID -->
+              <!-- ID document -->
               <div class="upload-block" data-slot="id">
                 <div class="upload-head">
                   <div class="upload-title">
-                    <svg class="ic"><use href="#i-id" /></svg>
-                    <span>ID document</span>
+                    <svg class="ic"><use href="#i-id" /></svg
+                    ><span>ID document</span>
                   </div>
                   <span class="badge">optional</span>
                 </div>
@@ -1287,8 +1424,8 @@
                   <div class="dz-file" id="idMeta" hidden>
                     <img class="dz-thumb" id="idThumb" alt="" />
                     <div class="dz-meta">
-                      <span class="dz-name" id="idName"></span>
-                      <span class="dz-size mono" id="idSize"></span>
+                      <span class="dz-name" id="idName"></span
+                      ><span class="dz-size mono" id="idSize"></span>
                     </div>
                     <button
                       type="button"
@@ -1321,8 +1458,8 @@
                     </div>
                   </div>
                   <div class="field">
-                    <label for="idMaxKb">Max size (KB, images only)</label>
-                    <input
+                    <label for="idMaxKb">Max size (KB, images only)</label
+                    ><input
                       type="number"
                       id="idMaxKb"
                       min="10"
@@ -1343,29 +1480,11 @@
                 <h3>Live output</h3>
                 <span class="mono" id="outputSpec">no template</span>
               </div>
-              <div class="output-frames">
-                <div class="frame" id="photoFrameBox">
-                  <div class="frame-stage">
-                    <canvas id="photoOut" width="200" height="240"></canvas>
-                  </div>
-                  <div class="frame-label">
-                    <span>Photo</span><span class="mono" id="photoDims">—</span>
-                  </div>
-                </div>
-                <div class="frame" id="signFrameBox">
-                  <div class="frame-stage">
-                    <canvas id="signOut" width="240" height="80"></canvas>
-                  </div>
-                  <div class="frame-label">
-                    <span>Signature</span
-                    ><span class="mono" id="signDims">—</span>
-                  </div>
-                </div>
-              </div>
+              <div class="output-frames" id="outputFrames"></div>
+              <div class="readiness" id="readiness"></div>
               <div class="actions">
                 <button id="processBtn" class="btn btn-primary" type="button">
-                  <svg class="ic"><use href="#i-sparkle" /></svg>
-                  Process
+                  <svg class="ic"><use href="#i-sparkle" /></svg>Process
                 </button>
                 <button
                   id="downloadBtn"
@@ -1373,21 +1492,22 @@
                   type="button"
                   disabled
                 >
-                  <svg class="ic"><use href="#i-download" /></svg>
-                  Download
+                  <svg class="ic"><use href="#i-download" /></svg>Download
                 </button>
               </div>
-              <label class="check">
-                <input type="checkbox" id="zipToggle" checked />
-                <span>Bundle everything as one ZIP</span>
-              </label>
+              <label class="check"
+                ><input type="checkbox" id="zipToggle" checked /><span
+                  >Bundle everything as one ZIP</span
+                ></label
+              >
               <div class="status" id="status" role="status" aria-live="polite">
                 Ready
               </div>
               <ul class="results" id="results" aria-live="polite"></ul>
               <div class="kbd-hint">
                 <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to process ·
-                <kbd>Ctrl</kbd> + <kbd>V</kbd> to paste an image
+                <kbd>Ctrl</kbd> + <kbd>V</kbd> to paste an image ·
+                <kbd>/</kbd> to search exams
               </div>
             </aside>
           </div>
@@ -1398,94 +1518,10 @@
       <section class="section preview-section" id="preview">
         <div class="container">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">06 — Before &amp; after</span>
+            <span class="kicker">07 — Before &amp; after</span>
             <h2>Watch the bytes fall.</h2>
           </div>
-          <div class="preview-grid" id="previewGrid">
-            <div class="preview-card card" id="photoPreview" hidden>
-              <div class="preview-compare">
-                <div class="pc-side">
-                  <span class="pc-tag">Original</span>
-                  <div class="pc-img" id="photoPreviewImage"></div>
-                </div>
-                <div class="pc-side">
-                  <span class="pc-tag accent">Processed</span>
-                  <div class="pc-img" id="photoPreviewAfter">
-                    <span class="pc-empty">Process to compare</span>
-                  </div>
-                </div>
-              </div>
-              <div class="preview-info">
-                <div class="preview-title">
-                  <svg class="ic"><use href="#i-photo" /></svg> Photo
-                </div>
-                <div class="size-row">
-                  <span class="size-label">Original</span
-                  ><span class="size-value mono" id="photoSizeBefore">—</span>
-                </div>
-                <div class="bar"><i id="photoBarBefore"></i></div>
-                <div class="size-row">
-                  <span class="size-label">After processing</span
-                  ><span class="size-value mono" id="photoSizeAfter">—</span>
-                </div>
-                <div class="bar"><i class="after" id="photoBarAfter"></i></div>
-                <div class="size-reduction" id="photoReduction" hidden></div>
-              </div>
-            </div>
-
-            <div class="preview-card card" id="signPreview" hidden>
-              <div class="preview-compare">
-                <div class="pc-side">
-                  <span class="pc-tag">Original</span>
-                  <div class="pc-img" id="signPreviewImage"></div>
-                </div>
-                <div class="pc-side">
-                  <span class="pc-tag accent">Processed</span>
-                  <div class="pc-img" id="signPreviewAfter">
-                    <span class="pc-empty">Process to compare</span>
-                  </div>
-                </div>
-              </div>
-              <div class="preview-info">
-                <div class="preview-title">
-                  <svg class="ic"><use href="#i-pen" /></svg> Signature
-                </div>
-                <div class="size-row">
-                  <span class="size-label">Original</span
-                  ><span class="size-value mono" id="signSizeBefore">—</span>
-                </div>
-                <div class="bar"><i id="signBarBefore"></i></div>
-                <div class="size-row">
-                  <span class="size-label">After processing</span
-                  ><span class="size-value mono" id="signSizeAfter">—</span>
-                </div>
-                <div class="bar"><i class="after" id="signBarAfter"></i></div>
-                <div class="size-reduction" id="signReduction" hidden></div>
-              </div>
-            </div>
-
-            <div class="preview-card card" id="idPreview" hidden>
-              <div class="preview-compare single">
-                <div class="pc-side">
-                  <span class="pc-tag">Document</span>
-                  <div class="pc-img" id="idPreviewImage"></div>
-                </div>
-              </div>
-              <div class="preview-info">
-                <div class="preview-title">
-                  <svg class="ic"><use href="#i-id" /></svg> ID document
-                </div>
-                <div class="size-row">
-                  <span class="size-label">File size</span
-                  ><span class="size-value mono" id="idSize2">—</span>
-                </div>
-                <div class="size-row">
-                  <span class="size-label">Output</span
-                  ><span class="size-value mono" id="idOutInfo">—</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div class="preview-grid" id="previewGrid"></div>
           <div
             class="preview-empty-state card"
             id="previewEmptyState"
@@ -1504,11 +1540,10 @@
       <section class="section tools" id="tools">
         <div class="container">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">07 — Extra tools</span>
+            <span class="kicker">08 — Extra tools</span>
             <h2>Print sheets and quick squeezes.</h2>
           </div>
           <div class="tools-grid">
-            <!-- Photo sheet -->
             <div class="card tool-card" data-reveal="up">
               <div class="tool-head">
                 <svg class="ic"><use href="#i-grid" /></svg>
@@ -1542,8 +1577,8 @@
                 <div class="dz-file" id="sheetMeta" hidden>
                   <img class="dz-thumb" id="sheetThumb" alt="" />
                   <div class="dz-meta">
-                    <span class="dz-name" id="sheetName"></span>
-                    <span class="dz-size mono" id="sheetSize"></span>
+                    <span class="dz-name" id="sheetName"></span
+                    ><span class="dz-size mono" id="sheetSize"></span>
                   </div>
                   <button
                     type="button"
@@ -1581,8 +1616,8 @@
                   </div>
                 </div>
                 <div class="field">
-                  <label for="sheetGap">Gap (mm)</label>
-                  <input
+                  <label for="sheetGap">Gap (mm)</label
+                  ><input
                     type="number"
                     id="sheetGap"
                     value="3"
@@ -1593,8 +1628,8 @@
               </div>
               <div class="row-3" id="sheetCustom" hidden>
                 <div class="field">
-                  <label for="sheetCW">Width (mm)</label>
-                  <input
+                  <label for="sheetCW">Width (mm)</label
+                  ><input
                     type="number"
                     id="sheetCW"
                     value="35"
@@ -1603,8 +1638,8 @@
                   />
                 </div>
                 <div class="field">
-                  <label for="sheetCH">Height (mm)</label>
-                  <input
+                  <label for="sheetCH">Height (mm)</label
+                  ><input
                     type="number"
                     id="sheetCH"
                     value="45"
@@ -1646,7 +1681,6 @@
               </div>
             </div>
 
-            <!-- Quick compress -->
             <div class="card tool-card" data-reveal="up" data-delay="0.15">
               <div class="tool-head">
                 <svg class="ic"><use href="#i-compress" /></svg>
@@ -1677,8 +1711,8 @@
                 <div class="dz-file" id="compMeta" hidden>
                   <img class="dz-thumb" id="compThumb" alt="" />
                   <div class="dz-meta">
-                    <span class="dz-name" id="compName"></span>
-                    <span class="dz-size mono" id="compSize"></span>
+                    <span class="dz-name" id="compName"></span
+                    ><span class="dz-size mono" id="compSize"></span>
                   </div>
                   <button
                     type="button"
@@ -1693,8 +1727,8 @@
               </div>
               <div class="row-3">
                 <div class="field">
-                  <label for="compKb">Target (KB)</label>
-                  <input
+                  <label for="compKb">Target (KB)</label
+                  ><input
                     type="number"
                     id="compKb"
                     value="100"
@@ -1703,8 +1737,8 @@
                   />
                 </div>
                 <div class="field">
-                  <label for="compMaxDim">Max side (px)</label>
-                  <input
+                  <label for="compMaxDim">Max side (px)</label
+                  ><input
                     type="number"
                     id="compMaxDim"
                     placeholder="keep"
@@ -1767,7 +1801,7 @@
       <section class="section merge-section" id="merge">
         <div class="container">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">08 — Merge</span>
+            <span class="kicker">09 — Merge</span>
             <h2>Many files, one PDF.</h2>
             <p>
               Drop images and PDFs, drag to reorder, and export a single
@@ -1818,8 +1852,8 @@
                   </div>
                 </div>
                 <div class="field">
-                  <label for="mergeName">File name</label>
-                  <input type="text" id="mergeName" value="merged" />
+                  <label for="mergeName">File name</label
+                  ><input type="text" id="mergeName" value="merged" />
                 </div>
               </div>
               <div class="merge-summary mono" id="mergeSummary"></div>
@@ -1831,8 +1865,7 @@
                 type="button"
                 disabled
               >
-                <svg class="ic"><use href="#i-pdf" /></svg>
-                Merge into one PDF
+                <svg class="ic"><use href="#i-pdf" /></svg>Merge into one PDF
               </button>
               <button
                 id="mergeClearBtn"
@@ -1850,11 +1883,98 @@
         </div>
       </section>
 
+      <!-- NEWS -->
+      <section class="section news" id="news">
+        <div class="container">
+          <div class="section-head" data-reveal="up">
+            <span class="kicker">10 — Vacancy &amp; exam news</span>
+            <h2>What's new on the notice boards.</h2>
+            <p>
+              Fresh headlines about notifications, admit cards, results and exam
+              dates, refreshed every day. Each story opens at its source.
+            </p>
+          </div>
+
+          <div class="news-hero card" data-reveal="up" data-delay="0.1">
+            <img
+              id="newsHeroImg"
+              data-img="news"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="news-hero-body">
+              <span class="pill live"><i></i>Auto-refreshed daily</span>
+              <h3>Sarkari notice board</h3>
+              <p id="newsMeta">Loading the latest headlines…</p>
+            </div>
+          </div>
+
+          <div class="finder" data-reveal="up" data-delay="0.15">
+            <label class="search" for="newsSearch">
+              <svg class="ic"><use href="#i-search" /></svg>
+              <input
+                type="search"
+                id="newsSearch"
+                placeholder="Filter headlines — e.g. admit card, result, CGL…"
+                autocomplete="off"
+              />
+            </label>
+            <div
+              class="chips"
+              id="newsChips"
+              role="tablist"
+              aria-label="News categories"
+            ></div>
+          </div>
+
+          <div class="news-layout">
+            <div>
+              <div class="news-grid" id="newsGrid" aria-live="polite"></div>
+              <div class="finder-empty card" id="newsEmpty" hidden>
+                <svg class="ic"><use href="#i-news" /></svg>
+                <p id="newsEmptyText">No headlines match that filter.</p>
+              </div>
+              <div class="news-more">
+                <button
+                  class="btn btn-ghost"
+                  id="newsMore"
+                  type="button"
+                  hidden
+                >
+                  Show more
+                </button>
+              </div>
+            </div>
+            <aside class="news-aside">
+              <div class="card aside-card" data-reveal="left">
+                <h4>
+                  <svg class="ic"><use href="#i-external" /></svg> Official
+                  notice boards
+                </h4>
+                <ul class="source-list" id="sourceList"></ul>
+              </div>
+              <div class="card aside-card" data-reveal="left" data-delay="0.1">
+                <h4>
+                  <svg class="ic"><use href="#i-calendar" /></svg> Typical
+                  yearly windows
+                </h4>
+                <ul class="calendar-list" id="calendarList"></ul>
+                <p class="hint">
+                  Indicative months based on recent cycles. Dates move — trust
+                  the notification.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
       <!-- FEATURES -->
       <section class="section features" id="features">
         <div class="container">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">09 — Why GovForms</span>
+            <span class="kicker">11 — Why GovForms</span>
             <h2>Built for the last five minutes before a deadline.</h2>
           </div>
           <div class="feature-grid" data-reveal-stagger>
@@ -1909,12 +2029,12 @@
             </div>
             <div class="feature-card card tilt">
               <div class="feature-icon">
-                <svg class="ic"><use href="#i-layers" /></svg>
+                <svg class="ic"><use href="#i-install" /></svg>
               </div>
-              <h3>All formats</h3>
+              <h3>Installable</h3>
               <p>
-                JPEG, PNG, WEBP in; JPEG, PNG, PDF or a merged PDF out. ZIP the
-                lot.
+                Add it to your home screen and it works offline, like a native
+                app.
               </p>
             </div>
           </div>
@@ -1925,7 +2045,7 @@
       <section class="section faq" id="faq">
         <div class="container narrow">
           <div class="section-head" data-reveal="up">
-            <span class="kicker">10 — FAQ</span>
+            <span class="kicker">12 — FAQ</span>
             <h2>Questions people ask at 11:58 pm.</h2>
           </div>
           <div class="faq-list" data-reveal-stagger>
@@ -1942,7 +2062,8 @@
               <div class="faq-body">
                 Templates carry the values most commonly quoted for each exam,
                 but portals do change them. Check the official notification and
-                use the Custom template if yours differs.
+                use the Custom template if yours differs. Cards marked “verify”
+                use generic passport-size defaults.
               </div>
             </details>
             <details class="faq-item">
@@ -1959,26 +2080,87 @@
               </summary>
               <div class="faq-body">
                 Sign on plain white paper, photograph it in good light, and keep
-                the "Remove paper background" toggle on. GovForms lifts the
+                the “Remove paper background” toggle on. GovForms lifts the
                 paper to pure white and deepens the ink.
               </div>
             </details>
             <details class="faq-item">
-              <summary>Can I make a printable passport photo sheet?</summary>
+              <summary>
+                What about thumb impressions and handwritten declarations?
+              </summary>
               <div class="faq-body">
-                Yes. The Passport photo sheet tool tiles any photo across A4,
-                A5, Letter or 4×6 paper at 300 DPI with cut guides, as JPEG or
-                PDF.
+                Bank exams such as IBPS, SBI and RBI ask for them. Pick that
+                template and the extra upload slots appear automatically with
+                the right sizes and KB limits.
               </div>
             </details>
             <details class="faq-item">
-              <summary>Does it work offline?</summary>
+              <summary>Can I install GovForms on my phone?</summary>
               <div class="faq-body">
-                Once the page and its libraries are cached by your browser, the
-                tools work without a connection. Reload while online at least
-                once first.
+                Yes. On Android and desktop Chrome, tap the install icon in the
+                top bar. On iPhone, open the Share menu in Safari and choose
+                “Add to Home Screen”. Once installed it works offline.
               </div>
             </details>
+            <details class="faq-item">
+              <summary>Where does the news come from?</summary>
+              <div class="faq-body">
+                Headlines are pulled daily from Google News (India edition)
+                using searches for each exam category, then de-duplicated. Every
+                story links to its original publisher. Always confirm dates on
+                the official notice board.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- CREDITS -->
+      <section class="section credits" id="credits">
+        <div class="container">
+          <div class="credits-card card" data-reveal="scale">
+            <div class="credits-media">
+              <img
+                id="creditsImg"
+                data-img="credits"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div class="credits-body">
+              <span class="kicker">Built with care</span>
+              <h2>
+                Made by Amit Kumar &amp;
+                <a
+                  href="https://portfolio-astro-two.vercel.app/"
+                  target="_blank"
+                  rel="noopener"
+                  >Ajay Kumar</a
+                >.
+              </h2>
+              <p>
+                GovForms started as a fix for a rejected upload the night before
+                a deadline. It is free, open and runs entirely on your device.
+              </p>
+              <div class="credits-links">
+                <a
+                  class="btn btn-primary"
+                  href="https://portfolio-astro-two.vercel.app/"
+                  target="_blank"
+                  rel="noopener"
+                  >Ajay's portfolio
+                  <svg class="ic"><use href="#i-external" /></svg
+                ></a>
+                <a
+                  class="btn btn-ghost"
+                  href="https://github.com/A-JA-Y/fast-form-gov-"
+                  target="_blank"
+                  rel="noopener"
+                  >Source on GitHub</a
+                >
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1994,15 +2176,32 @@
           <p class="footer-note">
             Transforming document formatting. Fast · Secure · Professional.
           </p>
+          <p class="footer-note">
+            Built by Amit Kumar &amp;
+            <a
+              href="https://portfolio-astro-two.vercel.app/"
+              target="_blank"
+              rel="noopener"
+              >Ajay Kumar</a
+            >.
+          </p>
         </div>
         <div class="footer-links">
+          <a href="#templates">Exams</a>
           <a href="#studio">Studio</a>
           <a href="#tools">Tools</a>
           <a href="#merge">Merge PDF</a>
+          <a href="#news">News</a>
           <a href="#faq">FAQ</a>
         </div>
         <div class="footer-fine">
-          © 2026 GovForms. All processing happens locally in your browser.
+          <p>
+            © 2026 GovForms. All processing happens locally in your browser.
+          </p>
+          <details class="photo-credits">
+            <summary>Photo credits</summary>
+            <ul id="photoCredits"></ul>
+          </details>
         </div>
       </div>
     </footer>
@@ -2039,6 +2238,45 @@
         </div>
         <div class="viewer-body" id="viewerBody">
           <p class="viewer-empty">Select a file to preview.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // safety net: never leave the intro curtain up if the animation layer fails to load
+      setTimeout(function () {
+        var i = document.getElementById("intro");
+        if (i && !i.classList.contains("done")) i.classList.add("done");
+      }, 6000);
+    </script>
+
+    <div
+      id="installSheet"
+      class="sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="installTitle"
+      hidden
+    >
+      <div class="sheet-card card">
+        <div class="sheet-grab"></div>
+        <h3 id="installTitle">Install GovForms</h3>
+        <p>Add it to your home screen for a full-screen, offline-ready app.</p>
+        <ol class="install-steps" id="installSteps">
+          <li>
+            Tap the <b>Share</b> button
+            <svg class="ic"><use href="#i-share" /></svg> in Safari.
+          </li>
+          <li>
+            Choose <b>Add to Home Screen</b>
+            <svg class="ic"><use href="#i-plus-square" /></svg>.
+          </li>
+          <li>Tap <b>Add</b>. GovForms appears next to your apps.</li>
+        </ol>
+        <div class="actions">
+          <button class="btn btn-primary" id="installSheetClose" type="button">
+            Got it
+          </button>
         </div>
       </div>
     </div>

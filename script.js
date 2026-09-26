@@ -1,5 +1,5 @@
 /* ============================================================
-   GovForms — application logic
+   GovForms — application logic (v2)
    All processing happens on-device with the Canvas API.
    ============================================================ */
 (() => {
@@ -9,6 +9,25 @@
   const $ = (id) => document.getElementById(id);
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const esc = (s) =>
+    String(s ?? "").replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+  const debounce = (fn, ms) => {
+    let t;
+    return (...a) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...a), ms);
+    };
+  };
 
   function formatFileSize(bytes) {
     if (!bytes) return "0 B";
@@ -19,6 +38,16 @@
       Math.floor(Math.log(bytes) / Math.log(k)),
     );
     return (bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1) + " " + sizes[i];
+  }
+  function timeAgo(iso) {
+    const d = new Date(iso);
+    const s = Math.max(0, (Date.now() - d.getTime()) / 1000);
+    if (s < 60) return "just now";
+    if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+    const days = Math.floor(s / 86400);
+    if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   }
 
   const toastsEl = $("toasts");
@@ -33,13 +62,11 @@
       setTimeout(() => t.remove(), 400);
     }, ms);
   }
-
   function setStatus(el, text, kind = "") {
     if (!el) return;
     el.textContent = text;
     el.className = "status" + (kind ? " " + kind : "");
   }
-
   function downloadFile(file, name) {
     const url = URL.createObjectURL(file);
     const a = document.createElement("a");
@@ -50,6 +77,15 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
+  const scrollToEl = (target, opts) => {
+    const el =
+      typeof target === "string" ? document.querySelector(target) : target;
+    if (!el) return;
+    if (window.GovFX && window.GovFX.scrollTo) window.GovFX.scrollTo(el, opts);
+    else el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const layoutChanged = () =>
+    document.dispatchEvent(new CustomEvent("govforms:layout"));
 
   const isImage = (f) =>
     !!f &&
@@ -58,7 +94,7 @@
   const isPdf = (f) =>
     !!f && (f.type === "application/pdf" || /\.pdf$/i.test(f.name));
   const kbOf = (input) => {
-    const v = parseFloat(input.value);
+    const v = parseFloat(input && input.value);
     return Number.isFinite(v) && v > 0 ? Math.round(v * 1024) : 0;
   };
   const placeholderThumb = (label) =>
@@ -67,101 +103,179 @@
       `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="12" fill="#1b2a4a"/><text x="40" y="46" font-family="monospace" font-size="16" font-weight="700" text-anchor="middle" fill="#22d3ee">${label}</text></svg>`,
     );
 
-  /* ---------- templates (single source of truth) ---------- */
-  const TEMPLATES = {
-    sscexams: {
-      name: "SSC CGL / CHSL / MTS / GD",
-      org: "Staff Selection Commission",
-      photo: { w: 200, h: 240, format: "jpeg", maxKb: 50, minKb: 20 },
-      sign: { w: 240, h: 80, format: "png", maxKb: 20, minKb: 10 },
+  /* ---------- catalog ---------- */
+  const CATALOG = window.GOVFORMS_CATALOG || {
+    categories: [],
+    templates: {
+      custom: {
+        name: "Custom",
+        org: "Enter your own pixel sizes",
+        category: "custom",
+        tags: [],
+        custom: true,
+      },
     },
-    railway: {
-      name: "Railway RRB (NTPC / Group D)",
-      org: "Railway Recruitment Boards",
-      photo: { w: 200, h: 230, format: "png" },
-      sign: { w: 150, h: 50, format: "png" },
-    },
-    ibps: {
-      name: "IBPS / SBI PO & Clerk",
-      org: "Banking recruitment",
-      photo: { w: 200, h: 230, format: "jpeg", maxKb: 50, minKb: 20 },
-      sign: { w: 140, h: 60, format: "jpeg", maxKb: 20, minKb: 10 },
-    },
-    bank: {
-      name: "Bank (generic)",
-      org: "Other bank portals",
-      photo: { w: 140, h: 160, format: "jpeg" },
-      sign: { w: 120, h: 60, format: "jpeg" },
-    },
-    bpsc: {
-      name: "BPSC",
-      org: "Bihar Public Service Commission",
-      photo: { w: 150, h: 180, format: "png" },
-      sign: { w: 120, h: 60, format: "png" },
-    },
-    passport: {
-      name: "Passport / Visa 2 × 2 in",
-      org: "600 × 600 px at 300 DPI",
-      photo: { w: 600, h: 600, format: "jpeg" },
-      sign: { w: 300, h: 100, format: "png" },
-    },
-    mm3545: {
-      name: "35 × 45 mm ID photo",
-      org: "413 × 531 px at 300 DPI",
-      photo: { w: 413, h: 531, format: "jpeg" },
-      sign: { w: 300, h: 100, format: "png" },
-    },
-    custom: { name: "Custom", org: "Enter your own pixel sizes", custom: true },
   };
+  const TEMPLATES = CATALOG.templates;
+  const CATEGORIES = CATALOG.categories;
+  const catName = (id) =>
+    (
+      CATEGORIES.find((c) => c.id === id) || {
+        name: id === "custom" ? "Custom" : id,
+      }
+    ).name;
+
+  /* ---------- imagery (Wikimedia Commons, credited in the footer) ---------- */
+  const IMAGES = {
+    railway: {
+      path: "6/6d/Dhubri_railway_station_platform_with_child_and_flag.jpg",
+      title: "Dhubri railway station platform",
+      author: "GeoEvan",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
+    banking: {
+      path: "f/f6/General_Post_Office_and_Reserve_Bank_of_India%2C_Kolkata%2C_India.jpg",
+      title: "General Post Office and Reserve Bank of India, Kolkata",
+      author: "Vyacheslav Argenberg",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
+    defence: {
+      path: "c/c6/Indian_Army_contingent_Republic_Day_parade_2023_Img1.jpg",
+      title: "Indian Army contingent, Republic Day parade 2023",
+      author: "Government of India",
+      license: "GODL-India",
+      licenseUrl:
+        "https://data.gov.in/sites/default/files/Gazette_Notification_OGDL.pdf",
+    },
+    ssc: {
+      path: "0/09/India_Gate_in_New_Delhi_03-2016.jpg",
+      title: "India Gate, New Delhi",
+      author: "A. Savin",
+      license: "FAL 1.3",
+      licenseUrl: "https://artlibre.org/licence/lal/en/",
+    },
+    upsc: {
+      path: "d/d7/North_Block%2C_Secretariat_Building%2C_New_Delhi_-_1.jpg",
+      title: "North Block, Secretariat Building, New Delhi",
+      author: "Ronakshah1990",
+      license: "CC BY-SA 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    },
+    documents: {
+      path: "9/9f/Indian_Passport_01.jpg",
+      title: "Indian passport",
+      author: "Gpkp",
+      license: "CC BY-SA 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    },
+    entrance: {
+      path: "6/63/Students_at_a_school_in_Bangalore%2C_India_learning_to_code_on_Progate.jpg",
+      title: "Students at a school in Bangalore",
+      author: "Nayakyashraj",
+      license: "CC BY-SA 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    },
+    news: {
+      path: "3/34/Rashtrapati_Bhavan-Delhi-India05.JPG",
+      title: "Rashtrapati Bhavan, New Delhi",
+      author: "Diego Delso",
+      license: "CC BY-SA 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    },
+    credits: {
+      path: "f/fd/India_Gate_Evening_New_Delhi.jpg",
+      title: "India Gate in the evening",
+      author: "Dipesh Patel",
+      license: "CC BY-SA 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
+    },
+  };
+  const wm = (path, w) =>
+    `https://upload.wikimedia.org/wikipedia/commons/thumb/${path}/${w}px-${path.split("/").pop()}`;
+  const wmPage = (path) =>
+    "https://commons.wikimedia.org/wiki/File:" +
+    decodeURIComponent(path.split("/").pop());
+
+  function applyImages() {
+    document.querySelectorAll("img[data-img]").forEach((img) => {
+      const meta = IMAGES[img.dataset.img];
+      if (!meta) return;
+      img.alt = meta.title;
+      img.sizes = "(max-width: 640px) 100vw, (max-width: 1080px) 60vw, 640px";
+      img.srcset = `${wm(meta.path, 500)} 500w, ${wm(meta.path, 1280)} 1280w`;
+      img.src = wm(meta.path, 1280);
+      const done = () => img.classList.add("loaded");
+      img.addEventListener("load", done, { once: true });
+      img.addEventListener(
+        "error",
+        () => {
+          img.remove();
+          const host = img.closest(".tile, .news-hero, .credits-media");
+          if (host) host.classList.add("no-img");
+        },
+        { once: true },
+      );
+      if (img.complete && img.naturalWidth) done();
+    });
+    const list = $("photoCredits");
+    if (list) {
+      list.innerHTML = Object.values(IMAGES)
+        .map(
+          (m) =>
+            `<li><a href="${wmPage(m.path)}" target="_blank" rel="noopener">${esc(m.title)}</a> — ${esc(m.author)}, <a href="${m.licenseUrl}" target="_blank" rel="noopener">${esc(m.license)}</a>, via Wikimedia Commons</li>`,
+        )
+        .join("");
+    }
+  }
 
   /* ---------- DOM ---------- */
-  const templateSel = $("template");
   const templateHint = $("templateHint");
+  const templateBtn = $("templateBtn");
+  const templateBtnLabel = $("templateBtnLabel");
+  const templateBtnSub = $("templateBtnSub");
+  const templatePop = $("templatePop");
+  const templatePopSearch = $("templatePopSearch");
+  const templatePopList = $("templatePopList");
   const customBox = $("customBox");
   const customW = $("customW");
   const customH = $("customH");
   const customSW = $("customSW");
   const customSH = $("customSH");
+  const slotsHost = $("slotsHost");
+  const outputFrames = $("outputFrames");
+  const readinessEl = $("readiness");
   const processBtn = $("processBtn");
   const downloadBtn = $("downloadBtn");
   const statusEl = $("status");
   const resultsEl = $("results");
   const zipToggle = $("zipToggle");
   const outputSpec = $("outputSpec");
-  const photoFormat = $("photoFormat");
-  const signFormat = $("signFormat");
   const idFormat = $("idFormat");
-  const photoMaxKb = $("photoMaxKb");
-  const signMaxKb = $("signMaxKb");
   const idMaxKb = $("idMaxKb");
-  const signClean = $("signClean");
+  const previewGrid = $("previewGrid");
   const previewEmptyState = $("previewEmptyState");
+  const stepper = $("stepper");
+  const dockCta = $("dockCta");
+  const dockCtaIcon = $("dockCtaIcon");
+  const dockCtaLabel = $("dockCtaLabel");
 
   /* ---------- state ---------- */
-  const defaultState = (mode) => ({ zoom: 1, px: 0, py: 0, rot: 0, mode });
-  const slots = {
-    photo: {
-      file: null,
-      bmp: null,
-      url: null,
-      state: defaultState("fill"),
-      bg: "#ffffff",
-    },
-    sign: {
-      file: null,
-      bmp: null,
-      url: null,
-      state: defaultState("fit"),
-      bg: "#ffffff",
-    },
-    id: { file: null, bmp: null, url: null },
+  const state = {
+    templateKey: "",
+    results: [],
+    downloaded: false,
+    lastSlot: null,
+    category: "all",
+    search: "",
   };
-  let results = []; // [{key, file, over, label}]
-  let lastSlot = null;
+  const defaultView = (mode) => ({ zoom: 1, px: 0, py: 0, rot: 0, mode });
+  const slots = new Map(); // key → slot record (photo, sign, extras)
+  const idSlot = { file: null, bmp: null, url: null };
 
   /* ---------- image loading & scaling ---------- */
   function halveUntil(src, w, h, targetScale) {
-    // progressive halving for high-quality downscales
     let cur = src,
       cw = w,
       ch = h;
@@ -217,39 +331,39 @@
   }
 
   /* ---------- framing geometry (resolution independent) ---------- */
-  function geom(iw, ih, W, H, state) {
-    const swap = state.rot % 180 !== 0;
+  function geom(iw, ih, W, H, view) {
+    const swap = view.rot % 180 !== 0;
     const rw = swap ? ih : iw;
     const rh = swap ? iw : ih;
     const base =
-      state.mode === "fill"
+      view.mode === "fill"
         ? Math.max(W / rw, H / rh)
         : Math.min(W / rw, H / rh);
-    const s = base * state.zoom;
+    const s = base * view.zoom;
     const dw = rw * s;
     const dh = rh * s;
     const overX = Math.max(0, dw - W);
     const overY = Math.max(0, dh - H);
-    const dx = (W - dw) / 2 + (state.px * overX) / 2;
-    const dy = (H - dh) / 2 + (state.py * overY) / 2;
+    const dx = (W - dw) / 2 + (view.px * overX) / 2;
+    const dy = (H - dh) / 2 + (view.py * overY) / 2;
     return { s, dw, dh, dx, dy, overX, overY };
   }
 
-  function renderFrame(canvas, bmp, W, H, state, bg) {
+  function renderFrame(canvas, bmp, W, H, view, bg) {
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = bg || "#ffffff";
     ctx.fillRect(0, 0, W, H);
     if (!bmp) return ctx;
-    const g = geom(bmp.w, bmp.h, W, H, state);
+    const g = geom(bmp.w, bmp.h, W, H, view);
     const stepped = halveUntil(bmp.src, bmp.w, bmp.h, g.s);
     const drawScale = g.s * (bmp.w / stepped.w);
     ctx.save();
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.translate(g.dx + g.dw / 2, g.dy + g.dh / 2);
-    ctx.rotate((state.rot * Math.PI) / 180);
+    ctx.rotate((view.rot * Math.PI) / 180);
     ctx.drawImage(
       stepped.src,
       (-stepped.w * drawScale) / 2,
@@ -261,18 +375,15 @@
     return ctx;
   }
 
-  /* ---------- signature clean-up ---------- */
+  /* ---------- signature / ink clean-up ---------- */
   function cleanSignature(canvas) {
     const ctx = canvas.getContext("2d");
     const { width: W, height: H } = canvas;
     const data = ctx.getImageData(0, 0, W, H);
     const p = data.data;
     const hist = new Uint32Array(256);
-    for (let i = 0; i < p.length; i += 4) {
-      const l = (p[i] * 299 + p[i + 1] * 587 + p[i + 2] * 114) / 1000;
-      hist[l | 0]++;
-    }
-    // paper brightness ≈ median luminance (paper dominates the area)
+    for (let i = 0; i < p.length; i += 4)
+      hist[((p[i] * 299 + p[i + 1] * 587 + p[i + 2] * 114) / 1000) | 0]++;
     let acc = 0,
       median = 200;
     const half = (W * H) / 2;
@@ -367,8 +478,9 @@
       compress: true,
     });
     pdf.addImage(imgData, "JPEG", 0, 0, mmW, mmH);
-    const blob = pdf.output("blob");
-    return new File([blob], filename, { type: "application/pdf" });
+    return new File([pdf.output("blob")], filename, {
+      type: "application/pdf",
+    });
   }
 
   /* ---------- dropzones ---------- */
@@ -418,7 +530,6 @@
       zone.style.setProperty("--my", e.clientY - r.top + "px");
     });
   }
-  // keep the browser from navigating away when a file is dropped outside a zone
   document.addEventListener("dragover", (e) => {
     if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files"))
       e.preventDefault();
@@ -427,20 +538,856 @@
     if (e.dataTransfer && e.dataTransfer.files.length) e.preventDefault();
   });
 
-  /* ---------- template select & cards ---------- */
-  function buildTemplateOptions() {
-    Object.entries(TEMPLATES).forEach(([key, t]) => {
-      const opt = document.createElement("option");
-      opt.value = key;
-      opt.textContent = t.custom
-        ? "Custom dimensions…"
-        : `${t.name} — ${t.photo.w}×${t.photo.h}`;
-      templateSel.appendChild(opt);
-    });
-    const stat = $("statTemplates");
-    if (stat) stat.dataset.count = String(Object.keys(TEMPLATES).length - 1);
+  /* ---------- template spec ---------- */
+  function currentSpec() {
+    const key = state.templateKey;
+    if (!key || !TEMPLATES[key]) return null;
+    if (TEMPLATES[key].custom) {
+      const w = clamp(parseInt(customW.value, 10) || 200, 16, 4000);
+      const h = clamp(parseInt(customH.value, 10) || 240, 16, 4000);
+      const sw = clamp(parseInt(customSW.value, 10) || 240, 16, 4000);
+      const sh = clamp(parseInt(customSH.value, 10) || 80, 16, 4000);
+      return {
+        key,
+        name: "Custom",
+        org: "",
+        category: "custom",
+        custom: true,
+        photo: { w, h, format: "jpeg" },
+        sign: { w: sw, h: sh, format: "png" },
+        extras: [],
+      };
+    }
+    return { key, ...TEMPLATES[key], extras: TEMPLATES[key].extras || [] };
   }
 
+  function slotDefs(spec) {
+    if (!spec) return [];
+    const defs = [
+      {
+        key: "photo",
+        name: "Photo",
+        icon: "i-photo",
+        kind: "photo",
+        required: true,
+        spec: spec.photo,
+        guide: true,
+        bg: true,
+        clean: false,
+        defaultMode: "fill",
+      },
+      {
+        key: "sign",
+        name: "Signature",
+        icon: "i-pen",
+        kind: "sign",
+        required: true,
+        spec: spec.sign,
+        guide: false,
+        bg: false,
+        clean: true,
+        defaultMode: "fit",
+        hint: "Photograph it on white paper — the paper is removed automatically.",
+      },
+    ];
+    (spec.extras || []).forEach((e) => {
+      defs.push({
+        key: e.key,
+        name: e.name,
+        icon:
+          e.key === "thumb"
+            ? "i-thumb"
+            : e.key === "postcard"
+              ? "i-photo"
+              : "i-pen",
+        kind: "extra",
+        required: false,
+        spec: {
+          w: e.w,
+          h: e.h,
+          format: e.format,
+          minKb: e.minKb,
+          maxKb: e.maxKb,
+        },
+        guide: !!e.guide,
+        bg: e.key === "postcard",
+        clean: e.key !== "postcard",
+        defaultMode: e.mode || "fit",
+        hint: e.hint,
+      });
+    });
+    return defs;
+  }
+
+  const describeSize = (s) =>
+    `${s.w}×${s.h} px · ${s.format.toUpperCase()}${s.maxKb ? ` · ${s.minKb ? s.minKb + "–" : "≤ "}${s.maxKb} KB` : ""}`;
+
+  function describeSpec(spec) {
+    if (!spec)
+      return "Select a template to pre-fill dimensions and size limits.";
+    const parts = [
+      `Photo ${describeSize(spec.photo)}`,
+      `Signature ${describeSize(spec.sign)}`,
+    ];
+    (spec.extras || []).forEach((e) =>
+      parts.push(`${e.name} ${describeSize(e)}`),
+    );
+    let text = parts.join("  —  ");
+    if (spec.note) text += `  ·  ${spec.note}`;
+    if (spec.verify)
+      text +=
+        "  ·  Generic passport-size defaults — verify with the notification.";
+    return text;
+  }
+
+  /* ---------- slot blocks (dynamic) ---------- */
+  function createSlot(def) {
+    const block = document.createElement("div");
+    block.className = "upload-block";
+    block.dataset.slot = def.key;
+    block.innerHTML = `
+      <div class="upload-head">
+        <div class="upload-title"><svg class="ic"><use href="#${def.icon}"/></svg><span data-title>${esc(def.name)}</span></div>
+        <span class="badge ${def.required ? "req" : ""}" data-badge>${def.required ? "required" : "optional"}</span>
+      </div>
+      ${def.hint ? `<p class="hint slot-hint" data-hint>${esc(def.hint)}</p>` : `<p class="hint slot-hint" data-hint hidden></p>`}
+      <div class="dropzone ${def.kind === "extra" ? "compact" : ""}" data-drop tabindex="0" role="button" aria-label="Upload ${esc(def.name)}">
+        <input type="file" data-input accept="image/*" hidden />
+        <div class="dz-inner">
+          <span class="dz-icon"><svg class="ic"><use href="#i-upload"/></svg></span>
+          <span class="dz-text"><b>Drop ${def.kind === "photo" ? "a photo" : def.kind === "sign" ? "a signature" : "an image"}</b> or click to browse</span>
+          <span class="dz-sub">JPG · PNG · WEBP · or paste with Ctrl/⌘+V</span>
+        </div>
+        <div class="dz-file" data-meta hidden>
+          <img class="dz-thumb" data-thumb alt="" />
+          <div class="dz-meta"><span class="dz-name" data-name></span><span class="dz-size mono" data-size></span></div>
+          <button type="button" class="icon-btn" data-view title="Preview original" aria-label="Preview original"><svg class="ic"><use href="#i-eye"/></svg></button>
+          <button type="button" class="icon-btn danger" data-clear title="Remove" aria-label="Remove"><svg class="ic"><use href="#i-x"/></svg></button>
+        </div>
+      </div>
+      <div class="editor" data-editor hidden>
+        <div class="editor-stage">
+          <div class="editor-frame">
+            <canvas class="editor-canvas" data-canvas></canvas>
+            ${def.guide ? '<div class="editor-guides"><span class="g-head"></span></div>' : ""}
+          </div>
+        </div>
+        <div class="editor-tools">
+          <label class="range-label">Zoom</label>
+          <input type="range" data-zoom min="1" max="3" step="0.01" value="1" aria-label="Zoom" />
+          <div class="seg" role="group" aria-label="Fit mode">
+            <button type="button" class="seg-btn ${def.defaultMode === "fill" ? "active" : ""}" data-mode="fill">Fill</button>
+            <button type="button" class="seg-btn ${def.defaultMode === "fit" ? "active" : ""}" data-mode="fit">Fit</button>
+          </div>
+          <button type="button" class="icon-btn" data-rotate title="Rotate 90°" aria-label="Rotate 90 degrees"><svg class="ic"><use href="#i-rotate"/></svg></button>
+          <button type="button" class="icon-btn" data-reset title="Reset" aria-label="Reset framing"><svg class="ic"><use href="#i-reset"/></svg></button>
+        </div>
+      </div>
+      <div class="row-3">
+        <div class="field">
+          <label>Output format</label>
+          <div class="select-wrap"><select data-format aria-label="Output format for ${esc(def.name)}">
+            <option value="jpeg">JPEG</option><option value="jpg">JPG</option><option value="png">PNG</option><option value="pdf">PDF</option>
+          </select></div>
+        </div>
+        <div class="field">
+          <label>Max size (KB)</label>
+          <input type="number" data-maxkb min="2" max="10240" placeholder="auto" aria-label="Maximum size in KB for ${esc(def.name)}" />
+        </div>
+        <div class="field">
+          ${
+            def.bg
+              ? `<label>Background</label>
+            <div class="swatches" data-swatches>
+              <button type="button" class="swatch active" data-color="#ffffff" style="--c:#ffffff" title="White" aria-label="White background"></button>
+              <button type="button" class="swatch" data-color="#dbeafe" style="--c:#dbeafe" title="Light blue" aria-label="Light blue background"></button>
+              <button type="button" class="swatch" data-color="#f1f5f9" style="--c:#f1f5f9" title="Light grey" aria-label="Light grey background"></button>
+              <label class="swatch custom" title="Custom colour"><input type="color" data-bgcustom value="#ffffff" aria-label="Custom background colour" /></label>
+            </div>`
+              : def.clean
+                ? `<label>Clean-up</label>
+            <label class="toggle"><input type="checkbox" data-clean checked /><span class="toggle-track"><span class="toggle-thumb"></span></span><span class="toggle-text">Remove paper background</span></label>`
+                : ""
+          }
+        </div>
+      </div>`;
+    const q = (sel) => block.querySelector(sel);
+    const frame = document.createElement("div");
+    frame.className = "frame empty";
+    frame.dataset.slot = def.key;
+    frame.innerHTML = `<div class="frame-stage"><canvas data-out width="${def.spec.w}" height="${def.spec.h}"></canvas></div><div class="frame-label"><span data-flabel>${esc(def.name)}</span><span class="mono" data-fdims></span></div>`;
+    const slot = {
+      key: def.key,
+      def,
+      file: null,
+      bmp: null,
+      url: null,
+      view: defaultView(def.defaultMode),
+      bg: "#ffffff",
+      cssW: 0,
+      cssH: 0,
+      el: {
+        block,
+        drop: q("[data-drop]"),
+        input: q("[data-input]"),
+        meta: q("[data-meta]"),
+        thumb: q("[data-thumb]"),
+        name: q("[data-name]"),
+        size: q("[data-size]"),
+        badge: q("[data-badge]"),
+        hint: q("[data-hint]"),
+        title: q("[data-title]"),
+        editor: q("[data-editor]"),
+        canvas: q("[data-canvas]"),
+        zoom: q("[data-zoom]"),
+        segs: Array.from(block.querySelectorAll(".seg-btn")),
+        fmt: q("[data-format]"),
+        maxKb: q("[data-maxkb]"),
+        clean: q("[data-clean]"),
+        swatches: q("[data-swatches]"),
+        bgCustom: q("[data-bgcustom]"),
+        frame,
+        out: frame.querySelector("[data-out]"),
+        fdims: frame.querySelector("[data-fdims]"),
+        flabel: frame.querySelector("[data-flabel]"),
+        preview: null,
+      },
+    };
+    if (def.clean) slot.el.out.getContext("2d", { willReadFrequently: true });
+    wireSlot(slot);
+    return slot;
+  }
+
+  function wireSlot(slot) {
+    const { el } = slot;
+    setupDropzone(el.drop, el.input, (files) => setSlotFile(slot, files[0]));
+    el.drop.addEventListener("pointerenter", () => (state.lastSlot = slot.key));
+    el.drop.addEventListener("focus", () => (state.lastSlot = slot.key));
+    el.block.querySelector("[data-view]").addEventListener("click", (e) => {
+      e.stopPropagation();
+      openViewer(slot.file, `${slot.def.name} (original)`);
+    });
+    el.block.querySelector("[data-clear]").addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearSlot(slot);
+    });
+    // editor interactions
+    let dragging = false,
+      lx = 0,
+      ly = 0;
+    el.canvas.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      lx = e.clientX;
+      ly = e.clientY;
+      el.canvas.setPointerCapture(e.pointerId);
+    });
+    el.canvas.addEventListener("pointermove", (e) => {
+      if (!dragging || !slot.bmp) return;
+      const g = geom(slot.bmp.w, slot.bmp.h, slot.cssW, slot.cssH, slot.view);
+      const dx = e.clientX - lx,
+        dy = e.clientY - ly;
+      lx = e.clientX;
+      ly = e.clientY;
+      if (g.overX > 0)
+        slot.view.px = clamp(slot.view.px + (dx * 2) / g.overX, -1, 1);
+      if (g.overY > 0)
+        slot.view.py = clamp(slot.view.py + (dy * 2) / g.overY, -1, 1);
+      drawEditor(slot);
+      renderLive();
+    });
+    const stop = () => (dragging = false);
+    el.canvas.addEventListener("pointerup", stop);
+    el.canvas.addEventListener("pointercancel", stop);
+    el.canvas.addEventListener(
+      "wheel",
+      (e) => {
+        if (!slot.bmp) return;
+        e.preventDefault();
+        slot.view.zoom = clamp(
+          slot.view.zoom - Math.sign(e.deltaY) * 0.08,
+          1,
+          3,
+        );
+        drawEditor(slot);
+        renderLive();
+      },
+      { passive: false },
+    );
+    el.zoom.addEventListener("input", () => {
+      slot.view.zoom = parseFloat(el.zoom.value);
+      drawEditor(slot);
+      renderLive();
+    });
+    el.block.querySelector("[data-rotate]").addEventListener("click", () => {
+      slot.view.rot = (slot.view.rot + 90) % 360;
+      drawEditor(slot);
+      renderLive();
+    });
+    el.block.querySelector("[data-reset]").addEventListener("click", () => {
+      slot.view = defaultView(slot.view.mode);
+      drawEditor(slot);
+      renderLive();
+    });
+    el.segs.forEach((btn) =>
+      btn.addEventListener("click", () => {
+        slot.view.mode = btn.dataset.mode;
+        slot.view.px = slot.view.py = 0;
+        el.segs.forEach((b) => b.classList.toggle("active", b === btn));
+        drawEditor(slot);
+        renderLive();
+      }),
+    );
+    if (el.swatches) {
+      el.swatches.querySelectorAll(".swatch[data-color]").forEach((sw) =>
+        sw.addEventListener("click", () => {
+          slot.bg = sw.dataset.color;
+          el.swatches
+            .querySelectorAll(".swatch")
+            .forEach((b) => b.classList.toggle("active", b === sw));
+          drawEditor(slot);
+          renderLive();
+        }),
+      );
+      el.bgCustom.addEventListener("input", () => {
+        slot.bg = el.bgCustom.value;
+        el.swatches
+          .querySelectorAll(".swatch")
+          .forEach((b) =>
+            b.classList.toggle("active", b === el.bgCustom.parentElement),
+          );
+        drawEditor(slot);
+        renderLive();
+      });
+    }
+    if (el.clean) el.clean.addEventListener("change", () => renderLive());
+    [el.fmt, el.maxKb].forEach((c) =>
+      c.addEventListener("change", invalidateResults),
+    );
+  }
+
+  function applySlotSpec(slot, def, resetOutputs) {
+    slot.def = def;
+    slot.el.title.textContent = def.name;
+    slot.el.flabel.textContent = def.name;
+    slot.el.badge.textContent = def.required ? "required" : "optional";
+    slot.el.badge.classList.toggle("req", def.required);
+    if (def.hint) {
+      slot.el.hint.textContent = def.hint;
+      slot.el.hint.hidden = false;
+    } else slot.el.hint.hidden = true;
+    if (resetOutputs) {
+      slot.el.fmt.value = def.spec.format || "jpeg";
+      slot.el.maxKb.value = def.spec.maxKb || "";
+      slot.el.maxKb.placeholder = def.spec.maxKb
+        ? String(def.spec.maxKb)
+        : "auto";
+      if (!slot.file) {
+        slot.view = defaultView(def.defaultMode);
+        slot.el.segs.forEach((b) =>
+          b.classList.toggle("active", b.dataset.mode === def.defaultMode),
+        );
+      }
+    }
+  }
+
+  function syncSlots(resetOutputs) {
+    const spec = currentSpec();
+    const defs = slotDefs(spec);
+    const keep = new Set(defs.map((d) => d.key));
+    // remove slots no longer in the template (never photo/sign)
+    for (const [key, slot] of Array.from(slots)) {
+      if (!keep.has(key)) {
+        if (slot.url) URL.revokeObjectURL(slot.url);
+        slot.el.block.remove();
+        slot.el.frame.remove();
+        if (slot.el.preview) slot.el.preview.remove();
+        slots.delete(key);
+      }
+    }
+    defs.forEach((def) => {
+      let slot = slots.get(def.key);
+      if (!slot) {
+        slot = createSlot(def);
+        slots.set(def.key, slot);
+        applySlotSpec(slot, def, true);
+      } else applySlotSpec(slot, def, resetOutputs);
+      slotsHost.appendChild(slot.el.block);
+      outputFrames.appendChild(slot.el.frame);
+    });
+    if (!defs.length) {
+      // no template yet: keep photo + signature visible so users can upload first
+      const base = slotDefs({
+        photo: { w: 200, h: 240, format: "jpeg" },
+        sign: { w: 240, h: 80, format: "png" },
+        extras: [],
+      });
+      base.forEach((def) => {
+        let slot = slots.get(def.key);
+        if (!slot) {
+          slot = createSlot(def);
+          slots.set(def.key, slot);
+          applySlotSpec(slot, def, true);
+        }
+        slotsHost.appendChild(slot.el.block);
+        outputFrames.appendChild(slot.el.frame);
+      });
+    }
+    slots.forEach((slot) => drawEditor(slot));
+    renderLive();
+  }
+
+  function slotSpecDims(slot) {
+    const spec = currentSpec();
+    if (spec) {
+      if (slot.key === "photo") return spec.photo;
+      if (slot.key === "sign") return spec.sign;
+      const e = (spec.extras || []).find((x) => x.key === slot.key);
+      if (e) return e;
+    }
+    return slot.def.spec;
+  }
+
+  function drawEditor(slot) {
+    const { el } = slot;
+    if (!slot.bmp) {
+      el.editor.hidden = true;
+      return;
+    }
+    el.editor.hidden = false;
+    const spec = slotSpecDims(slot);
+    const stage = el.canvas.closest(".editor-stage");
+    const maxW = Math.max(120, Math.min((stage.clientWidth || 360) - 20, 420));
+    const maxH = 320;
+    const aspect = spec.w / spec.h;
+    let cw = maxW,
+      ch = cw / aspect;
+    if (ch > maxH) {
+      ch = maxH;
+      cw = ch * aspect;
+    }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    el.canvas.style.width = cw + "px";
+    el.canvas.style.height = ch + "px";
+    renderFrame(
+      el.canvas,
+      slot.bmp,
+      Math.round(cw * dpr),
+      Math.round(ch * dpr),
+      slot.view,
+      slot.bg,
+    );
+    slot.cssW = cw;
+    slot.cssH = ch;
+    el.zoom.value = slot.view.zoom;
+    el.zoom.style.setProperty("--fill", ((slot.view.zoom - 1) / 2) * 100 + "%");
+  }
+
+  let liveTimer = null;
+  function renderLive() {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => {
+      const spec = currentSpec();
+      slots.forEach((slot) => {
+        const dims = slotSpecDims(slot);
+        const W = dims.w,
+          H = dims.h;
+        slot.el.fdims.textContent = `${W} × ${H} px`;
+        slot.el.frame.classList.toggle("empty", !slot.bmp);
+        if (!slot.bmp) {
+          slot.el.out.width = W;
+          slot.el.out.height = H;
+          const ctx = slot.el.out.getContext("2d");
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = `${Math.max(10, Math.min(W, H) / 9)}px Inter, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(slot.def.name.toLowerCase(), W / 2, H / 2);
+          return;
+        }
+        renderFrame(slot.el.out, slot.bmp, W, H, slot.view, slot.bg);
+        if (slot.el.clean && slot.el.clean.checked) cleanSignature(slot.el.out);
+      });
+      outputSpec.textContent = spec
+        ? `${spec.photo.w}×${spec.photo.h} / ${spec.sign.w}×${spec.sign.h}`
+        : "no template";
+      updateReadiness();
+    }, 40);
+  }
+
+  async function setSlotFile(slot, file) {
+    if (!file) return;
+    if (!isImage(file)) {
+      toast("Please choose an image file (JPG, PNG or WEBP).", "err");
+      return;
+    }
+    clearSlot(slot, true);
+    slot.file = file;
+    slot.el.name.textContent = file.name;
+    slot.el.size.textContent = formatFileSize(file.size);
+    slot.el.meta.hidden = false;
+    slot.el.drop.classList.add("has-file");
+    try {
+      const { bmp, url } = await loadBitmap(file);
+      if (slot.file !== file) return;
+      slot.bmp = bmp;
+      slot.url = url;
+      slot.el.thumb.src = url;
+    } catch (err) {
+      toast(err.message, "err");
+      clearSlot(slot);
+      return;
+    }
+    slot.view = defaultView(slot.view.mode);
+    drawEditor(slot);
+    renderLive();
+    updatePreviewCards();
+    invalidateResults();
+    layoutChanged();
+  }
+
+  function clearSlot(slot, silent = false) {
+    if (slot.key === "photo" && sheet.fromStudio) clearSheet();
+    if (slot.url) URL.revokeObjectURL(slot.url);
+    slot.file = null;
+    slot.bmp = null;
+    slot.url = null;
+    slot.el.meta.hidden = true;
+    slot.el.drop.classList.remove("has-file");
+    slot.el.thumb.removeAttribute("src");
+    slot.el.editor.hidden = true;
+    renderLive();
+    if (!silent) {
+      updatePreviewCards();
+      invalidateResults();
+      layoutChanged();
+    }
+  }
+
+  /* ---------- ID document slot ---------- */
+  const idEls = {
+    drop: $("idDrop"),
+    input: $("idFile"),
+    meta: $("idMeta"),
+    thumb: $("idThumb"),
+    name: $("idName"),
+    size: $("idSize"),
+  };
+  async function setIdFile(file) {
+    if (!file) return;
+    clearId(true);
+    idSlot.file = file;
+    idEls.name.textContent = file.name;
+    idEls.size.textContent = formatFileSize(file.size);
+    idEls.meta.hidden = false;
+    idEls.drop.classList.add("has-file");
+    if (isImage(file)) {
+      try {
+        const { bmp, url } = await loadBitmap(file);
+        if (idSlot.file !== file) return;
+        idSlot.bmp = bmp;
+        idSlot.url = url;
+        idEls.thumb.src = url;
+      } catch (err) {
+        toast(err.message, "err");
+        clearId();
+        return;
+      }
+    } else idEls.thumb.src = placeholderThumb(isPdf(file) ? "PDF" : "FILE");
+    updatePreviewCards();
+    invalidateResults();
+    layoutChanged();
+  }
+  function clearId(silent) {
+    if (idSlot.url) URL.revokeObjectURL(idSlot.url);
+    idSlot.file = idSlot.bmp = idSlot.url = null;
+    idEls.meta.hidden = true;
+    idEls.drop.classList.remove("has-file");
+    idEls.thumb.removeAttribute("src");
+    if (!silent) {
+      updatePreviewCards();
+      invalidateResults();
+      layoutChanged();
+    }
+  }
+  setupDropzone(idEls.drop, idEls.input, (files) => setIdFile(files[0]));
+  idEls.drop.addEventListener("pointerenter", () => (state.lastSlot = "id"));
+  document.querySelector('[data-view="id"]').addEventListener("click", (e) => {
+    e.stopPropagation();
+    openViewer(idSlot.file, "ID document");
+  });
+  document.querySelector('[data-clear="id"]').addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearId();
+  });
+
+  // clipboard paste → photo / signature / focused slot
+  document.addEventListener("paste", (e) => {
+    const items = Array.from((e.clipboardData && e.clipboardData.items) || []);
+    const item = items.find(
+      (i) => i.kind === "file" && i.type.startsWith("image/"),
+    );
+    if (!item) return;
+    const file = item.getAsFile();
+    if (!file) return;
+    let target = state.lastSlot && slots.get(state.lastSlot);
+    if (!target)
+      target = !slots.get("photo").file
+        ? slots.get("photo")
+        : slots.get("sign");
+    const named = new File(
+      [file],
+      `pasted-${Date.now()}.${file.type.split("/")[1] || "png"}`,
+      { type: file.type },
+    );
+    setSlotFile(target, named);
+    toast(`Pasted image into ${target.def.name}`, "ok");
+    scrollToEl("#studio");
+  });
+
+  /* ---------- readiness, stepper, dock ---------- */
+  function requiredMissing() {
+    const missing = [];
+    slots.forEach((slot) => {
+      if (slot.def.required && !slot.bmp) missing.push(slot.def.name);
+    });
+    return missing;
+  }
+  function updateReadiness() {
+    const spec = currentSpec();
+    const chips = [];
+    chips.push(
+      `<span class="chip ${spec ? "ok" : ""}">${spec ? "✓ " + esc(spec.name) : "no template"}</span>`,
+    );
+    slots.forEach((slot) => {
+      if (!slot.def.required && !slot.bmp) return;
+      chips.push(
+        `<span class="chip ${slot.bmp ? "ok" : ""}">${slot.bmp ? "✓ " : ""}${esc(slot.def.name)}${slot.bmp ? "" : " · missing"}</span>`,
+      );
+    });
+    if (idSlot.file) chips.push(`<span class="chip ok">✓ ID document</span>`);
+    readinessEl.innerHTML = chips.join("");
+    updateStepper();
+    updateDock();
+  }
+  function updateStepper() {
+    if (!stepper) return;
+    const hasTemplate = !!currentSpec();
+    const filesOk =
+      hasTemplate && requiredMissing().length === 0 && slots.size > 0;
+    const processed = state.results.length > 0;
+    const states = [
+      hasTemplate ? "done" : "active",
+      filesOk ? "done" : hasTemplate ? "active" : "",
+      processed ? "done" : filesOk ? "active" : "",
+      state.downloaded ? "done" : processed ? "active" : "",
+    ];
+    stepper.querySelectorAll(".step").forEach((li, i) => {
+      li.classList.toggle("done", states[i] === "done");
+      li.classList.toggle("active", states[i] === "active");
+    });
+  }
+  if (stepper)
+    stepper.addEventListener("click", (e) => {
+      const li = e.target.closest(".step");
+      if (!li) return;
+      const n = +li.dataset.step;
+      if (n === 1) {
+        scrollToEl("#templateField", { offset: -100 });
+        setTimeout(openPicker, 500);
+      } else if (n === 2) {
+        const first =
+          Array.from(slots.values()).find((s) => !s.bmp) || slots.get("photo");
+        scrollToEl(first.el.block, { offset: -90 });
+      } else if (n === 3) {
+        const first = Array.from(slots.values()).find((s) => s.bmp);
+        scrollToEl(first ? first.el.editor : slotsHost, { offset: -90 });
+      } else scrollToEl(".studio-output", { offset: -90 });
+    });
+
+  function dockState() {
+    if (state.results.length) return "download";
+    if (currentSpec() && requiredMissing().length === 0 && slots.size)
+      return "process";
+    return "studio";
+  }
+  function updateDock() {
+    if (!dockCta) return;
+    const s = dockState();
+    const map = {
+      download: ["#i-download", "Download"],
+      process: ["#i-sparkle", "Process"],
+      studio: ["#i-sparkle", "Studio"],
+    };
+    dockCtaIcon.querySelector("use").setAttribute("href", map[s][0]);
+    dockCtaLabel.textContent = map[s][1];
+    dockCta.setAttribute(
+      "aria-label",
+      s === "studio"
+        ? "Open the Studio"
+        : s === "process"
+          ? "Process files"
+          : "Download files",
+    );
+    dockCta.classList.toggle("pulse", s !== "studio");
+  }
+  if (dockCta)
+    dockCta.addEventListener("click", () => {
+      const s = dockState();
+      if (s === "download") downloadAll();
+      else if (s === "process") processAll();
+      else scrollToEl("#studio");
+    });
+
+  /* ---------- template selection ---------- */
+  function selectTemplate(key, opts = {}) {
+    if (!TEMPLATES[key]) key = "";
+    const changed = key !== state.templateKey;
+    state.templateKey = key;
+    const spec = currentSpec();
+    const t = key ? TEMPLATES[key] : null;
+    templateBtnLabel.textContent = t ? t.name : "Choose a template…";
+    templateBtnSub.textContent = t
+      ? t.custom
+        ? "Enter your own pixel sizes"
+        : `${catName(t.category)} · ${t.org}`
+      : "Search 40+ exams and documents";
+    templateHint.textContent = describeSpec(spec);
+    customBox.hidden = !(t && t.custom);
+    document
+      .querySelectorAll(".template-card")
+      .forEach((c) => c.classList.toggle("selected", c.dataset.key === key));
+    updateAnatomy(spec);
+    syncSlots(changed && !!t && !t.custom);
+    if (changed) invalidateResults();
+    try {
+      localStorage.setItem("govforms-template", key);
+    } catch (e) {}
+    renderPickerList(templatePopSearch.value);
+    if (opts.toast && t) toast(`${t.name} loaded into the Studio`, "ok");
+    if (opts.scroll) scrollToEl("#studio");
+    layoutChanged();
+  }
+
+  function updateAnatomy(spec) {
+    const p = spec ? spec.photo : { w: 200, h: 240, maxKb: 50, format: "jpeg" };
+    const s = spec ? spec.sign : { w: 240, h: 80 };
+    const set = (id, v) => {
+      const el = $(id);
+      if (el) el.textContent = v;
+    };
+    set("anWidth", `${p.w} px`);
+    set("anHeight", `${p.h} px`);
+    set("anSig", `${s.w} × ${s.h} px`);
+    set(
+      "anKb",
+      p.maxKb
+        ? `≤ ${p.maxKb} KB as ${(p.format || "jpeg").toUpperCase()}`
+        : `${(p.format || "jpeg").toUpperCase()}, no fixed limit`,
+    );
+  }
+  [customW, customH, customSW, customSH].forEach((el) =>
+    el.addEventListener("input", () => {
+      templateHint.textContent = describeSpec(currentSpec());
+      updateAnatomy(currentSpec());
+      syncSlots(false);
+      invalidateResults();
+    }),
+  );
+
+  /* ---------- picker (searchable combobox) ---------- */
+  let pickerOpen = false,
+    pickerFocus = -1;
+  function pickerItems() {
+    return Array.from(templatePopList.querySelectorAll(".picker-item"));
+  }
+  function renderPickerList(filter = "") {
+    const f = filter.trim().toLowerCase();
+    const groups = [...CATEGORIES.map((c) => c.id), "custom"];
+    let html = "";
+    let any = false;
+    groups.forEach((cat) => {
+      const entries = Object.entries(TEMPLATES).filter(
+        ([, t]) => (t.category || "custom") === cat && matches(t, f),
+      );
+      if (!entries.length) return;
+      any = true;
+      html += `<div class="picker-group">${esc(catName(cat))}</div>`;
+      entries.forEach(([key, t]) => {
+        const dims = t.custom
+          ? "any size"
+          : `${t.photo.w}×${t.photo.h} · ${t.sign.w}×${t.sign.h}`;
+        html += `<button type="button" class="picker-item ${key === state.templateKey ? "selected" : ""}" role="option" data-key="${key}" aria-selected="${key === state.templateKey}"><span>${esc(t.name)}</span><small>${dims}</small></button>`;
+      });
+    });
+    templatePopList.innerHTML = any
+      ? html
+      : '<div class="picker-empty">No matches. Try “SSC”, “bank” or “passport”.</div>';
+    pickerFocus = -1;
+  }
+  function matches(t, f) {
+    if (!f) return true;
+    const hay = [t.name, t.org, catName(t.category), ...(t.tags || [])]
+      .join(" ")
+      .toLowerCase();
+    return f.split(/\s+/).every((w) => hay.includes(w));
+  }
+  function openPicker() {
+    if (pickerOpen) return;
+    pickerOpen = true;
+    templatePop.hidden = false;
+    templateBtn.setAttribute("aria-expanded", "true");
+    renderPickerList(templatePopSearch.value);
+    setTimeout(() => templatePopSearch.focus(), 30);
+  }
+  function closePicker() {
+    if (!pickerOpen) return;
+    pickerOpen = false;
+    templatePop.hidden = true;
+    templateBtn.setAttribute("aria-expanded", "false");
+  }
+  templateBtn.addEventListener("click", () =>
+    pickerOpen ? closePicker() : openPicker(),
+  );
+  templatePopSearch.addEventListener("input", () =>
+    renderPickerList(templatePopSearch.value),
+  );
+  templatePopList.addEventListener("click", (e) => {
+    const item = e.target.closest(".picker-item");
+    if (!item) return;
+    selectTemplate(item.dataset.key, { toast: false });
+    closePicker();
+    templateBtn.focus();
+  });
+  templatePop.addEventListener("keydown", (e) => {
+    const items = pickerItems();
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!items.length) return;
+      pickerFocus =
+        (pickerFocus + (e.key === "ArrowDown" ? 1 : -1) + items.length) %
+        items.length;
+      items.forEach((it, i) => it.classList.toggle("focus", i === pickerFocus));
+      items[pickerFocus].scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const target = pickerFocus >= 0 ? items[pickerFocus] : items[0];
+      if (target) {
+        selectTemplate(target.dataset.key);
+        closePicker();
+        templateBtn.focus();
+      }
+    } else if (e.key === "Escape") {
+      closePicker();
+      templateBtn.focus();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (pickerOpen && !e.target.closest(".picker")) closePicker();
+  });
+
+  /* ---------- gallery (templates section) ---------- */
   function templateCardSVG(t) {
     const p = t.photo,
       s = t.sign;
@@ -478,7 +1425,7 @@
     </svg>`;
   }
 
-  function buildTemplateCards() {
+  function buildGallery() {
     const grid = $("templateGrid");
     if (!grid) return;
     Object.entries(TEMPLATES).forEach(([key, t]) => {
@@ -486,14 +1433,22 @@
       card.type = "button";
       card.className = "template-card card";
       card.dataset.key = key;
+      card.dataset.cat = t.category || "custom";
+      card.dataset.search = [
+        t.name,
+        t.org,
+        catName(t.category),
+        ...(t.tags || []),
+      ]
+        .join(" ")
+        .toLowerCase();
       if (t.custom) {
         card.innerHTML = `
-          <div class="tc-head"><div><div class="tc-name">${t.name}</div><div class="tc-org">${t.org}</div></div></div>
+          <div class="tc-head"><div><div class="tc-name">${esc(t.name)}</div><div class="tc-org">${esc(t.org)}</div></div><span class="tc-cat">any</span></div>
           <svg class="tc-svg" viewBox="0 0 240 150" aria-hidden="true">
             <rect class="r" x="40" y="20" width="70" height="90" rx="4" stroke-dasharray="6 5"/>
             <rect class="r s" x="130" y="50" width="80" height="30" rx="3" stroke-dasharray="6 5"/>
-            <text x="75" y="135" text-anchor="middle">W × H</text>
-            <text x="170" y="105" text-anchor="middle">W × H</text>
+            <text x="75" y="135" text-anchor="middle">W × H</text><text x="170" y="105" text-anchor="middle">W × H</text>
           </svg>
           <div class="tc-meta"><span class="chip accent">any size</span><span class="chip">any format</span></div>`;
       } else {
@@ -503,446 +1458,130 @@
         ];
         if (t.photo.maxKb)
           chips.push(`<span class="chip">≤ ${t.photo.maxKb} KB</span>`);
+        if (t.extras && t.extras.length)
+          chips.push(`<span class="chip">+${t.extras.length} extra</span>`);
+        if (t.verify) chips.push(`<span class="chip warn">verify sizes</span>`);
         card.innerHTML = `
-          <div class="tc-head"><div><div class="tc-name">${t.name}</div><div class="tc-org">${t.org}</div></div></div>
+          <div class="tc-head"><div><div class="tc-name">${esc(t.name)}</div><div class="tc-org">${esc(t.org)}</div></div><span class="tc-cat">${esc(catName(t.category))}</span></div>
           ${templateCardSVG(t)}
           <div class="tc-meta">${chips.join("")}</div>`;
       }
-      card.addEventListener("click", () => {
-        templateSel.value = key;
-        templateSel.dispatchEvent(new Event("change"));
-        document
-          .getElementById("studio")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        toast(`${t.name} loaded into the Studio`, "ok");
-      });
+      card.addEventListener("click", () =>
+        selectTemplate(key, { scroll: true, toast: true }),
+      );
       grid.appendChild(card);
     });
+    const stat = $("statTemplates");
+    if (stat) stat.dataset.count = String(Object.keys(TEMPLATES).length - 1);
+    buildChips();
+    filterGallery();
   }
 
-  function markSelectedCard() {
-    document.querySelectorAll(".template-card").forEach((c) => {
-      c.classList.toggle("selected", c.dataset.key === templateSel.value);
+  function buildChips() {
+    const host = $("catChips");
+    if (!host) return;
+    const counts = {};
+    Object.values(TEMPLATES).forEach((t) => {
+      const c = t.category || "custom";
+      counts[c] = (counts[c] || 0) + 1;
+    });
+    const total = Object.keys(TEMPLATES).length;
+    const chips = [
+      { id: "all", name: "All", n: total },
+      ...CATEGORIES.map((c) => ({
+        id: c.id,
+        name: c.name,
+        n: counts[c.id] || 0,
+      })),
+    ];
+    host.innerHTML = chips
+      .map(
+        (c) =>
+          `<button type="button" class="chip-btn ${c.id === state.category ? "active" : ""}" role="tab" data-cat="${c.id}" aria-selected="${c.id === state.category}">${esc(c.name)} <span class="n">${c.n}</span></button>`,
+      )
+      .join("");
+    host.addEventListener("click", (e) => {
+      const b = e.target.closest(".chip-btn");
+      if (!b) return;
+      setCategory(b.dataset.cat);
     });
   }
-
-  function currentSpec() {
-    const key = templateSel.value;
-    if (!key) return null;
-    if (key === "custom") {
-      const w = clamp(parseInt(customW.value, 10) || 200, 16, 4000);
-      const h = clamp(parseInt(customH.value, 10) || 240, 16, 4000);
-      const sw = clamp(parseInt(customSW.value, 10) || 240, 16, 4000);
-      const sh = clamp(parseInt(customSH.value, 10) || 80, 16, 4000);
-      return {
-        key,
-        name: "Custom",
-        photo: { w, h, format: "jpeg" },
-        sign: { w: sw, h: sh, format: "png" },
-      };
-    }
-    return { key, ...TEMPLATES[key] };
+  function setCategory(cat) {
+    state.category = cat;
+    document.querySelectorAll("#catChips .chip-btn").forEach((b) => {
+      const on = b.dataset.cat === cat;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on);
+    });
+    filterGallery();
   }
-
-  function describeSpec(spec) {
-    if (!spec)
-      return "Select a template to pre-fill dimensions and size limits.";
-    const p = spec.photo,
-      s = spec.sign;
-    const pk = p.maxKb ? ` · ≤ ${p.maxKb} KB` : "";
-    const sk = s.maxKb ? ` · ≤ ${s.maxKb} KB` : "";
-    return `Photo ${p.w}×${p.h} px · ${p.format.toUpperCase()}${pk}  —  Signature ${s.w}×${s.h} px · ${s.format.toUpperCase()}${sk}`;
+  function filterGallery() {
+    const f = state.search.trim().toLowerCase();
+    let shown = 0;
+    document.querySelectorAll(".template-card").forEach((card) => {
+      const catOk =
+        state.category === "all" ||
+        card.dataset.cat === state.category ||
+        (card.dataset.cat === "custom" && !f);
+      const words = f.split(/\s+/).filter(Boolean);
+      const searchOk = words.every((w) => card.dataset.search.includes(w));
+      const show = catOk && searchOk;
+      card.classList.toggle("hidden-by-filter", !show);
+      if (show) shown++;
+    });
+    const count = $("templateCount");
+    if (count) count.textContent = `${shown} template${shown === 1 ? "" : "s"}`;
+    const empty = $("templateEmpty");
+    if (empty) empty.hidden = shown > 0;
+    layoutChanged();
   }
-
-  function applyTemplate(fromUser = true) {
-    const key = templateSel.value;
-    customBox.hidden = key !== "custom";
-    const spec = currentSpec();
-    templateHint.textContent = describeSpec(spec);
-    markSelectedCard();
-    if (spec && key !== "custom" && fromUser) {
-      photoFormat.value = spec.photo.format;
-      signFormat.value = spec.sign.format;
-      photoMaxKb.value = spec.photo.maxKb || "";
-      signMaxKb.value = spec.sign.maxKb || "";
-      photoMaxKb.placeholder = spec.photo.maxKb
-        ? String(spec.photo.maxKb)
-        : "auto";
-      signMaxKb.placeholder = spec.sign.maxKb
-        ? String(spec.sign.maxKb)
-        : "auto";
-    }
-    try {
-      localStorage.setItem("govforms-template", key);
-    } catch (e) {}
-    updateAnatomy(spec);
-    outputSpec.textContent = spec
-      ? `${spec.photo.w}×${spec.photo.h} / ${spec.sign.w}×${spec.sign.h}`
-      : "no template";
-    drawEditor("photo");
-    drawEditor("sign");
-    renderLive();
-    document.dispatchEvent(new CustomEvent("govforms:layout"));
-  }
-
-  function updateAnatomy(spec) {
-    const p = spec ? spec.photo : { w: 200, h: 240 };
-    const s = spec ? spec.sign : { w: 240, h: 80 };
-    const w = $("anWidth"),
-      h = $("anHeight"),
-      sg = $("anSig");
-    if (w) w.textContent = `${p.w} px`;
-    if (h) h.textContent = `${p.h} px`;
-    if (sg) sg.textContent = `${s.w} × ${s.h} px`;
-  }
-
-  templateSel.addEventListener("change", () => applyTemplate(true));
-  [customW, customH, customSW, customSH].forEach((el) =>
-    el.addEventListener("input", () => applyTemplate(false)),
-  );
-
-  /* ---------- slot editors ---------- */
-  const editors = {
-    photo: {
-      wrap: $("photoEditor"),
-      canvas: $("photoEditorCanvas"),
-      zoom: $("photoZoom"),
-      out: $("photoOut"),
-      dims: $("photoDims"),
-      frame: $("photoFrameBox"),
-    },
-    sign: {
-      wrap: $("signEditor"),
-      canvas: $("signEditorCanvas"),
-      zoom: $("signZoom"),
-      out: $("signOut"),
-      dims: $("signDims"),
-      frame: $("signFrameBox"),
-    },
-  };
-
-  function specFor(slot) {
-    const spec = currentSpec();
-    if (!spec) return null;
-    return slot === "photo" ? spec.photo : spec.sign;
-  }
-
-  function drawEditor(slot) {
-    const ed = editors[slot];
-    const s = slots[slot];
-    const spec = specFor(slot);
-    if (!ed || !s.bmp || !spec) {
-      if (ed) ed.wrap.hidden = true;
-      return;
-    }
-    ed.wrap.hidden = false;
-    const stage = ed.canvas.closest(".editor-stage");
-    const maxW = Math.max(120, Math.min(stage.clientWidth - 20, 420));
-    const maxH = 320;
-    const aspect = spec.w / spec.h;
-    let cw = maxW,
-      ch = cw / aspect;
-    if (ch > maxH) {
-      ch = maxH;
-      cw = ch * aspect;
-    }
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    ed.canvas.style.width = cw + "px";
-    ed.canvas.style.height = ch + "px";
-    renderFrame(
-      ed.canvas,
-      s.bmp,
-      Math.round(cw * dpr),
-      Math.round(ch * dpr),
-      s.state,
-      s.bg,
+  const templateSearch = $("templateSearch");
+  if (templateSearch)
+    templateSearch.addEventListener(
+      "input",
+      debounce(() => {
+        state.search = templateSearch.value;
+        filterGallery();
+      }, 80),
     );
-    ed.cssW = cw;
-    ed.cssH = ch;
-    ed.zoom.value = s.state.zoom;
-    ed.zoom.style.setProperty("--fill", ((s.state.zoom - 1) / 2) * 100 + "%");
-  }
-
-  let liveTimer = null;
-  function renderLive() {
-    clearTimeout(liveTimer);
-    liveTimer = setTimeout(() => {
-      ["photo", "sign"].forEach((slot) => {
-        const ed = editors[slot];
-        const s = slots[slot];
-        const spec = specFor(slot);
-        const W = spec ? spec.w : slot === "photo" ? 200 : 240;
-        const H = spec ? spec.h : slot === "photo" ? 240 : 80;
-        ed.dims.textContent = `${W} × ${H} px`;
-        ed.frame.classList.toggle("empty", !s.bmp || !spec);
-        if (!s.bmp || !spec) {
-          ed.out.width = W;
-          ed.out.height = H;
-          const ctx = ed.out.getContext("2d");
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(0, 0, W, H);
-          ctx.fillStyle = "#94a3b8";
-          ctx.font = `${Math.max(10, Math.min(W, H) / 9)}px Inter, sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(slot === "photo" ? "photo" : "signature", W / 2, H / 2);
-          return;
-        }
-        renderFrame(ed.out, s.bmp, W, H, s.state, s.bg);
-        if (slot === "sign" && signClean.checked) cleanSignature(ed.out);
-      });
-    }, 40);
-  }
-
-  function wireEditor(slot) {
-    const ed = editors[slot];
-    const s = slots[slot];
-    let dragging = false,
-      lx = 0,
-      ly = 0;
-    ed.canvas.addEventListener("pointerdown", (e) => {
-      dragging = true;
-      lx = e.clientX;
-      ly = e.clientY;
-      ed.canvas.setPointerCapture(e.pointerId);
-    });
-    ed.canvas.addEventListener("pointermove", (e) => {
-      if (!dragging || !s.bmp) return;
-      const spec = specFor(slot);
-      if (!spec) return;
-      const g = geom(s.bmp.w, s.bmp.h, ed.cssW, ed.cssH, s.state);
-      const dx = e.clientX - lx,
-        dy = e.clientY - ly;
-      lx = e.clientX;
-      ly = e.clientY;
-      if (g.overX > 0)
-        s.state.px = clamp(s.state.px + (dx * 2) / g.overX, -1, 1);
-      if (g.overY > 0)
-        s.state.py = clamp(s.state.py + (dy * 2) / g.overY, -1, 1);
-      drawEditor(slot);
-      renderLive();
-    });
-    const stop = () => (dragging = false);
-    ed.canvas.addEventListener("pointerup", stop);
-    ed.canvas.addEventListener("pointercancel", stop);
-    ed.canvas.addEventListener(
-      "wheel",
-      (e) => {
-        if (!s.bmp) return;
-        e.preventDefault();
-        s.state.zoom = clamp(s.state.zoom - Math.sign(e.deltaY) * 0.08, 1, 3);
-        drawEditor(slot);
-        renderLive();
-      },
-      { passive: false },
+  const useCustomBtn = $("useCustomBtn");
+  if (useCustomBtn)
+    useCustomBtn.addEventListener("click", () =>
+      selectTemplate("custom", { scroll: true, toast: true }),
     );
-    ed.zoom.addEventListener("input", () => {
-      s.state.zoom = parseFloat(ed.zoom.value);
-      drawEditor(slot);
-      renderLive();
-    });
-  }
-  wireEditor("photo");
-  wireEditor("sign");
-  editors.sign.out.getContext("2d", { willReadFrequently: true });
-
-  document.querySelectorAll("[data-rotate]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const slot = btn.dataset.rotate;
-      slots[slot].state.rot = (slots[slot].state.rot + 90) % 360;
-      drawEditor(slot);
-      renderLive();
-    }),
-  );
-  document.querySelectorAll("[data-resetslot]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const slot = btn.dataset.resetslot;
-      slots[slot].state = defaultState(slots[slot].state.mode);
-      drawEditor(slot);
-      renderLive();
-    }),
-  );
-  document.querySelectorAll(".seg-btn[data-mode]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const slot = btn.dataset.slot;
-      slots[slot].state.mode = btn.dataset.mode;
-      slots[slot].state.px = 0;
-      slots[slot].state.py = 0;
-      btn.parentElement
-        .querySelectorAll(".seg-btn")
-        .forEach((b) => b.classList.toggle("active", b === btn));
-      drawEditor(slot);
-      renderLive();
-    }),
-  );
-  document
-    .querySelectorAll(".swatches[data-bg] .swatch[data-color]")
-    .forEach((sw) =>
-      sw.addEventListener("click", () => {
-        const slot = sw.closest(".swatches").dataset.bg;
-        slots[slot].bg = sw.dataset.color;
-        sw.parentElement
-          .querySelectorAll(".swatch")
-          .forEach((b) => b.classList.toggle("active", b === sw));
-        drawEditor(slot);
-        renderLive();
-      }),
-    );
-  const bgCustom = $("photoBgCustom");
-  if (bgCustom)
-    bgCustom.addEventListener("input", () => {
-      slots.photo.bg = bgCustom.value;
-      bgCustom.parentElement.parentElement
-        .querySelectorAll(".swatch")
-        .forEach((b) =>
-          b.classList.toggle("active", b === bgCustom.parentElement),
-        );
-      drawEditor("photo");
-      renderLive();
-    });
-  signClean.addEventListener("change", renderLive);
-
-  let resizeTimer;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      drawEditor("photo");
-      drawEditor("sign");
-    }, 150);
-  });
-
-  /* ---------- slot files ---------- */
-  const metaEls = (slot) => ({
-    drop: $(slot + "Drop"),
-    meta: $(slot + "Meta"),
-    thumb: $(slot + "Thumb"),
-    name: $(slot + "Name"),
-    size: $(slot + "Size"),
-  });
-
-  async function setSlotFile(slot, file) {
-    if (!file) return;
-    const s = slots[slot];
-    const needsImage = slot !== "id";
-    if (needsImage && !isImage(file)) {
-      toast("Please choose an image file (JPG, PNG or WEBP).", "err");
-      return;
-    }
-    clearSlot(slot, true);
-    const m = metaEls(slot);
-    s.file = file;
-    m.name.textContent = file.name;
-    m.size.textContent = formatFileSize(file.size);
-    m.meta.hidden = false;
-    m.drop.classList.add("has-file");
-    if (isImage(file)) {
-      try {
-        const { bmp, url } = await loadBitmap(file);
-        if (s.file !== file) return; // replaced meanwhile
-        s.bmp = bmp;
-        s.url = url;
-        m.thumb.src = url;
-      } catch (err) {
-        toast(err.message, "err");
-        clearSlot(slot);
-        return;
+  // showcase tiles → category filter
+  document.querySelectorAll(".tile[data-cat]").forEach((tile) =>
+    tile.addEventListener("click", () => {
+      setCategory(tile.dataset.cat);
+      if (templateSearch) {
+        templateSearch.value = "";
+        state.search = "";
+        filterGallery();
       }
-    } else {
-      m.thumb.src = placeholderThumb(isPdf(file) ? "PDF" : "FILE");
-    }
-    if (slot !== "id") {
-      s.state = defaultState(s.state.mode);
-      drawEditor(slot);
-      renderLive();
-    }
-    updatePreviewCards();
-    invalidateResults();
-    document.dispatchEvent(new CustomEvent("govforms:layout"));
-  }
-
-  function clearSlot(slot, silent = false) {
-    const s = slots[slot];
-    const m = metaEls(slot);
-    if (slot === "photo" && sheet.fromStudio) clearSheet();
-    if (s.url) URL.revokeObjectURL(s.url);
-    s.file = null;
-    s.bmp = null;
-    s.url = null;
-    m.meta.hidden = true;
-    m.drop.classList.remove("has-file");
-    m.thumb.removeAttribute("src");
-    if (editors[slot]) {
-      editors[slot].wrap.hidden = true;
-      renderLive();
-    }
-    if (!silent) {
-      updatePreviewCards();
-      invalidateResults();
-      document.dispatchEvent(new CustomEvent("govforms:layout"));
-    }
-  }
-
-  ["photo", "sign", "id"].forEach((slot) => {
-    const m = metaEls(slot);
-    setupDropzone(m.drop, $(slot + "File"), (files) =>
-      setSlotFile(slot, files[0]),
-    );
-    m.drop.addEventListener("pointerenter", () => (lastSlot = slot));
-    m.drop.addEventListener("focus", () => (lastSlot = slot));
-  });
-  document.querySelectorAll("[data-clear]").forEach((btn) =>
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const slot = btn.dataset.clear;
-      if (slots[slot]) clearSlot(slot);
-      else if (slot === "sheet") clearSheet();
-      else if (slot === "comp") clearComp();
     }),
   );
-  document.querySelectorAll("[data-view]").forEach((btn) =>
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const slot = btn.dataset.view;
-      const labels = {
-        photo: "Photo (original)",
-        sign: "Signature (original)",
-        id: "ID document",
-      };
-      openViewer(slots[slot].file, labels[slot]);
-    }),
-  );
-
-  // clipboard paste → photo / signature
-  document.addEventListener("paste", (e) => {
-    const items = Array.from((e.clipboardData && e.clipboardData.items) || []);
-    const item = items.find(
-      (i) => i.kind === "file" && i.type.startsWith("image/"),
-    );
-    if (!item) return;
-    const file = item.getAsFile();
-    if (!file) return;
-    const target =
-      lastSlot && lastSlot !== "id"
-        ? lastSlot
-        : !slots.photo.file
-          ? "photo"
-          : "sign";
-    const named = new File(
-      [file],
-      `pasted-${Date.now()}.${file.type.split("/")[1] || "png"}`,
-      { type: file.type },
-    );
-    setSlotFile(target, named);
-    toast(
-      `Pasted image into ${target === "photo" ? "Photo" : "Signature"}`,
-      "ok",
-    );
-    document
-      .getElementById("studio")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
 
   /* ---------- preview cards ---------- */
+  function ensurePreviewCard(slot) {
+    if (slot.el.preview) return slot.el.preview;
+    const card = document.createElement("div");
+    card.className = "preview-card card";
+    card.innerHTML = `
+      <div class="preview-compare">
+        <div class="pc-side"><span class="pc-tag">Original</span><div class="pc-img" data-before></div></div>
+        <div class="pc-side"><span class="pc-tag accent">Processed</span><div class="pc-img" data-after><span class="pc-empty">Process to compare</span></div></div>
+      </div>
+      <div class="preview-info">
+        <div class="preview-title"><svg class="ic"><use href="#${slot.def.icon}"/></svg> <span data-ptitle>${esc(slot.def.name)}</span></div>
+        <div class="size-row"><span class="size-label">Original</span><span class="size-value mono" data-sbefore>—</span></div>
+        <div class="bar"><i data-bbefore></i></div>
+        <div class="size-row"><span class="size-label">After processing</span><span class="size-value mono" data-safter>—</span></div>
+        <div class="bar"><i class="after" data-bafter></i></div>
+        <div class="size-reduction" data-red hidden></div>
+      </div>`;
+    slot.el.preview = card;
+    return card;
+  }
   function setPreviewImage(container, src, alt) {
     container.innerHTML = "";
     if (!src) {
@@ -954,51 +1593,76 @@
     img.alt = alt || "";
     container.appendChild(img);
   }
-
+  let idPreviewCard = null;
   function updatePreviewCards() {
-    const anyFile = slots.photo.file || slots.sign.file || slots.id.file;
-    previewEmptyState.hidden = !!anyFile;
-    ["photo", "sign"].forEach((slot) => {
-      const card = $(slot + "Preview");
-      const s = slots[slot];
-      card.hidden = !s.file;
-      if (!s.file) return;
-      setPreviewImage($(slot + "PreviewImage"), s.url, slot);
-      $(slot + "SizeBefore").textContent = formatFileSize(s.file.size);
-      const r = results.find((x) => x.key === slot);
+    let any = false;
+    slots.forEach((slot) => {
+      const card = ensurePreviewCard(slot);
+      if (!slot.file) {
+        card.remove();
+        return;
+      }
+      any = true;
+      previewGrid.appendChild(card);
+      card.querySelector("[data-ptitle]").textContent = slot.def.name;
+      setPreviewImage(
+        card.querySelector("[data-before]"),
+        slot.url,
+        slot.def.name,
+      );
+      card.querySelector("[data-sbefore]").textContent = formatFileSize(
+        slot.file.size,
+      );
+      const r = state.results.find((x) => x.key === slot.key);
       if (!r) {
-        $(slot + "SizeAfter").textContent = "—";
-        $(slot + "BarBefore").style.width = "100%";
-        $(slot + "BarAfter").style.width = "0%";
-        $(slot + "Reduction").hidden = true;
-        setPreviewImage($(slot + "PreviewAfter"), null);
+        card.querySelector("[data-safter]").textContent = "—";
+        card.querySelector("[data-bbefore]").style.width = "100%";
+        card.querySelector("[data-bafter]").style.width = "0%";
+        card.querySelector("[data-red]").hidden = true;
+        setPreviewImage(card.querySelector("[data-after]"), null);
       }
     });
-    const idCard = $("idPreview");
-    idCard.hidden = !slots.id.file;
-    if (slots.id.file) {
-      const box = $("idPreviewImage");
-      if (slots.id.url) setPreviewImage(box, slots.id.url, "ID document");
+    if (idSlot.file) {
+      any = true;
+      if (!idPreviewCard) {
+        idPreviewCard = document.createElement("div");
+        idPreviewCard.className = "preview-card card";
+        idPreviewCard.innerHTML = `
+          <div class="preview-compare single"><div class="pc-side"><span class="pc-tag">Document</span><div class="pc-img" data-before></div></div></div>
+          <div class="preview-info">
+            <div class="preview-title"><svg class="ic"><use href="#i-id"/></svg> ID document</div>
+            <div class="size-row"><span class="size-label">File size</span><span class="size-value mono" data-sbefore>—</span></div>
+            <div class="size-row"><span class="size-label">Output</span><span class="size-value mono" data-out>—</span></div>
+          </div>`;
+      }
+      previewGrid.appendChild(idPreviewCard);
+      const box = idPreviewCard.querySelector("[data-before]");
+      if (idSlot.url) setPreviewImage(box, idSlot.url, "ID document");
       else
-        box.innerHTML = `<span class="pc-doc">📄 ${slots.id.file.name}</span>`;
-      $("idSize2").textContent = formatFileSize(slots.id.file.size);
-      const r = results.find((x) => x.key === "id");
-      $("idOutInfo").textContent = r
+        box.innerHTML = `<span class="pc-doc">📄 ${esc(idSlot.file.name)}</span>`;
+      idPreviewCard.querySelector("[data-sbefore]").textContent =
+        formatFileSize(idSlot.file.size);
+      const r = state.results.find((x) => x.key === "id");
+      idPreviewCard.querySelector("[data-out]").textContent = r
         ? `${r.file.name} · ${formatFileSize(r.file.size)}`
         : "—";
-    }
+    } else if (idPreviewCard) idPreviewCard.remove();
+    previewEmptyState.hidden = any;
+    layoutChanged();
   }
-
   function showAfter(slot, file) {
-    const before = slots[slot].file.size;
+    const card = ensurePreviewCard(slot);
+    const before = slot.file.size;
     const after = file.size;
-    $(slot + "SizeAfter").textContent = formatFileSize(after);
+    card.querySelector("[data-safter]").textContent = formatFileSize(after);
     const max = Math.max(before, after, 1);
     requestAnimationFrame(() => {
-      $(slot + "BarBefore").style.width = (before / max) * 100 + "%";
-      $(slot + "BarAfter").style.width = (after / max) * 100 + "%";
+      card.querySelector("[data-bbefore]").style.width =
+        (before / max) * 100 + "%";
+      card.querySelector("[data-bafter]").style.width =
+        (after / max) * 100 + "%";
     });
-    const red = $(slot + "Reduction");
+    const red = card.querySelector("[data-red]");
     const diff = before - after;
     const pct = ((Math.abs(diff) / before) * 100).toFixed(1);
     red.hidden = false;
@@ -1009,71 +1673,75 @@
       red.textContent = `Increased by ${pct}% (${formatFileSize(-diff)} added — try JPEG or a KB limit)`;
       red.classList.add("negative");
     } else red.hidden = true;
-    const box = $(slot + "PreviewAfter");
-    if (file.type === "application/pdf") {
+    const box = card.querySelector("[data-after]");
+    if (file.type === "application/pdf")
       box.innerHTML = `<span class="pc-doc">PDF · ${formatFileSize(after)}</span>`;
-    } else {
+    else {
       const url = URL.createObjectURL(file);
-      setPreviewImage(box, url, slot + " processed");
+      setPreviewImage(box, url, slot.def.name + " processed");
       box.querySelector("img").onload = () => URL.revokeObjectURL(url);
     }
   }
 
   /* ---------- processing ---------- */
   function invalidateResults() {
-    if (!results.length) return;
-    results = [];
+    if (!state.results.length) return;
+    state.results = [];
+    state.downloaded = false;
     resultsEl.innerHTML = "";
     downloadBtn.disabled = true;
     setStatus(
       statusEl,
       "Inputs changed — process again to refresh the output.",
     );
+    updateReadiness();
   }
+  const extFor = (fmt) =>
+    fmt === "jpg" ? "jpg" : fmt === "jpeg" ? "jpeg" : fmt;
+  const baseName = (slot) =>
+    slot.key === "photo"
+      ? "photo"
+      : slot.key === "sign"
+        ? "signature"
+        : slot.key;
 
-  function extFor(fmt) {
-    return fmt === "jpg" ? "jpg" : fmt === "jpeg" ? "jpeg" : fmt;
-  }
-
-  async function encodeSlot(slot, spec, fmt, maxBytes) {
-    const s = slots[slot];
+  async function encodeSlot(slot) {
+    const dims = slotSpecDims(slot);
+    const fmt = slot.el.fmt.value;
+    const maxBytes = kbOf(slot.el.maxKb);
     const canvas = document.createElement("canvas");
-    if (slot === "sign") canvas.getContext("2d", { willReadFrequently: true });
-    renderFrame(canvas, s.bmp, spec.w, spec.h, s.state, s.bg);
-    if (slot === "sign" && signClean.checked) cleanSignature(canvas);
-    const base = slot === "photo" ? "photo" : "signature";
+    if (slot.def.clean) canvas.getContext("2d", { willReadFrequently: true });
+    renderFrame(canvas, slot.bmp, dims.w, dims.h, slot.view, slot.bg);
+    if (slot.el.clean && slot.el.clean.checked) cleanSignature(canvas);
+    const base = `${baseName(slot)}_${dims.w}x${dims.h}`;
     if (fmt === "pdf") {
-      const file = await canvasToPDF(canvas, `${base}_${spec.w}x${spec.h}.pdf`);
-      return { file, over: !!maxBytes && file.size > maxBytes, quality: null };
+      const file = await canvasToPDF(canvas, `${base}.pdf`);
+      return {
+        key: slot.key,
+        label: slot.def.name,
+        file,
+        over: !!maxBytes && file.size > maxBytes,
+      };
     }
     const mime = fmt === "png" ? "image/png" : "image/jpeg";
-    const { blob, over, quality } = await encodeUnderLimit(
-      canvas,
-      mime,
-      maxBytes,
-    );
-    const file = new File(
-      [blob],
-      `${base}_${spec.w}x${spec.h}.${extFor(fmt)}`,
-      { type: mime },
-    );
-    return { file, over, quality };
+    const { blob, over } = await encodeUnderLimit(canvas, mime, maxBytes);
+    const file = new File([blob], `${base}.${extFor(fmt)}`, { type: mime });
+    return { key: slot.key, label: slot.def.name, file, over };
   }
 
   async function processId() {
-    const s = slots.id;
-    if (!s.file) return null;
+    if (!idSlot.file) return null;
     const wantPdf = idFormat.value === "pdf";
     const maxBytes = kbOf(idMaxKb);
-    if (s.bmp) {
+    if (idSlot.bmp) {
       if (wantPdf) {
         const c = document.createElement("canvas");
         renderFrame(
           c,
-          s.bmp,
-          s.bmp.w,
-          s.bmp.h,
-          defaultState("fill"),
+          idSlot.bmp,
+          idSlot.bmp.w,
+          idSlot.bmp.h,
+          defaultView("fill"),
           "#ffffff",
         );
         const file = await canvasToPDF(c, "id_document.pdf");
@@ -1084,14 +1752,14 @@
           label: "ID document",
         };
       }
-      if (maxBytes && s.file.size > maxBytes) {
+      if (maxBytes && idSlot.file.size > maxBytes) {
         const c = document.createElement("canvas");
         renderFrame(
           c,
-          s.bmp,
-          s.bmp.w,
-          s.bmp.h,
-          defaultState("fill"),
+          idSlot.bmp,
+          idSlot.bmp.w,
+          idSlot.bmp.h,
+          defaultView("fill"),
           "#ffffff",
         );
         const { blob, over } = await encodeUnderLimit(
@@ -1099,16 +1767,20 @@
           "image/jpeg",
           maxBytes,
         );
-        const file = new File([blob], "id_document.jpg", {
-          type: "image/jpeg",
-        });
-        return { key: "id", file, over, label: "ID document" };
+        return {
+          key: "id",
+          file: new File([blob], "id_document.jpg", { type: "image/jpeg" }),
+          over,
+          label: "ID document",
+        };
       }
     }
-    const name = /\.[a-z0-9]+$/i.test(s.file.name)
-      ? s.file.name
-      : s.file.name + ".bin";
-    const file = new File([s.file], "id_" + name, { type: s.file.type });
+    const name = /\.[a-z0-9]+$/i.test(idSlot.file.name)
+      ? idSlot.file.name
+      : idSlot.file.name + ".bin";
+    const file = new File([idSlot.file], "id_" + name, {
+      type: idSlot.file.type,
+    });
     return {
       key: "id",
       file,
@@ -1119,29 +1791,25 @@
 
   function renderResults() {
     resultsEl.innerHTML = "";
-    results.forEach((r, i) => {
+    state.results.forEach((r, i) => {
       const li = document.createElement("li");
       li.style.animationDelay = i * 0.08 + "s";
       const icon = r.file.type === "application/pdf" ? "#i-pdf" : "#i-photo";
-      li.innerHTML = `<svg class="ic"><use href="${icon}"/></svg>
-        <span class="r-name" title="${r.file.name}">${r.file.name}</span>
-        <span class="r-size mono ${r.over ? "over" : ""}">${formatFileSize(r.file.size)}${r.over ? " ⚠" : ""}</span>`;
-      const view = document.createElement("button");
-      view.type = "button";
-      view.className = "icon-btn";
-      view.title = "Preview";
-      view.setAttribute("aria-label", "Preview " + r.file.name);
-      view.innerHTML = '<svg class="ic"><use href="#i-eye"/></svg>';
-      view.addEventListener("click", () => openViewer(r.file, r.file.name));
-      const dl = document.createElement("button");
-      dl.type = "button";
-      dl.className = "icon-btn";
-      dl.title = "Download this file";
-      dl.setAttribute("aria-label", "Download " + r.file.name);
-      dl.innerHTML = '<svg class="ic"><use href="#i-download"/></svg>';
-      dl.addEventListener("click", () => downloadFile(r.file));
-      li.appendChild(view);
-      li.appendChild(dl);
+      li.innerHTML = `<svg class="ic"><use href="${icon}"/></svg><span class="r-name" title="${esc(r.file.name)}">${esc(r.file.name)}</span><span class="r-size mono ${r.over ? "over" : ""}">${formatFileSize(r.file.size)}${r.over ? " ⚠" : ""}</span>`;
+      const mk = (icon2, title, fn) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "icon-btn";
+        b.title = title;
+        b.setAttribute("aria-label", `${title} ${r.file.name}`);
+        b.innerHTML = `<svg class="ic"><use href="${icon2}"/></svg>`;
+        b.addEventListener("click", fn);
+        return b;
+      };
+      li.appendChild(
+        mk("#i-eye", "Preview", () => openViewer(r.file, r.file.name)),
+      );
+      li.appendChild(mk("#i-download", "Download", () => downloadFile(r.file)));
       resultsEl.appendChild(li);
     });
   }
@@ -1152,45 +1820,40 @@
     const spec = currentSpec();
     if (!spec) {
       setStatus(statusEl, "Choose a template first.", "err");
-      templateSel.focus();
+      scrollToEl("#templateField", { offset: -100 });
+      openPicker();
       return;
     }
-    if (!slots.photo.bmp || !slots.sign.bmp) {
-      setStatus(statusEl, "Upload both a photo and a signature.", "err");
+    const missing = requiredMissing();
+    if (missing.length) {
+      setStatus(statusEl, `Upload the ${missing.join(" and ")} first.`, "err");
+      const first = Array.from(slots.values()).find(
+        (s) => s.def.required && !s.bmp,
+      );
+      if (first) scrollToEl(first.el.block, { offset: -90 });
       return;
     }
     processing = true;
     processBtn.classList.add("loading");
     processBtn.disabled = true;
+    if (dockCta) dockCta.classList.add("busy");
     setStatus(statusEl, "Processing on your device…", "busy");
     const t0 = performance.now();
     try {
       const out = [];
-      const p = await encodeSlot(
-        "photo",
-        spec.photo,
-        photoFormat.value,
-        kbOf(photoMaxKb),
-      );
-      out.push({ key: "photo", file: p.file, over: p.over, label: "Photo" });
-      const sg = await encodeSlot(
-        "sign",
-        spec.sign,
-        signFormat.value,
-        kbOf(signMaxKb),
-      );
-      out.push({
-        key: "sign",
-        file: sg.file,
-        over: sg.over,
-        label: "Signature",
-      });
+      for (const slot of slots.values()) {
+        if (!slot.bmp) continue;
+        out.push(await encodeSlot(slot));
+      }
       const id = await processId();
       if (id) out.push(id);
-      results = out;
+      state.results = out;
+      state.downloaded = false;
       renderResults();
-      showAfter("photo", p.file);
-      showAfter("sign", sg.file);
+      slots.forEach((slot) => {
+        const r = out.find((x) => x.key === slot.key);
+        if (r) showAfter(slot, r.file);
+      });
       updatePreviewCards();
       downloadBtn.disabled = false;
       const overs = out.filter((r) => r.over);
@@ -1208,9 +1871,10 @@
           `Done in ${ms} ms. ${out.length} file${out.length > 1 ? "s" : ""} ready to download.`,
           "ok",
         );
-        toast("Processing complete", "ok");
+        toast("Processing complete — ready to download", "ok");
       }
-      document.dispatchEvent(new CustomEvent("govforms:layout"));
+      updateReadiness();
+      layoutChanged();
     } catch (err) {
       console.error(err);
       setStatus(statusEl, "Error: " + err.message, "err");
@@ -1218,60 +1882,52 @@
       processing = false;
       processBtn.classList.remove("loading");
       processBtn.disabled = false;
+      if (dockCta) dockCta.classList.remove("busy");
     }
   }
   processBtn.addEventListener("click", processAll);
 
   async function downloadAll() {
-    if (!results.length) return;
+    if (!state.results.length) return;
     try {
-      if (zipToggle.checked && window.JSZip && results.length > 1) {
+      if (zipToggle.checked && window.JSZip && state.results.length > 1) {
         setStatus(statusEl, "Zipping…", "busy");
         const zip = new JSZip();
-        results.forEach((r) => zip.file(r.file.name, r.file));
+        state.results.forEach((r) => zip.file(r.file.name, r.file));
         const blob = await zip.generateAsync({
           type: "blob",
           compression: "STORE",
         });
         downloadFile(
-          new File([blob], `govforms_${templateSel.value || "files"}.zip`, {
+          new File([blob], `govforms_${state.templateKey || "files"}.zip`, {
             type: "application/zip",
           }),
         );
         setStatus(statusEl, "ZIP downloaded.", "ok");
-        return;
+      } else {
+        for (const r of state.results) {
+          downloadFile(r.file);
+          await sleep(350);
+        }
+        setStatus(statusEl, "Files downloaded.", "ok");
       }
-      for (const r of results) {
-        downloadFile(r.file);
-        await sleep(350);
-      }
-      setStatus(statusEl, "Files downloaded.", "ok");
+      state.downloaded = true;
+      updateReadiness();
     } catch (err) {
       console.error(err);
       setStatus(statusEl, "Error: " + err.message, "err");
     }
   }
   downloadBtn.addEventListener("click", downloadAll);
-
-  [photoFormat, signFormat, idFormat, photoMaxKb, signMaxKb, idMaxKb].forEach(
-    (el) => el.addEventListener("change", invalidateResults),
+  [idFormat, idMaxKb].forEach((el) =>
+    el.addEventListener("change", invalidateResults),
   );
-
-  document.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      e.preventDefault();
-      processAll();
-    }
-    if (e.key === "Escape" && viewerModal.classList.contains("active"))
-      closeViewer();
-  });
 
   /* ---------- viewer modal ---------- */
   const viewerModal = $("viewerModal");
   const viewerBody = $("viewerBody");
   const viewerTitle = $("viewerTitle");
   let viewerUrl = null;
-
   function openViewer(file, title = "Document Preview") {
     if (!file) return;
     closeViewer();
@@ -1306,12 +1962,16 @@
       viewerBody.appendChild(p);
     }
     viewerModal.classList.add("active");
+    document.dispatchEvent(new CustomEvent("govforms:modal", { detail: true }));
   }
   function closeViewer() {
     viewerBody.innerHTML = "";
     if (viewerUrl) URL.revokeObjectURL(viewerUrl);
     viewerUrl = null;
     viewerModal.classList.remove("active");
+    document.dispatchEvent(
+      new CustomEvent("govforms:modal", { detail: false }),
+    );
   }
   $("closeViewerBtn").addEventListener("click", closeViewer);
   viewerModal.addEventListener("click", (e) => {
@@ -1342,7 +2002,6 @@
     mergeItems.splice(to, 0, it);
     renderMergeList();
   }
-
   function renderMergeList() {
     mergeListEl.innerHTML = "";
     const total = mergeItems.reduce((a, b) => a + b.file.size, 0);
@@ -1354,7 +2013,7 @@
     if (!mergeItems.length) {
       mergeListEl.innerHTML =
         '<p class="merge-empty">No files yet. Add files to start merging.</p>';
-      document.dispatchEvent(new CustomEvent("govforms:layout"));
+      layoutChanged();
       return;
     }
     mergeItems.forEach((item, index) => {
@@ -1372,7 +2031,7 @@
       row.appendChild(thumb);
       const meta = document.createElement("div");
       meta.className = "mi-meta";
-      meta.innerHTML = `<span class="mi-name" title="${item.file.name}">${item.file.name}</span><span class="mi-size mono">${formatFileSize(item.file.size)}</span>`;
+      meta.innerHTML = `<span class="mi-name" title="${esc(item.file.name)}">${esc(item.file.name)}</span><span class="mi-size mono">${formatFileSize(item.file.size)}</span>`;
       row.appendChild(meta);
       const mk = (icon, title, cls, fn, disabled) => {
         const b = document.createElement("button");
@@ -1415,7 +2074,6 @@
           renderMergeList();
         }),
       );
-      // drag to reorder
       row.addEventListener("dragstart", (e) => {
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", String(index));
@@ -1453,9 +2111,8 @@
       });
       mergeListEl.appendChild(row);
     });
-    document.dispatchEvent(new CustomEvent("govforms:layout"));
+    layoutChanged();
   }
-
   setupDropzone($("mergeDrop"), $("mergeFiles"), (files) => {
     let added = 0;
     files.forEach((file) => {
@@ -1467,10 +2124,12 @@
       });
       added++;
     });
-    if (!added) {
-      setStatus(mergeStatus, "Only images and PDFs can be merged.", "err");
-      return;
-    }
+    if (!added)
+      return setStatus(
+        mergeStatus,
+        "Only images and PDFs can be merged.",
+        "err",
+      );
     renderMergeList();
     setStatus(
       mergeStatus,
@@ -1494,7 +2153,6 @@
     const blob = await canvasToBlob(c, "image/png");
     return new Uint8Array(await blob.arrayBuffer());
   }
-
   async function mergeFilesToPdf(items, pageMode, onProgress) {
     if (!window.PDFLib)
       throw new Error("PDF library did not load. Check your connection.");
@@ -1505,8 +2163,7 @@
       const file = items[i].file;
       onProgress && onProgress(i, items.length, file.name);
       if (isPdf(file)) {
-        const bytes = await file.arrayBuffer();
-        const pdf = await PDFLib.PDFDocument.load(bytes, {
+        const pdf = await PDFLib.PDFDocument.load(await file.arrayBuffer(), {
           ignoreEncryption: true,
         });
         const pages = await merged.copyPages(pdf, pdf.getPageIndices());
@@ -1524,15 +2181,15 @@
           img = await merged.embedJpg(bytes);
         else img = await merged.embedPng(await imageToPngBytes(file));
       } catch (err) {
-        // fall back to re-encoding through the canvas (handles odd JPEG variants, WEBP, BMP…)
         img = await merged.embedPng(await imageToPngBytes(file));
       }
       const { width, height } = img.scale(1);
       if (pageMode === "a4") {
         const page = merged.addPage(A4);
-        const maxW = A4[0] - MARGIN * 2;
-        const maxH = A4[1] - MARGIN * 2;
-        const s = Math.min(maxW / width, maxH / height, 1e9);
+        const s = Math.min(
+          (A4[0] - MARGIN * 2) / width,
+          (A4[1] - MARGIN * 2) / height,
+        );
         const w = width * s,
           h = height * s;
         page.drawImage(img, {
@@ -1546,10 +2203,8 @@
         page.drawImage(img, { x: 0, y: 0, width, height });
       }
     }
-    const bytes = await merged.save();
-    return bytes;
+    return merged.save();
   }
-
   mergeBtn.addEventListener("click", async () => {
     if (!mergeItems.length) return;
     mergeBtn.disabled = true;
@@ -1598,20 +2253,20 @@
   const sheet = {
     bmp: null,
     url: null,
-    state: defaultState("fill"),
+    view: defaultView("fill"),
     fromStudio: false,
   };
-  const sheetPaper = $("sheetPaper");
-  const sheetPhoto = $("sheetPhoto");
-  const sheetGap = $("sheetGap");
-  const sheetCustom = $("sheetCustom");
-  const sheetCW = $("sheetCW");
-  const sheetCH = $("sheetCH");
-  const sheetGuides = $("sheetGuides");
-  const sheetPreview = $("sheetPreview");
-  const sheetInfo = $("sheetInfo");
-  const sheetJpgBtn = $("sheetJpgBtn");
-  const sheetPdfBtn = $("sheetPdfBtn");
+  const sheetPaper = $("sheetPaper"),
+    sheetPhoto = $("sheetPhoto"),
+    sheetGap = $("sheetGap"),
+    sheetCustom = $("sheetCustom"),
+    sheetCW = $("sheetCW"),
+    sheetCH = $("sheetCH"),
+    sheetGuides = $("sheetGuides"),
+    sheetPreview = $("sheetPreview"),
+    sheetInfo = $("sheetInfo"),
+    sheetJpgBtn = $("sheetJpgBtn"),
+    sheetPdfBtn = $("sheetPdfBtn");
 
   function sheetLayout() {
     const [pw, ph] = PAPERS[sheetPaper.value] || PAPERS.a4;
@@ -1638,7 +2293,6 @@
       oy: (ph - gridH) / 2,
     };
   }
-
   function drawSheet(canvas, pxPerMm) {
     const L = sheetLayout();
     canvas.width = Math.round(L.pw * pxPerMm);
@@ -1653,25 +2307,22 @@
       sheet.bmp,
       Math.round(L.cw * pxPerMm),
       Math.round(L.ch * pxPerMm),
-      sheet.state,
+      sheet.view,
       "#ffffff",
     );
-    const guides = sheetGuides.checked;
     ctx.strokeStyle = "#9aa4b8";
     ctx.lineWidth = Math.max(1, pxPerMm * 0.12);
     ctx.setLineDash([pxPerMm * 1.2, pxPerMm * 1.2]);
-    for (let r = 0; r < L.rows; r++) {
+    for (let r = 0; r < L.rows; r++)
       for (let c = 0; c < L.cols; c++) {
         const x = Math.round((L.ox + c * (L.cw + L.gap)) * pxPerMm);
         const y = Math.round((L.oy + r * (L.ch + L.gap)) * pxPerMm);
         ctx.drawImage(cell, x, y);
-        if (guides)
+        if (sheetGuides.checked)
           ctx.strokeRect(x + 0.5, y + 0.5, cell.width - 1, cell.height - 1);
       }
-    }
     return L;
   }
-
   function refreshSheet() {
     sheetCustom.hidden = sheetPhoto.value !== "custom";
     const scale = Math.min(
@@ -1688,21 +2339,22 @@
     sheetInfo.textContent = has
       ? `${L.cols * L.rows} photos of ${L.cw} × ${L.ch} mm on ${sheetPaper.value.toUpperCase()} · ${L.cols} × ${L.rows} grid · 300 DPI`
       : "Add a photo to preview the sheet.";
-    document.dispatchEvent(new CustomEvent("govforms:layout"));
+    layoutChanged();
   }
   [sheetPaper, sheetPhoto, sheetGap, sheetCW, sheetCH, sheetGuides].forEach(
     (el) => el.addEventListener("input", refreshSheet),
   );
-
   async function setSheetFile(file) {
     if (!isImage(file)) return toast("Please choose an image file.", "err");
     clearSheet(true);
     try {
       const { bmp, url } = await loadBitmap(file);
-      sheet.bmp = bmp;
-      sheet.url = url;
-      sheet.state = defaultState("fill");
-      sheet.fromStudio = false;
+      Object.assign(sheet, {
+        bmp,
+        url,
+        view: defaultView("fill"),
+        fromStudio: false,
+      });
       $("sheetThumb").src = url;
       $("sheetName").textContent = file.name;
       $("sheetSize").textContent = formatFileSize(file.size);
@@ -1715,8 +2367,7 @@
   }
   function clearSheet(silent) {
     if (sheet.url && !sheet.fromStudio) URL.revokeObjectURL(sheet.url);
-    sheet.bmp = null;
-    sheet.url = null;
+    sheet.bmp = sheet.url = null;
     sheet.fromStudio = false;
     $("sheetMeta").hidden = true;
     $("sheetDrop").classList.remove("has-file");
@@ -1727,25 +2378,33 @@
   );
   $("sheetUseStudio").addEventListener("click", (e) => {
     e.stopPropagation();
-    if (!slots.photo.bmp) {
+    const photo = slots.get("photo");
+    if (!photo || !photo.bmp) {
       toast("Upload a photo in the Studio first.", "warn");
-      document.getElementById("studio")?.scrollIntoView({ behavior: "smooth" });
+      scrollToEl("#studio");
       return;
     }
     clearSheet(true);
-    sheet.bmp = slots.photo.bmp;
-    sheet.url = slots.photo.url;
-    sheet.state = { ...slots.photo.state };
-    sheet.fromStudio = true;
-    $("sheetThumb").src = slots.photo.url;
-    $("sheetName").textContent = slots.photo.file.name + " (Studio framing)";
-    $("sheetSize").textContent = formatFileSize(slots.photo.file.size);
+    Object.assign(sheet, {
+      bmp: photo.bmp,
+      url: photo.url,
+      view: { ...photo.view },
+      fromStudio: true,
+    });
+    $("sheetThumb").src = photo.url;
+    $("sheetName").textContent = photo.file.name + " (Studio framing)";
+    $("sheetSize").textContent = formatFileSize(photo.file.size);
     $("sheetMeta").hidden = false;
     $("sheetDrop").classList.add("has-file");
     refreshSheet();
     toast("Using the Studio photo with its current framing", "ok");
   });
-
+  document
+    .querySelector('[data-clear="sheet"]')
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearSheet();
+    });
   async function exportSheet(kind) {
     if (!sheet.bmp) return;
     const btn = kind === "pdf" ? sheetPdfBtn : sheetJpgBtn;
@@ -1755,19 +2414,22 @@
       const full = document.createElement("canvas");
       const L = drawSheet(full, DPI / 25.4);
       const stamp = `${sheetPaper.value}_${L.cw}x${L.ch}mm`;
-      if (kind === "pdf") {
-        const file = await canvasToPDF(full, `photo_sheet_${stamp}.pdf`, {
-          mmW: L.pw,
-          mmH: L.ph,
-          quality: 0.92,
-        });
-        downloadFile(file);
-      } else {
-        const blob = await canvasToBlob(full, "image/jpeg", 0.92);
+      if (kind === "pdf")
         downloadFile(
-          new File([blob], `photo_sheet_${stamp}.jpg`, { type: "image/jpeg" }),
+          await canvasToPDF(full, `photo_sheet_${stamp}.pdf`, {
+            mmW: L.pw,
+            mmH: L.ph,
+            quality: 0.92,
+          }),
         );
-      }
+      else
+        downloadFile(
+          new File(
+            [await canvasToBlob(full, "image/jpeg", 0.92)],
+            `photo_sheet_${stamp}.jpg`,
+            { type: "image/jpeg" },
+          ),
+        );
       toast("Photo sheet downloaded", "ok");
     } catch (err) {
       console.error(err);
@@ -1782,18 +2444,15 @@
 
   /* ---------- quick compress ---------- */
   const comp = { file: null, bmp: null, url: null, out: null };
-  const compBtn = $("compBtn");
-  const compDownloadBtn = $("compDownloadBtn");
-  const compStatus = $("compStatus");
-
+  const compBtn = $("compBtn"),
+    compDownloadBtn = $("compDownloadBtn"),
+    compStatus = $("compStatus");
   async function setCompFile(file) {
     if (!isImage(file)) return toast("Please choose an image file.", "err");
     clearComp(true);
     try {
       const { bmp, url } = await loadBitmap(file);
-      comp.file = file;
-      comp.bmp = bmp;
-      comp.url = url;
+      Object.assign(comp, { file, bmp, url });
       $("compThumb").src = url;
       $("compName").textContent = file.name;
       $("compSize").textContent = formatFileSize(file.size);
@@ -1819,7 +2478,12 @@
     if (!silent) setStatus(compStatus, "Add an image to begin.");
   }
   setupDropzone($("compDrop"), $("compFile"), (files) => setCompFile(files[0]));
-
+  document
+    .querySelector('[data-clear="comp"]')
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearComp();
+    });
   compBtn.addEventListener("click", async () => {
     if (!comp.bmp) return;
     compBtn.classList.add("loading");
@@ -1836,7 +2500,7 @@
         h = Math.round(h * s);
       }
       const c = document.createElement("canvas");
-      renderFrame(c, comp.bmp, w, h, defaultState("fill"), "#ffffff");
+      renderFrame(c, comp.bmp, w, h, defaultView("fill"), "#ffffff");
       const fmt = $("compFormat").value;
       const mime =
         fmt === "png"
@@ -1869,7 +2533,7 @@
           : `Done — ${pct}% smaller.`,
         over ? "err" : "ok",
       );
-      document.dispatchEvent(new CustomEvent("govforms:layout"));
+      layoutChanged();
     } catch (err) {
       console.error(err);
       setStatus(compStatus, "Error: " + err.message, "err");
@@ -1883,6 +2547,213 @@
     () => comp.out && downloadFile(comp.out),
   );
 
+  /* ---------- news ---------- */
+  const NEWS_CATS = [
+    { id: "all", name: "All" },
+    { id: "ssc", name: "SSC" },
+    { id: "railway", name: "Railways" },
+    { id: "banking", name: "Banking" },
+    { id: "upsc", name: "UPSC & PSC" },
+    { id: "defence", name: "Defence" },
+    { id: "entrance", name: "Entrance" },
+    { id: "general", name: "General" },
+  ];
+  const SOURCES = [
+    ["SSC", "https://ssc.gov.in/"],
+    [
+      "RRB (Railways)",
+      "https://indianrailways.gov.in/railwayboard/view_section.jsp?lang=0&id=0,7,1281",
+    ],
+    ["IBPS", "https://www.ibps.in/"],
+    ["SBI Careers", "https://sbi.co.in/web/careers"],
+    ["RBI Opportunities", "https://opportunities.rbi.org.in/"],
+    ["UPSC", "https://upsc.gov.in/"],
+    ["NTA (NEET, JEE, CUET, NET)", "https://nta.ac.in/"],
+    ["Join Indian Army", "https://joinindianarmy.nic.in/"],
+    ["Employment News", "https://www.employmentnews.gov.in/"],
+    ["Passport Seva", "https://www.passportindia.gov.in/"],
+  ];
+  const CALENDAR = [
+    ["SSC CGL notification", "Jun – Jul"],
+    ["SSC CHSL notification", "May – Jun"],
+    ["RRB NTPC / Group D", "Sep – Jan"],
+    ["IBPS PO / Clerk", "Jul – Aug"],
+    ["SBI PO / Clerk", "Sep – Dec"],
+    ["UPSC CSE prelims", "May – Jun"],
+    ["NDA I / II", "Dec · May"],
+    ["NEET UG", "Feb – May"],
+    ["JEE Main", "Nov · Jan"],
+    ["CUET UG", "Feb – May"],
+    ["CTET", "Jul · Dec"],
+  ];
+  const news = {
+    items: [],
+    updatedAt: null,
+    cat: "all",
+    search: "",
+    shown: 12,
+    loaded: false,
+  };
+  const newsGrid = $("newsGrid"),
+    newsChips = $("newsChips"),
+    newsSearch = $("newsSearch"),
+    newsMeta = $("newsMeta"),
+    newsMore = $("newsMore"),
+    newsEmpty = $("newsEmpty"),
+    newsEmptyText = $("newsEmptyText");
+
+  function buildNewsStatic() {
+    const src = $("sourceList");
+    if (src)
+      src.innerHTML = SOURCES.map(
+        ([n, u]) =>
+          `<li><a href="${u}" target="_blank" rel="noopener">${esc(n)}<svg class="ic"><use href="#i-external"/></svg></a></li>`,
+      ).join("");
+    const cal = $("calendarList");
+    if (cal)
+      cal.innerHTML = CALENDAR.map(
+        ([n, w]) => `<li><span>${esc(n)}</span><span>${esc(w)}</span></li>`,
+      ).join("");
+    if (newsChips) {
+      newsChips.innerHTML = NEWS_CATS.map(
+        (c) =>
+          `<button type="button" class="chip-btn ${c.id === "all" ? "active" : ""}" role="tab" data-cat="${c.id}">${esc(c.name)}</button>`,
+      ).join("");
+      newsChips.addEventListener("click", (e) => {
+        const b = e.target.closest(".chip-btn");
+        if (!b) return;
+        news.cat = b.dataset.cat;
+        news.shown = 12;
+        newsChips
+          .querySelectorAll(".chip-btn")
+          .forEach((x) => x.classList.toggle("active", x === b));
+        renderNews();
+      });
+    }
+    if (newsSearch)
+      newsSearch.addEventListener(
+        "input",
+        debounce(() => {
+          news.search = newsSearch.value;
+          news.shown = 12;
+          renderNews();
+        }, 100),
+      );
+    if (newsMore)
+      newsMore.addEventListener("click", () => {
+        news.shown += 12;
+        renderNews();
+      });
+  }
+  async function loadNews() {
+    if (!newsGrid) return;
+    newsGrid.innerHTML = Array.from(
+      { length: 6 },
+      () => '<div class="news-skel"></div>',
+    ).join("");
+    try {
+      const res = await fetch("./news.json", { cache: "no-cache" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      news.items = Array.isArray(data.items) ? data.items : [];
+      news.updatedAt = data.updatedAt || null;
+      news.loaded = true;
+    } catch (err) {
+      news.items = [];
+      news.loaded = false;
+    }
+    renderNews();
+  }
+  function renderNews() {
+    if (!newsGrid) return;
+    const f = news.search.trim().toLowerCase();
+    const list = news.items.filter(
+      (it) =>
+        (news.cat === "all" || it.category === news.cat) &&
+        (!f ||
+          it.title.toLowerCase().includes(f) ||
+          (it.source || "").toLowerCase().includes(f)),
+    );
+    newsMeta.textContent = news.loaded
+      ? `Updated ${timeAgo(news.updatedAt)} · ${news.items.length} headlines · via Google News (India)`
+      : "Headlines load from news.json when the site is served over HTTP. Use the official notice boards on the right meanwhile.";
+    const visible = list.slice(0, news.shown);
+    newsGrid.innerHTML = visible
+      .map(
+        (
+          it,
+          i,
+        ) => `<a class="news-card" href="${esc(it.link)}" target="_blank" rel="noopener" style="animation-delay:${(i % 12) * 0.05}s">
+          <div class="news-top"><span class="news-src">${esc(it.source || "News")}</span><span>${timeAgo(it.date)}</span></div>
+          <div class="news-title">${esc(it.title)}</div>
+          <div class="news-bottom"><span class="news-cat">${esc((NEWS_CATS.find((c) => c.id === it.category) || { name: it.category }).name)}</span><span class="news-read">Read <svg class="ic"><use href="#i-external"/></svg></span></div>
+        </a>`,
+      )
+      .join("");
+    newsEmpty.hidden = list.length > 0;
+    newsEmptyText.textContent = news.loaded
+      ? "No headlines match that filter."
+      : "Live headlines are unavailable in this view.";
+    newsMore.hidden = list.length <= news.shown;
+    layoutChanged();
+  }
+
+  /* ---------- PWA: service worker + install ---------- */
+  const installBtn = $("installBtn");
+  const installSheet = $("installSheet");
+  let deferredPrompt = null;
+  const isIOS =
+    /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  const standalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+  if (
+    "serviceWorker" in navigator &&
+    (location.protocol === "https:" ||
+      /^(localhost|127\.0\.0\.1)$/.test(location.hostname))
+  ) {
+    window.addEventListener("load", () =>
+      navigator.serviceWorker.register("./sw.js").catch(() => {}),
+    );
+  }
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn && !standalone) installBtn.hidden = false;
+  });
+  if (isIOS && !standalone && installBtn) installBtn.hidden = false;
+  function openInstallSheet() {
+    installSheet.hidden = false;
+    installSheet.classList.add("active");
+    document.dispatchEvent(new CustomEvent("govforms:modal", { detail: true }));
+  }
+  function closeInstallSheet() {
+    installSheet.classList.remove("active");
+    installSheet.hidden = true;
+    document.dispatchEvent(
+      new CustomEvent("govforms:modal", { detail: false }),
+    );
+  }
+  if (installBtn)
+    installBtn.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === "accepted") installBtn.hidden = true;
+        deferredPrompt = null;
+      } else openInstallSheet();
+    });
+  if (installSheet) {
+    $("installSheetClose").addEventListener("click", closeInstallSheet);
+    installSheet.addEventListener("click", (e) => {
+      if (e.target === installSheet) closeInstallSheet();
+    });
+  }
+  window.addEventListener("appinstalled", () => {
+    if (installBtn) installBtn.hidden = true;
+    toast("GovForms installed — find it on your home screen", "ok");
+  });
+
   /* ---------- theme ---------- */
   const themeToggle = $("themeToggle");
   if (themeToggle)
@@ -1894,31 +2765,68 @@
       try {
         localStorage.setItem("govforms-theme", next);
       } catch (e) {}
+      document
+        .querySelectorAll('meta[name="theme-color"]')
+        .forEach((m) =>
+          m.setAttribute("content", next === "light" ? "#f3f6fc" : "#050915"),
+        );
       document.dispatchEvent(
         new CustomEvent("govforms:theme", { detail: next }),
       );
     });
 
+  /* ---------- keyboard ---------- */
+  document.addEventListener("keydown", (e) => {
+    const typing =
+      /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "") ||
+      (e.target && e.target.isContentEditable);
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      processAll();
+    } else if (e.key === "Escape") {
+      if (viewerModal.classList.contains("active")) closeViewer();
+      else if (installSheet && installSheet.classList.contains("active"))
+        closeInstallSheet();
+      else closePicker();
+    } else if (e.key === "/" && !typing && templateSearch) {
+      e.preventDefault();
+      scrollToEl("#templates", { offset: -70 });
+      setTimeout(() => templateSearch.focus(), 400);
+    }
+  });
+
   /* ---------- init ---------- */
-  buildTemplateOptions();
-  buildTemplateCards();
+  applyImages();
+  buildGallery();
+  buildNewsStatic();
   let remembered = "";
   try {
     remembered = localStorage.getItem("govforms-template") || "";
   } catch (e) {}
-  if (remembered && TEMPLATES[remembered]) templateSel.value = remembered;
-  applyTemplate(!!remembered);
-  updatePreviewCards();
+  selectTemplate(remembered && TEMPLATES[remembered] ? remembered : "");
   renderMergeList();
   refreshSheet();
+  updatePreviewCards();
+  loadNews();
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => slots.forEach((s) => drawEditor(s)), 150);
+  });
+  // deep links: #templates?cat=… or ?cat=… → preselect a category
+  const params = new URLSearchParams(location.search);
+  if (params.get("cat")) setCategory(params.get("cat"));
 
-  // expose a little API for debugging / tests
   window.GovForms = {
     TEMPLATES,
+    CATEGORIES,
     slots,
-    setSlotFile,
+    selectTemplate,
+    setSlotFile: (key, file) => setSlotFile(slots.get(key), file),
     processAll,
     currentSpec,
-    results: () => results,
+    results: () => state.results,
+    state,
+    news,
   };
 })();
