@@ -1,132 +1,145 @@
 # GovForms — Auto Document Formatter
 
-A cinematic, single-page web app that formats exam photos, signatures and ID
-documents to exact pixel sizes and KB limits — entirely in your browser.
-Nothing is uploaded anywhere.
+A premium, installable single-page web app that formats exam photos, signatures,
+thumb impressions and ID documents to exact pixel sizes and KB limits — entirely
+in your browser. Nothing is uploaded anywhere.
+
+Built by **Amit Kumar** and **[Ajay Kumar](https://portfolio-astro-two.vercel.app/)**.
 
 ## 🌟 What it does
 
-- **Studio** — drop (or paste) a photo and a signature, pan / zoom / rotate them
-  inside the exact template frame, pick an output format and a KB ceiling, and
-  download the results individually or as one ZIP.
-- **Templates** — SSC (CGL / CHSL / MTS / GD), Railway RRB, IBPS / SBI, generic
-  Bank, BPSC, Passport 2×2 in, 35×45 mm ID photo, plus fully custom sizes.
-  Template cards show the photo and signature frames to scale.
+- **Exam catalog** — 40+ templates across seven categories: SSC, Railways,
+  Banking & Insurance, UPSC & State PSC, Defence & Police, Entrance & Teaching,
+  and Passport / PAN / Visa. Search by name, board or abbreviation, or browse by
+  category. Each card shows the photo and signature frames to scale.
+- **Studio** — a four-step flow (Template → Upload → Adjust → Export). Drop or
+  paste a photo and a signature, pan / zoom / rotate inside the exact frame, set
+  the output format and a KB ceiling, process, and download individually or as
+  one ZIP. Bank templates automatically add slots for the **left thumb
+  impression** and **handwritten declaration**.
 - **KB-aware encoding** — a binary search over JPEG quality lands each file just
-  under the limit you set (SSC and IBPS limits are pre-filled).
-- **Signature clean-up** — lifts photographed paper to pure white and deepens
-  the ink, so a phone photo of a signature comes out as clean dark strokes.
-- **Background fill** — white, light blue, light grey or any custom colour for
-  letter-boxed areas.
-- **Before & after** — side-by-side previews with animated size bars and
-  reduction percentages.
-- **Passport photo sheet** — tile one photo across A4, A5, Letter or 4×6 paper at
+  under the limit; files that cannot fit are flagged.
+- **Signature / ink clean-up** — lifts photographed paper to pure white and
+  deepens the ink.
+- **Before & after** — side-by-side previews with animated size bars.
+- **Passport photo sheet** — tile any photo across A4, A5, Letter or 4×6 at
   300 DPI with cut guides; export as JPEG or PDF.
-- **Quick compress** — squeeze any image under a KB target (JPEG / WEBP / PNG),
-  optionally capping the longest side.
-- **Merge into one PDF** — drop images and PDFs, drag rows to reorder, keep
-  original pixel sizes or fit every image to A4.
-- **Light / dark theme**, keyboard shortcuts (`Ctrl/⌘ + Enter` to process,
-  `Ctrl/⌘ + V` to paste an image, `Esc` to close previews) and toast feedback.
+- **Quick compress** — squeeze any image under a KB target (JPEG / WEBP / PNG).
+- **Merge into one PDF** — drop images and PDFs, drag to reorder, keep original
+  sizes or fit to A4.
+- **Vacancy & exam news** — a daily-refreshed board of headlines about
+  notifications, admit cards, results and exam dates, filterable by category,
+  plus links to the official notice boards and a typical yearly calendar.
+- **Installable (PWA)** — add it to your home screen on Android, iOS or desktop;
+  a service worker keeps the app shell available offline.
+- **Mobile dock** — a floating glass dock with Home, Exams, a context-aware
+  action button (Studio → Process → Download), Tools and News.
+- Light / dark theme, keyboard shortcuts (`/` search exams, `Ctrl/⌘ + Enter`
+  process, `Ctrl/⌘ + V` paste an image, `Esc` close), toast feedback.
 
 ## 🎬 The cinematic layer
 
-The page is built as a scroll-driven experience:
+- Lenis smooth scrolling synced to GSAP ScrollTrigger.
+- A preload curtain with a drawn logo mark and a progress bar tied to real
+  asset loading.
+- Three.js hero scene (floating document sheets, wireframe icosahedron,
+  particles) with pointer parallax and a scroll-driven camera.
+- Word-by-word headline reveal, animated counters, marquee of exam names, and a
+  photographic bento of the seven exam boards with scroll parallax.
+- A pipeline diagram that draws itself on scroll, a 2D "anatomy of a compliant
+  photo" figure scrubbed by scroll position (its values follow the selected
+  template), and a pinned 3D exploded stack of the deliverables.
+- Scroll-triggered reveals, staggered grids, cursor spotlight, magnetic buttons,
+  3D-tilt cards, aurora background and subtle film grain.
 
-- A Three.js hero scene: floating document sheets, a wireframe icosahedron and a
-  particle field that react to the pointer and fly apart as you scroll.
-- Word-by-word headline reveal, animated counters and a marquee of exam names.
-- A pipeline diagram whose connecting path draws itself as you scroll, with
-  3D-tilting step cards.
-- A 2D "anatomy of a compliant photo" diagram: dimension lines, face guide and
-  callouts are drawn by scroll position and follow the selected template.
-- A pinned 3D "exploded stack" that separates photo, signature, ID and merged
-  PDF layers as you scroll (scrubbed on desktop, played on mobile).
-- Section reveals, staggered grids, cursor spotlight on cards, magnetic buttons,
-  aurora background with parallax and a subtle film grain.
+Every effect is progressive: `prefers-reduced-motion` disables the heavy motion,
+and the page stays fully usable if the animation libraries fail to load.
 
-Every effect is progressive: `prefers-reduced-motion` disables the heavy
-animation, and the page stays fully usable if the animation libraries fail to
-load.
+## 📋 Template catalog
 
-## 📋 Templates
+`templates.js` is the single source of truth. Entries carry photo and signature
+sizes, formats, KB ranges, optional extra documents, search tags and notes.
+Entries flagged `verify: true` use generic passport-size defaults (3.5 × 4.5 cm
+photo, 3.5 × 1.5 cm signature at 150 DPI) and are labelled "verify sizes" in the
+gallery. Portals change their rules — always cross-check the current official
+notification and use **Custom** when yours differs.
 
-| Template | Photo (px) | Signature (px) | Size hints |
-|---|---|---|---|
-| SSC CGL / CHSL / MTS / GD | 200 × 240 JPEG | 240 × 80 PNG | photo 20–50 KB, sign 10–20 KB |
-| Railway RRB (NTPC / Group D) | 200 × 230 PNG | 150 × 50 PNG | — |
-| IBPS / SBI PO & Clerk | 200 × 230 JPEG | 140 × 60 JPEG | photo 20–50 KB, sign 10–20 KB |
-| Bank (generic) | 140 × 160 JPEG | 120 × 60 JPEG | — |
-| BPSC | 150 × 180 PNG | 120 × 60 PNG | — |
-| Passport / Visa 2 × 2 in | 600 × 600 JPEG | 300 × 100 PNG | — |
-| 35 × 45 mm ID photo | 413 × 531 JPEG | 300 × 100 PNG | — |
-| Custom | any | any | any |
+Well-known specs included: SSC (200 × 240 / 240 × 80, 20–50 KB / 10–20 KB),
+IBPS / SBI / RBI (200 × 230 / 140 × 60 with 240 × 240 thumb and 800 × 400
+declaration), UPSC OTR (350 × 350, 20–300 KB), NTA exams (10–200 KB photo,
+4–30 KB signature), GATE (400 × 520 / 500 × 160), US visa DS-160 (600 × 600,
+≤ 240 KB), and 35 × 45 mm ICAO passport photos.
 
-Portals change their rules — always cross-check the official notification and
-use **Custom** when your requirement differs.
+## 📰 News feed
+
+`news.json` is generated by `scripts/update-news.mjs`, which pulls Google News
+RSS (India edition) for a set of exam-category searches, de-duplicates the
+headlines and keeps the newest 72 from the last 45 days. The GitHub Actions
+workflow in `.github/workflows/update-news.yml` runs it daily and commits the
+result, so the hosted site refreshes itself. Run it locally with:
+
+```
+node scripts/update-news.mjs
+```
+
+The page fetches `./news.json`; when opened from `file://` the live feed is
+unavailable and the official notice-board links are shown instead.
 
 ## 🚀 Getting started
 
-No build step, no server. Clone or download and open `index.html` in a modern
-browser (Chrome, Edge, Firefox, Safari). An internet connection is needed on
-first load so the browser can fetch the libraries below.
+No build step. Serve the folder over HTTP (GitHub Pages, `npx serve`, any static
+host) and open `index.html`. An internet connection is needed on first load for
+the libraries below; afterwards the service worker caches the app shell.
 
 ```
 fast-form-gov/
-├── index.html   # page structure
-├── gov.css      # design system, themes, animation states
-├── script.js    # application logic (templates, editor, encoding, tools, merge)
-├── fx.js        # cinematic layer (GSAP ScrollTrigger, Three.js hero, effects)
-└── README.md
+├── index.html                # page structure
+├── gov.css                   # design system, themes, animation states
+├── script.js                 # application logic (studio, catalog, tools, news, PWA)
+├── fx.js                     # cinematic layer (Lenis, GSAP ScrollTrigger, Three.js)
+├── templates.js              # exam & document catalog
+├── news.json                 # generated headlines (refreshed daily by CI)
+├── manifest.webmanifest      # PWA manifest
+├── sw.js                     # service worker (offline shell, runtime cache)
+├── icons/                    # app icons (SVG, 192, 512, maskable, Apple touch)
+├── scripts/update-news.mjs   # news feed updater
+└── .github/workflows/        # daily news refresh
 ```
-
-## 📖 How to use the Studio
-
-1. **Pick a template** — click a card in the Templates section or use the
-   dropdown. Dimensions, formats and KB limits are pre-filled.
-2. **Add a photo and a signature** — drag & drop, click to browse, or paste an
-   image from the clipboard. An optional ID document (image or PDF) can be added
-   too.
-3. **Frame it** — drag inside the editor to pan, scroll or use the slider to
-   zoom, rotate in 90° steps, and switch between *Fill* (crop) and *Fit* (pad).
-   The head guide shows where the face should sit. The live output panel shows
-   the exact pixels that will be exported.
-4. **Set output options** — format (JPEG / JPG / PNG / PDF), max size in KB,
-   background colour, and signature clean-up.
-5. **Process** — click *Process* or press `Ctrl/⌘ + Enter`. Files that could
-   not fit under their KB limit are flagged.
-6. **Download** — as one ZIP (default) or one file at a time. Every result can
-   also be previewed before download.
 
 ## 🔧 Technical notes
 
-- **Vanilla HTML / CSS / JavaScript** — no framework, no bundler.
-- **Canvas API** for cropping, rotation, progressive downscaling and encoding.
-- **jsPDF** for single-image PDFs and photo sheets, **pdf-lib** for merging,
-  **JSZip** for bundled downloads.
-- **GSAP + ScrollTrigger** for scrubbed scroll animation and pinning,
-  **Three.js** for the hero scene. All libraries load from cdnjs.
+- Vanilla HTML / CSS / JavaScript — no framework, no bundler.
+- Canvas API for cropping, rotation, progressive downscaling and encoding;
+  jsPDF for single-image PDFs and photo sheets; pdf-lib for merging; JSZip for
+  bundled downloads; GSAP 3.13 + ScrollTrigger and Lenis for motion; Three.js
+  r128 for the hero. Libraries load from cdnjs and jsDelivr with CORS so the
+  service worker can cache them.
 - Images larger than 2600 px on the longest side are downscaled progressively
-  on load for speed; outputs use stepwise halving before the final resample for
-  quality.
-- PDF page size uses 96 DPI pixel-to-mm conversion (photo sheets use 300 DPI).
+  on load; outputs use stepwise halving before the final resample.
+- Photography is served from Wikimedia Commons under free licences and credited
+  in the footer ("Photo credits").
 - The last used template and theme are remembered in `localStorage`; nothing
   else is stored.
 
 ## 🔒 Privacy
 
 All processing runs on your device. Files are never sent to a server; the page
-only fetches its libraries and fonts from public CDNs.
+only fetches its libraries, fonts, photographs and the news feed.
 
 ## 🚀 Version
 
-**Current version**: 4.0
+**Current version**: 5.0
 
+- v5.0 — Categorised catalog of 40+ exams with search and filters; dynamic
+  extra-document slots (thumb impression, declaration, postcard photo); guided
+  four-step Studio with a searchable template picker; daily vacancy & exam
+  news board; installable PWA with offline shell; mobile dock with context
+  action; Lenis smooth scrolling and re-tuned scroll choreography; photographic
+  showcase; new preload animation; credits.
 - v4.0 — Cinematic redesign: 3D hero, scroll-driven diagrams, exploded stack,
-  template gallery; new Studio with drag & drop, clipboard paste, pan / zoom /
-  rotate editor, KB-targeted encoding, signature clean-up, background fill, ZIP
-  download; passport photo sheet and quick compress tools; drag-to-reorder
-  merge with fit-to-A4; light / dark theme.
+  template gallery; Studio with drag & drop, clipboard paste, framing editor,
+  KB-targeted encoding, signature clean-up, background fill, ZIP download; photo
+  sheet and quick compress tools; drag-to-reorder merge; light / dark theme.
 - v3.0 — Individual format selectors for photo, signature and ID; improved PDF
   conversion.
 - v2.0 — Preview section with file size tracking.

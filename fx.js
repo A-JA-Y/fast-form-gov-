@@ -1,7 +1,8 @@
 /* ============================================================
-   GovForms — cinematic layer
-   Scroll-driven animation, 2D/3D diagrams and the Three.js hero.
-   Everything here is progressive: the page works without it.
+   GovForms — cinematic layer (v2)
+   Lenis smooth scroll, GSAP ScrollTrigger choreography, 2D/3D
+   diagrams and the Three.js hero. Everything is progressive:
+   the page works without it.
    ============================================================ */
 (() => {
   "use strict";
@@ -10,48 +11,143 @@
   const finePointer = window.matchMedia(
     "(hover: hover) and (pointer: fine)",
   ).matches;
+  const isMobile = window.matchMedia("(max-width: 900px)").matches;
   const hasGsap = !!(window.gsap && window.ScrollTrigger) && !reduced;
-  if (hasGsap) gsap.registerPlugin(ScrollTrigger);
-  else root.classList.add("no-gsap");
+  const hasLenis = !!window.Lenis && !reduced;
+  root.classList.add(hasGsap ? "gsap" : "no-gsap");
+  if (hasGsap) {
+    gsap.registerPlugin(ScrollTrigger);
+    ScrollTrigger.config({ ignoreMobileResize: true });
+    gsap.defaults({ ease: "power3.out", overwrite: "auto" });
+  }
 
-  /* ---------- intro curtain ---------- */
+  /* ---------- smooth scroll (Lenis) ---------- */
+  let lenis = null;
+  if (hasLenis) {
+    try {
+      lenis = new Lenis({
+        lerp: 0.085,
+        wheelMultiplier: 0.95,
+        smoothWheel: true,
+        syncTouch: false,
+        autoResize: true,
+      });
+      root.classList.add("lenis");
+      if (hasGsap) {
+        lenis.on("scroll", ScrollTrigger.update);
+        gsap.ticker.add((t) => lenis.raf(t * 1000));
+        gsap.ticker.lagSmoothing(0);
+      } else {
+        const raf = (t) => {
+          lenis.raf(t);
+          requestAnimationFrame(raf);
+        };
+        requestAnimationFrame(raf);
+      }
+    } catch (e) {
+      lenis = null;
+    }
+  }
+  const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
+  function scrollTo(target, opts = {}) {
+    const el =
+      typeof target === "string" ? document.querySelector(target) : target;
+    const offset = opts.offset != null ? opts.offset : -76;
+    if (el === null || el === undefined) return;
+    const isTop =
+      el === document.body ||
+      el === document.documentElement ||
+      (el.id === "top" && el.tagName === "MAIN");
+    if (lenis) {
+      if (isTop) lenis.scrollTo(0, { duration: 1.2, easing: easeOutQuart });
+      else lenis.scrollTo(el, { offset, duration: 1.15, easing: easeOutQuart });
+    } else {
+      const y = isTop
+        ? 0
+        : el.getBoundingClientRect().top + window.scrollY + offset;
+      window.scrollTo({ top: y, behavior: reduced ? "auto" : "smooth" });
+    }
+  }
+  window.GovFX = {
+    scrollTo,
+    refresh: () => hasGsap && ScrollTrigger.refresh(),
+  };
+
+  // in-page anchors → smooth scroll with offset
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const hash = a.getAttribute("href");
+    if (hash.length < 2) return;
+    const el = document.getElementById(hash.slice(1));
+    if (!el) return;
+    e.preventDefault();
+    scrollTo(el, { offset: hash === "#top" ? 0 : -76 });
+    if (history.replaceState) history.replaceState(null, "", hash);
+  });
+
+  /* ---------- intro ---------- */
   const intro = document.getElementById("intro");
   let introDelay = 0;
   let seen = false;
   try {
     seen = !!sessionStorage.getItem("govforms-intro");
   } catch (e) {}
-  if (intro) {
-    if (reduced || seen) intro.remove();
-    else {
-      introDelay = 1000;
-      let finished = false;
-      const done = () => {
-        if (finished) return;
-        finished = true;
-        intro.classList.add("done");
-        try {
-          sessionStorage.setItem("govforms-intro", "1");
-        } catch (e) {}
-        setTimeout(() => intro.remove(), 1200);
-      };
-      const fonts =
-        document.fonts && document.fonts.ready
-          ? document.fonts.ready
-          : Promise.resolve();
-      Promise.race([fonts, new Promise((r) => setTimeout(r, 700))]).then(() =>
-        setTimeout(done, 450),
-      );
-      setTimeout(done, 2400);
+  const introDone = new Promise((resolve) => {
+    if (!intro || reduced || seen) {
+      if (intro) intro.remove();
+      resolve();
+      return;
     }
-  }
+    introDelay = 1;
+    intro
+      .querySelectorAll(".intro-word span")
+      .forEach((s, i) => s.style.setProperty("--i", i));
+    if (lenis) lenis.stop();
+    document.body.style.overflow = "hidden";
+    // measured from navigation start, so slow networks never stretch the curtain past MAX
+    const MIN = 1600,
+      MAX = 3400;
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      root.style.setProperty("--boot", 1);
+      intro.classList.add("done");
+      document.body.style.overflow = "";
+      if (lenis) lenis.start();
+      try {
+        sessionStorage.setItem("govforms-intro", "1");
+      } catch (e) {}
+      setTimeout(() => intro.remove(), 1000);
+      resolve();
+    };
+    const bootRatio = () =>
+      window.__boot ? window.__boot.loaded / window.__boot.total : 1;
+    const fonts =
+      document.fonts && document.fonts.ready
+        ? document.fonts.ready
+        : Promise.resolve();
+    let fontsReady = false;
+    fonts.then(() => (fontsReady = true));
+    const tick = () => {
+      const elapsed = performance.now();
+      if ((bootRatio() >= 1 && fontsReady && elapsed >= MIN) || elapsed >= MAX)
+        finish();
+      else setTimeout(tick, 80);
+    };
+    tick();
+  });
 
-  /* ---------- nav: progress, shrink, active link ---------- */
+  /* ---------- nav, dock, progress ---------- */
   const nav = document.getElementById("nav");
   const progress = document.getElementById("scrollProgress");
   const toTop = document.getElementById("toTop");
   const aurora = document.querySelector(".aurora");
+  const dock = document.getElementById("dock");
+  let lastY = window.scrollY || 0;
   let ticking = false;
+  let modalOpen = false;
   function onScroll() {
     if (ticking) return;
     ticking = true;
@@ -66,6 +162,13 @@
       if (toTop) toTop.classList.toggle("show", y > 700);
       if (aurora && !reduced)
         aurora.style.transform = `translate3d(0, ${-y * 0.06}px, 0)`;
+      if (dock && !modalOpen) {
+        const dy = y - lastY;
+        if (y > 240 && dy > 8) dock.classList.add("hide");
+        else if (dy < -8 || y < 240 || y >= max - 4)
+          dock.classList.remove("hide");
+      }
+      lastY = y;
       ticking = false;
     });
   }
@@ -73,59 +176,162 @@
   onScroll();
   if (toTop)
     toTop.addEventListener("click", () =>
-      window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" }),
+      scrollTo(document.body, { offset: 0 }),
     );
+  document.addEventListener("govforms:modal", (e) => {
+    modalOpen = !!e.detail;
+    if (dock) dock.classList.toggle("hide", modalOpen);
+    if (lenis) modalOpen ? lenis.stop() : lenis.start();
+  });
+  // hide the dock while a field has focus on mobile (keyboard up)
+  document.addEventListener("focusin", (e) => {
+    if (
+      dock &&
+      isMobile &&
+      /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) &&
+      !/^(range|checkbox|file|color)$/.test(e.target.type)
+    )
+      dock.classList.add("hide");
+  });
+  document.addEventListener(
+    "focusout",
+    () =>
+      dock &&
+      setTimeout(() => !modalOpen && dock.classList.remove("hide"), 120),
+  );
 
   const navLinks = Array.from(
     document.querySelectorAll(".nav-links a[data-nav]"),
   );
-  if (navLinks.length && "IntersectionObserver" in window) {
-    const map = new Map(navLinks.map((a) => [a.dataset.nav, a]));
+  const dockItems = Array.from(
+    document.querySelectorAll(".dock-item[data-dock]"),
+  );
+  if ("IntersectionObserver" in window) {
+    const targets = new Map();
+    navLinks.forEach((a) => targets.set(a.dataset.nav, a.dataset.nav));
+    dockItems.forEach((a) => targets.set(a.dataset.dock, a.dataset.dock));
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((en) => {
           if (!en.isIntersecting) return;
-          navLinks.forEach((a) => a.classList.remove("active"));
-          const link = map.get(en.target.id);
-          if (link) link.classList.add("active");
+          const id = en.target.id;
+          navLinks.forEach((a) =>
+            a.classList.toggle("active", a.dataset.nav === id),
+          );
+          const dockId = dockOwner(id);
+          dockItems.forEach((a) =>
+            a.classList.toggle("active", a.dataset.dock === dockId),
+          );
         });
       },
-      { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 },
     );
-    map.forEach((_, id) => {
-      const sec = document.getElementById(id);
-      if (sec) io.observe(sec);
-    });
+    document
+      .querySelectorAll("main > section[id]")
+      .forEach((sec) => io.observe(sec));
+  }
+  // which dock item "owns" a section
+  function dockOwner(id) {
+    if (["hero", "showcase", "how", "anatomy", "stack"].includes(id))
+      return "hero";
+    if (["templates", "studio", "preview"].includes(id)) return "templates";
+    if (["tools", "merge"].includes(id)) return "tools";
+    if (["news", "features", "faq", "credits"].includes(id)) return "news";
+    return "";
   }
 
-  /* ---------- reveal on scroll ---------- */
+  /* ---------- reveals ---------- */
   function initReveals() {
-    const items = document.querySelectorAll(
-      "[data-reveal], [data-reveal-stagger], .pipeline, #stack",
+    const items = Array.from(document.querySelectorAll("[data-reveal]"));
+    const groups = Array.from(
+      document.querySelectorAll("[data-reveal-stagger]"),
     );
-    items.forEach((el) => {
-      if (el.dataset.delay) el.style.setProperty("--delay", el.dataset.delay);
-      if (el.hasAttribute("data-reveal-stagger"))
-        Array.from(el.children).forEach((c, i) =>
-          c.style.setProperty("--i", i),
-        );
-    });
-    if (!("IntersectionObserver" in window)) {
-      items.forEach((el) => el.classList.add("in-view"));
+    const extras = Array.from(
+      document.querySelectorAll(".pipeline, #stack, .anatomy-figure"),
+    );
+    if (!hasGsap) {
+      items.forEach(
+        (el) =>
+          el.dataset.delay && el.style.setProperty("--delay", el.dataset.delay),
+      );
+      groups.forEach((g) =>
+        Array.from(g.children).forEach((c, i) => c.style.setProperty("--i", i)),
+      );
+      const all = [...items, ...groups, ...extras];
+      if (!("IntersectionObserver" in window))
+        return all.forEach((el) => el.classList.add("in-view"));
+      const io = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((en) => {
+            if (en.isIntersecting) {
+              en.target.classList.add("in-view");
+              io.unobserve(en.target);
+            }
+          }),
+        { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+      );
+      all.forEach((el) => io.observe(el));
       return;
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) {
-            en.target.classList.add("in-view");
-            io.unobserve(en.target);
-          }
+    const from = (el) => {
+      const v = el.dataset.reveal;
+      return {
+        opacity: 0,
+        y: v === "up" ? 40 : 0,
+        x: v === "left" ? 44 : v === "right" ? -44 : 0,
+        scale: v === "scale" ? 0.94 : 1,
+        filter: v === "blur" ? "blur(14px)" : "blur(0px)",
+      };
+    };
+    items.forEach((el) => gsap.set(el, from(el)));
+    ScrollTrigger.batch(items, {
+      start: "top 88%",
+      once: true,
+      onEnter: (batch) => {
+        batch.forEach((el, i) => {
+          el.classList.add("in-view");
+          gsap.to(el, {
+            opacity: 1,
+            y: 0,
+            x: 0,
+            scale: 1,
+            filter: "blur(0px)",
+            duration: 1.15,
+            ease: "power3.out",
+            delay: i * 0.08 + (parseFloat(el.dataset.delay) || 0) * 0.6,
+            clearProps: "transform,filter",
+          });
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    });
+    groups.forEach((g) => {
+      const kids = Array.from(g.children);
+      gsap.set(kids, { opacity: 0, y: 30 });
+      ScrollTrigger.create({
+        trigger: g,
+        start: "top 86%",
+        once: true,
+        onEnter: () => {
+          g.classList.add("in-view");
+          gsap.to(kids, {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "power3.out",
+            stagger: { each: 0.07, from: "start" },
+            clearProps: "transform",
+          });
+        },
+      });
+    });
+    extras.forEach((el) =>
+      ScrollTrigger.create({
+        trigger: el,
+        start: "top 85%",
+        once: true,
+        onEnter: () => el.classList.add("in-view"),
+      }),
     );
-    items.forEach((el) => io.observe(el));
   }
 
   /* ---------- counters ---------- */
@@ -133,16 +339,22 @@
     const els = document.querySelectorAll("[data-count]");
     const run = (el) => {
       const target = parseFloat(el.dataset.count) || 0;
-      if (reduced) {
-        el.textContent = target;
+      if (reduced) return (el.textContent = target);
+      if (hasGsap) {
+        const o = { v: 0 };
+        gsap.to(o, {
+          v: target,
+          duration: 1.8,
+          ease: "power3.out",
+          onUpdate: () => (el.textContent = Math.round(o.v)),
+        });
         return;
       }
-      const dur = 1500;
-      const start = performance.now();
+      const dur = 1500,
+        start = performance.now();
       const step = (t) => {
         const p = Math.min(1, (t - start) / dur);
-        const e = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(target * e);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
         if (p < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
@@ -189,20 +401,24 @@
     if (!title) return;
     const words = splitWords(title);
     words.forEach((w, i) => w.style.setProperty("--i", i));
-    root.style.setProperty("--intro", introDelay / 1000 + "s");
+    root.style.setProperty("--intro", "0s");
     if (!hasGsap) return;
-    gsap.from(words, {
-      yPercent: 110,
-      rotateX: -50,
-      opacity: 0,
-      duration: 1.1,
-      ease: "power4.out",
-      stagger: 0.06,
-      delay: introDelay / 1000 + 0.1,
+    gsap.set(words, { yPercent: 110, rotateX: -50, opacity: 0 });
+    introDone.then(() => {
+      gsap.to(words, {
+        yPercent: 0,
+        rotateX: 0,
+        opacity: 1,
+        duration: 1.2,
+        ease: "power4.out",
+        stagger: 0.055,
+        delay: 0.15,
+        clearProps: "transform",
+      });
     });
     gsap.to(".hero-inner", {
-      yPercent: -14,
-      opacity: 0.15,
+      yPercent: -12,
+      opacity: 0.12,
       ease: "none",
       scrollTrigger: {
         trigger: "#hero",
@@ -217,62 +433,146 @@
   function initPointerFX() {
     if (!finePointer || reduced) return;
     const glow = document.querySelector(".cursor-glow");
-    let gx = window.innerWidth / 2,
-      gy = window.innerHeight / 2,
-      tx = gx,
-      ty = gy,
-      raf = null;
-    const loop = () => {
-      gx += (tx - gx) * 0.12;
-      gy += (ty - gy) * 0.12;
-      if (glow) glow.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
-      if (Math.abs(tx - gx) > 0.3 || Math.abs(ty - gy) > 0.3)
-        raf = requestAnimationFrame(loop);
-      else raf = null;
-    };
+    if (glow && hasGsap) {
+      const xTo = gsap.quickTo(glow, "x", { duration: 0.55, ease: "power3" });
+      const yTo = gsap.quickTo(glow, "y", { duration: 0.55, ease: "power3" });
+      document.addEventListener(
+        "pointermove",
+        (e) => {
+          document.body.classList.add("has-cursor");
+          xTo(e.clientX);
+          yTo(e.clientY);
+        },
+        { passive: true },
+      );
+    } else if (glow) {
+      let gx = 0,
+        gy = 0,
+        tx = 0,
+        ty = 0,
+        raf = null;
+      const loop = () => {
+        gx += (tx - gx) * 0.12;
+        gy += (ty - gy) * 0.12;
+        glow.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+        raf =
+          Math.abs(tx - gx) > 0.3 || Math.abs(ty - gy) > 0.3
+            ? requestAnimationFrame(loop)
+            : null;
+      };
+      document.addEventListener(
+        "pointermove",
+        (e) => {
+          tx = e.clientX;
+          ty = e.clientY;
+          document.body.classList.add("has-cursor");
+          if (!raf) raf = requestAnimationFrame(loop);
+        },
+        { passive: true },
+      );
+    }
+    // card spotlight
     document.addEventListener(
       "pointermove",
       (e) => {
-        tx = e.clientX;
-        ty = e.clientY;
-        document.body.classList.add("has-cursor");
-        if (!raf) raf = requestAnimationFrame(loop);
         const card = e.target.closest && e.target.closest(".card");
-        if (card) {
-          const r = card.getBoundingClientRect();
-          card.style.setProperty("--mx", e.clientX - r.left + "px");
-          card.style.setProperty("--my", e.clientY - r.top + "px");
-        }
+        if (!card) return;
+        const r = card.getBoundingClientRect();
+        card.style.setProperty("--mx", e.clientX - r.left + "px");
+        card.style.setProperty("--my", e.clientY - r.top + "px");
       },
       { passive: true },
     );
-
     // 3D tilt
     document.querySelectorAll(".tilt").forEach((el) => {
-      el.addEventListener("pointermove", (e) => {
-        const r = el.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width - 0.5;
-        const y = (e.clientY - r.top) / r.height - 0.5;
-        el.classList.add("tilting");
-        el.style.transform = `perspective(900px) rotateX(${(-y * 10).toFixed(2)}deg) rotateY(${(x * 12).toFixed(2)}deg) translateY(-4px)`;
-      });
-      el.addEventListener("pointerleave", () => {
-        el.classList.remove("tilting");
-        el.style.transform = "";
-      });
+      if (hasGsap) {
+        gsap.set(el, { transformPerspective: 900 });
+        const rx = gsap.quickTo(el, "rotationX", {
+          duration: 0.6,
+          ease: "power3",
+        });
+        const ry = gsap.quickTo(el, "rotationY", {
+          duration: 0.6,
+          ease: "power3",
+        });
+        const yy = gsap.quickTo(el, "y", { duration: 0.6, ease: "power3" });
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width - 0.5;
+          const y = (e.clientY - r.top) / r.height - 0.5;
+          el.classList.add("tilting");
+          rx(-y * 9);
+          ry(x * 11);
+          yy(-4);
+        });
+        el.addEventListener("pointerleave", () => {
+          el.classList.remove("tilting");
+          rx(0);
+          ry(0);
+          yy(0);
+        });
+      } else {
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width - 0.5;
+          const y = (e.clientY - r.top) / r.height - 0.5;
+          el.classList.add("tilting");
+          el.style.transform = `perspective(900px) rotateX(${(-y * 9).toFixed(2)}deg) rotateY(${(x * 11).toFixed(2)}deg) translateY(-4px)`;
+        });
+        el.addEventListener("pointerleave", () => {
+          el.classList.remove("tilting");
+          el.style.transform = "";
+        });
+      }
     });
-
     // magnetic buttons
     document.querySelectorAll(".magnetic").forEach((el) => {
-      const strength = 0.28;
-      el.addEventListener("pointermove", (e) => {
-        const r = el.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height / 2);
-        el.style.transform = `translate(${dx * strength}px, ${dy * strength - 2}px)`;
-      });
-      el.addEventListener("pointerleave", () => (el.style.transform = ""));
+      const strength = 0.26;
+      if (hasGsap) {
+        const xTo = gsap.quickTo(el, "x", { duration: 0.5, ease: "power3" });
+        const yTo = gsap.quickTo(el, "y", { duration: 0.5, ease: "power3" });
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          xTo((e.clientX - (r.left + r.width / 2)) * strength);
+          yTo((e.clientY - (r.top + r.height / 2)) * strength);
+        });
+        el.addEventListener("pointerleave", () => {
+          xTo(0);
+          yTo(0);
+        });
+      } else {
+        el.addEventListener("pointermove", (e) => {
+          const r = el.getBoundingClientRect();
+          el.style.transform = `translate(${(e.clientX - (r.left + r.width / 2)) * strength}px, ${(e.clientY - (r.top + r.height / 2)) * strength - 2}px)`;
+        });
+        el.addEventListener("pointerleave", () => (el.style.transform = ""));
+      }
     });
+  }
+
+  /* ---------- parallax imagery ---------- */
+  function initParallax() {
+    if (!hasGsap || isMobile) return;
+    document
+      .querySelectorAll(".tile img, .news-hero img, .credits-media img")
+      .forEach((img) => {
+        const host = img.parentElement;
+        gsap.fromTo(
+          img,
+          { yPercent: -7, scale: 1.16 },
+          {
+            yPercent: 7,
+            scale: 1.16,
+            ease: "none",
+            scrollTrigger: {
+              trigger: host,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          },
+        );
+      });
   }
 
   /* ---------- pipeline path ---------- */
@@ -296,9 +596,13 @@
         trigger: ".pipeline",
         start: "top 85%",
         end: "bottom 55%",
-        scrub: 0.8,
+        scrub: 0.6,
         onUpdate: (self) =>
-          dot && gsap.set(dot, { opacity: self.progress > 0.97 ? 1 : 0 }),
+          dot &&
+          gsap.to(dot, {
+            opacity: self.progress > 0.97 ? 1 : 0,
+            duration: 0.4,
+          }),
       },
     });
   }
@@ -330,8 +634,8 @@
       scrollTrigger: {
         trigger: ".anatomy-figure",
         start: "top 85%",
-        end: "center 40%",
-        scrub: 0.7,
+        end: "center 42%",
+        scrub: 0.6,
       },
     });
     const order = [
@@ -351,17 +655,16 @@
       if (!els.length) return;
       tl.to(
         els,
-        {
-          strokeDashoffset: 0,
-          duration: 0.6,
-          ease: "power1.inOut",
-          stagger: 0.05,
-        },
+        { strokeDashoffset: 0, duration: 0.6, ease: "none", stagger: 0.05 },
         t,
       );
-      t += 0.35;
+      t += 0.32;
     });
-    tl.to(texts, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06 }, 0.9);
+    tl.to(
+      texts,
+      { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: "none" },
+      0.9,
+    );
   }
 
   /* ---------- 3D exploded stack ---------- */
@@ -374,10 +677,7 @@
       const idx = Math.min(items.length - 1, Math.floor(p * items.length));
       items.forEach((li, i) => li.classList.toggle("active", i <= idx));
     };
-    if (!hasGsap) {
-      items.forEach((li) => li.classList.add("active"));
-      return;
-    }
+    if (!hasGsap) return items.forEach((li) => li.classList.add("active"));
     const mm = gsap.matchMedia();
     mm.add(
       { desktop: "(min-width: 901px)", mobile: "(max-width: 900px)" },
@@ -387,8 +687,8 @@
           scrollTrigger: {
             trigger: desktop ? "#stackPin" : "#stack",
             start: desktop ? "center center" : "top 75%",
-            end: desktop ? "+=130%" : "bottom 70%",
-            scrub: desktop ? 0.9 : 0.6,
+            end: desktop ? "+=120%" : "bottom 70%",
+            scrub: desktop ? 0.7 : 0.5,
             pin: desktop ? "#stackPin" : false,
             anticipatePin: 1,
             onUpdate: (self) => highlight(self.progress),
@@ -432,16 +732,19 @@
       renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
-        antialias: true,
+        antialias: !isMobile,
         powerPreference: "high-performance",
       });
     } catch (e) {
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 1.75),
+    );
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    const CAM_Z = window.innerWidth < window.innerHeight ? 15 : 12;
+    const portrait = window.innerWidth < window.innerHeight;
+    const CAM_Z = portrait ? 15 : 12;
     camera.position.set(0, 0, CAM_Z);
     const group = new THREE.Group();
     scene.add(group);
@@ -522,7 +825,6 @@
 
     const kinds = ["photo", "sign", "id", "pdf", "photo", "sign", "id", "pdf"];
     const cards = [];
-    const portrait = window.innerWidth < window.innerHeight;
     kinds.forEach((k, i) => {
       const geo = new THREE.PlaneGeometry(1.3, 1.65);
       const mat = new THREE.MeshStandardMaterial({
@@ -534,7 +836,6 @@
         side: THREE.DoubleSide,
       });
       const m = new THREE.Mesh(geo, mat);
-      // keep the ring of documents outside the headline: wide ellipse, low on portrait screens
       const a = (i / kinds.length) * Math.PI * 2 + 0.4;
       const r = 6.2 + (i % 3) * 0.9;
       const y = portrait ? -3.2 - (i % 2) * 1.4 : Math.sin(a * 1.7) * 2.4;
@@ -557,7 +858,6 @@
       group.add(m);
       cards.push(m);
     });
-
     const ico = new THREE.Mesh(
       new THREE.IcosahedronGeometry(2.2, 1),
       new THREE.MeshBasicMaterial({
@@ -580,8 +880,7 @@
     );
     core.position.copy(ico.position);
     group.add(core);
-
-    const N = 800;
+    const N = isMobile ? 420 : 800;
     const pos = new Float32Array(N * 3);
     for (let i = 0; i < N; i++) {
       pos[i * 3] = (Math.random() - 0.5) * 30;
@@ -616,7 +915,7 @@
       },
       { passive: true },
     );
-    if (hasGsap) {
+    if (hasGsap)
       ScrollTrigger.create({
         trigger: "#hero",
         start: "top top",
@@ -624,16 +923,13 @@
         scrub: true,
         onUpdate: (self) => (sp = self.progress),
       });
-    } else {
+    else
       window.addEventListener(
         "scroll",
         () =>
           (sp = Math.min(1, window.scrollY / Math.max(1, window.innerHeight))),
-        {
-          passive: true,
-        },
+        { passive: true },
       );
-    }
     const resize = () => {
       const w = canvas.clientWidth || window.innerWidth;
       const h = canvas.clientHeight || window.innerHeight;
@@ -650,13 +946,15 @@
       }).observe(canvas);
 
     const clock = new THREE.Clock();
-    let intro = 0;
+    let introT = 0;
+    let started = false;
+    introDone.then(() => (started = true));
     function tick() {
       requestAnimationFrame(tick);
       if (!visible || document.hidden) return;
       const t = clock.getElapsedTime();
-      intro = Math.min(1, intro + 0.012);
-      const ease = 1 - Math.pow(1 - intro, 3);
+      if (started) introT = Math.min(1, introT + 0.012);
+      const ease = 1 - Math.pow(1 - introT, 3);
       mx += (tx - mx) * 0.05;
       my += (ty - my) * 0.05;
       group.rotation.y = Math.sin(t * 0.12) * 0.22 + mx * 0.28 + sp * 1.3;
@@ -694,14 +992,18 @@
     let timer;
     const refresh = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => ScrollTrigger.refresh(), 220);
+      timer = setTimeout(() => ScrollTrigger.refresh(), 240);
     };
     document.addEventListener("govforms:layout", refresh);
     window.addEventListener("load", refresh);
+    introDone.then(refresh);
     if ("ResizeObserver" in window) {
       const main = document.querySelector("main");
       if (main) new ResizeObserver(refresh).observe(main);
     }
+    document
+      .querySelectorAll("img[data-img]")
+      .forEach((img) => img.addEventListener("load", refresh, { once: true }));
   }
 
   /* ---------- boot ---------- */
@@ -711,7 +1013,8 @@
   initPipeline();
   initAnatomy();
   initStack();
+  initParallax();
   initHero3D();
   initRefresh();
-  setTimeout(initReveals, introDelay ? 500 : 0);
+  introDone.then(() => setTimeout(initReveals, introDelay ? 120 : 0));
 })();
