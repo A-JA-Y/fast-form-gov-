@@ -1,145 +1,123 @@
-# GovForms — Auto Document Formatter
+# GovForms — exam photo & signature resizer
 
-A premium, installable single-page web app that formats exam photos, signatures,
-thumb impressions and ID documents to exact pixel sizes and KB limits — entirely
-in your browser. Nothing is uploaded anywhere.
+A small, installable web app that formats exam photos, signatures, thumb
+impressions and ID documents to the exact pixel size and KB range a government
+portal asks for. Everything runs in the browser; nothing is uploaded.
 
 Built by **Amit Kumar** and **[Ajay Kumar](https://portfolio-astro-two.vercel.app/)**.
 
-## 🌟 What it does
+## What it does
 
-- **Exam catalog** — 40+ templates across seven categories: SSC, Railways,
-  Banking & Insurance, UPSC & State PSC, Defence & Police, Entrance & Teaching,
-  and Passport / PAN / Visa. Search by name, board or abbreviation, or browse by
-  category. Each card shows the photo and signature frames to scale.
-- **Studio** — a four-step flow (Template → Upload → Adjust → Export). Drop or
-  paste a photo and a signature, pan / zoom / rotate inside the exact frame, set
-  the output format and a KB ceiling, process, and download individually or as
-  one ZIP. Bank templates automatically add slots for the **left thumb
-  impression** and **handwritten declaration**.
-- **KB-aware encoding** — a binary search over JPEG quality lands each file just
-  under the limit; files that cannot fit are flagged.
-- **Signature / ink clean-up** — lifts photographed paper to pure white and
-  deepens the ink.
-- **Before & after** — side-by-side previews with animated size bars.
-- **Passport photo sheet** — tile any photo across A4, A5, Letter or 4×6 at
-  300 DPI with cut guides; export as JPEG or PDF.
-- **Quick compress** — squeeze any image under a KB target (JPEG / WEBP / PNG).
-- **Merge into one PDF** — drop images and PDFs, drag to reorder, keep original
-  sizes or fit to A4.
-- **Vacancy & exam news** — a daily-refreshed board of headlines about
-  notifications, admit cards, results and exam dates, filterable by category,
-  plus links to the official notice boards and a typical yearly calendar.
-- **Installable (PWA)** — add it to your home screen on Android, iOS or desktop;
-  a service worker keeps the app shell available offline.
-- **Mobile dock** — a floating glass dock with Home, Exams, a context-aware
-  action button (Studio → Process → Download), Tools and News.
-- Light / dark theme, keyboard shortcuts (`/` search exams, `Ctrl/⌘ + Enter`
-  process, `Ctrl/⌘ + V` paste an image, `Esc` close), toast feedback.
+- **Pick an exam** — 40 templates across SSC, Railways, Banking & Insurance,
+  UPSC & State PSC, Defence & Police, Entrance & Teaching, and Passport / PAN /
+  Visa. Search by name or board, or use **Custom** for your own sizes. Bank
+  templates add slots for the left thumb impression and handwritten
+  declaration; the last used exam is remembered.
+- **Add a photo and a signature** — drop, pick or paste. Frame the photo inside
+  the exact output size (drag, scroll or pinch to zoom, rotate, fill or fit,
+  background colour). Signatures photographed on paper are cleaned to white
+  paper and dark ink.
+- **Process** — each file is cropped to the exact pixels and encoded under the
+  KB limit (a binary search over JPEG quality). Files that land under a portal's
+  minimum are padded up to it; files that cannot fit are flagged. Output as
+  JPG, JPEG, PNG or PDF, with an optional ID document (image or PDF).
+- **Download** — individually, as one ZIP, or via the share sheet on phones.
+- **Tools** — passport photo sheet (A4, A5, Letter, 4×6 at 300 DPI, with cut
+  guides, JPEG or PDF), quick compress under a KB target, and merge images and
+  PDFs into one PDF (EXIF orientation respected).
+- **Exam news** — a daily-refreshed list of notifications, admit cards and
+  results with links to the official boards.
+- **Installable** — add it to the home screen on Android, iOS or desktop; the
+  app shell works offline. Light and dark themes follow the system.
 
-## 🎬 The cinematic layer
+Keyboard: `/` opens the exam picker, `Ctrl/⌘ + Enter` processes,
+`Ctrl/⌘ + V` pastes an image, `Esc` closes.
 
-- Lenis smooth scrolling synced to GSAP ScrollTrigger.
-- A preload curtain with a drawn logo mark and a progress bar tied to real
-  asset loading.
-- Three.js hero scene (floating document sheets, wireframe icosahedron,
-  particles) with pointer parallax and a scroll-driven camera.
-- Word-by-word headline reveal, animated counters, marquee of exam names, and a
-  photographic bento of the seven exam boards with scroll parallax.
-- A pipeline diagram that draws itself on scroll, a 2D "anatomy of a compliant
-  photo" figure scrubbed by scroll position (its values follow the selected
-  template), and a pinned 3D exploded stack of the deliverables.
-- Scroll-triggered reveals, staggered grids, cursor spotlight, magnetic buttons,
-  3D-tilt cards, aurora background and subtle film grain.
+## Template catalog
 
-Every effect is progressive: `prefers-reduced-motion` disables the heavy motion,
-and the page stays fully usable if the animation libraries fail to load.
+`templates.js` is the single source of truth. Each entry carries photo and
+signature sizes, formats, KB ranges, optional extra documents, search tags and
+notes. Entries flagged `verify: true` use generic passport-size defaults and are
+marked "check sizes" in the gallery. Portals change their rules, so cross-check
+the current official notification and use **Custom** when yours differs.
 
-## 📋 Template catalog
-
-`templates.js` is the single source of truth. Entries carry photo and signature
-sizes, formats, KB ranges, optional extra documents, search tags and notes.
-Entries flagged `verify: true` use generic passport-size defaults (3.5 × 4.5 cm
-photo, 3.5 × 1.5 cm signature at 150 DPI) and are labelled "verify sizes" in the
-gallery. Portals change their rules — always cross-check the current official
-notification and use **Custom** when yours differs.
-
-Well-known specs included: SSC (200 × 240 / 240 × 80, 20–50 KB / 10–20 KB),
-IBPS / SBI / RBI (200 × 230 / 140 × 60 with 240 × 240 thumb and 800 × 400
-declaration), UPSC OTR (350 × 350, 20–300 KB), NTA exams (10–200 KB photo,
-4–30 KB signature), GATE (400 × 520 / 500 × 160), US visa DS-160 (600 × 600,
-≤ 240 KB), and 35 × 45 mm ICAO passport photos.
-
-## 📰 News feed
+## News feed
 
 `news.json` is generated by `scripts/update-news.mjs`, which pulls Google News
-RSS (India edition) for a set of exam-category searches, de-duplicates the
-headlines and keeps the newest 72 from the last 45 days. The GitHub Actions
-workflow in `.github/workflows/update-news.yml` runs it daily and commits the
-result, so the hosted site refreshes itself. Run it locally with:
+RSS (India edition) for a set of exam searches, de-duplicates the headlines and
+keeps the newest 72 from the last 45 days. The GitHub Actions workflow in
+`.github/workflows/update-news.yml` runs it daily and commits the result.
 
 ```
 node scripts/update-news.mjs
 ```
 
-The page fetches `./news.json`; when opened from `file://` the live feed is
-unavailable and the official notice-board links are shown instead.
+When the feed cannot be fetched, the page shows the official notice-board links
+instead.
 
-## 🚀 Getting started
+## Getting started
 
 No build step. Serve the folder over HTTP (GitHub Pages, `npx serve`, any static
-host) and open `index.html`. An internet connection is needed on first load for
-the libraries below; afterwards the service worker caches the app shell.
+host) and open `index.html`. The first load needs an internet connection for
+fonts and the PDF/ZIP libraries; the service worker caches them afterwards.
 
 ```
 fast-form-gov/
-├── index.html                # page structure
-├── gov.css                   # design system, themes, animation states
-├── script.js                 # application logic (studio, catalog, tools, news, PWA)
-├── fx.js                     # cinematic layer (Lenis, GSAP ScrollTrigger, Three.js)
+├── index.html                # page structure and the inline icon sprite
+├── gov.css                   # design tokens, components, themes, print
+├── script.js                 # studio, catalog, tools, news, PWA
 ├── templates.js              # exam & document catalog
 ├── news.json                 # generated headlines (refreshed daily by CI)
 ├── manifest.webmanifest      # PWA manifest
-├── sw.js                     # service worker (offline shell, runtime cache)
+├── sw.js                     # service worker (network-first shell, runtime cache)
 ├── icons/                    # app icons (SVG, 192, 512, maskable, Apple touch)
 ├── scripts/update-news.mjs   # news feed updater
 └── .github/workflows/        # daily news refresh
 ```
 
-## 🔧 Technical notes
+## Technical notes
 
-- Vanilla HTML / CSS / JavaScript — no framework, no bundler.
-- Canvas API for cropping, rotation, progressive downscaling and encoding;
-  jsPDF for single-image PDFs and photo sheets; pdf-lib for merging; JSZip for
-  bundled downloads; GSAP 3.13 + ScrollTrigger and Lenis for motion; Three.js
-  r128 for the hero. Libraries load from cdnjs and jsDelivr with CORS so the
-  service worker can cache them.
-- Images larger than 2600 px on the longest side are downscaled progressively
-  on load; outputs use stepwise halving before the final resample.
-- Photography is served from Wikimedia Commons under free licences and credited
-  in the footer ("Photo credits").
-- The last used template and theme are remembered in `localStorage`; nothing
+- Vanilla HTML / CSS / JavaScript. No framework, no bundler, no runtime
+  dependencies beyond three lazy-loaded libraries: jsPDF (single-image PDFs and
+  photo sheets), pdf-lib (merging) and JSZip (bundled downloads), served from
+  cdnjs with CORS so the service worker can cache them.
+- Canvas API for cropping, rotation, progressive downscaling and encoding.
+  Photos and signatures are decoded at up to 2600 px on the longest side; the
+  compress, merge and ID paths keep full resolution.
+- Minimum-size padding writes a JPEG COM segment or a PNG tEXt chunk so the
+  image data is untouched.
+- Typography: [Satoshi](https://www.fontshare.com/fonts/satoshi) via Fontshare
+  and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) via Google Fonts.
+  Icons: [Lucide](https://lucide.dev) (ISC licence), inlined as an SVG sprite.
+- Accessible by design: the exam picker is a combobox/listbox, dialogs trap
+  focus and make the page inert, tabs and chips carry ARIA state, every control
+  has a visible focus ring, and reduced-motion preferences are respected.
+- The last used exam and the theme are remembered in `localStorage`; nothing
   else is stored.
 
-## 🔒 Privacy
+## Privacy
 
 All processing runs on your device. Files are never sent to a server; the page
-only fetches its libraries, fonts, photographs and the news feed.
+only fetches its fonts, its libraries and the news feed.
 
-## 🚀 Version
+## Version
 
-**Current version**: 5.0
+**Current version**: 6.0
 
-- v5.0 — Categorised catalog of 40+ exams with search and filters; dynamic
-  extra-document slots (thumb impression, declaration, postcard photo); guided
-  four-step Studio with a searchable template picker; daily vacancy & exam
-  news board; installable PWA with offline shell; mobile dock with context
-  action; Lenis smooth scrolling and re-tuned scroll choreography; photographic
-  showcase; new preload animation; credits.
-- v4.0 — Cinematic redesign: 3D hero, scroll-driven diagrams, exploded stack,
-  template gallery; Studio with drag & drop, clipboard paste, framing editor,
-  KB-targeted encoding, signature clean-up, background fill, ZIP download; photo
-  sheet and quick compress tools; drag-to-reorder merge; light / dark theme.
+- v6.0 — App-first rework: the studio is the first screen, with a sticky output
+  panel on desktop and a fixed action bar and dock on phones. Flat visual system
+  with Satoshi, JetBrains Mono and Lucide icons; light and dark themes. Removed
+  the cinematic layer (GSAP, Lenis, Three.js), the hero, marquee, showcase,
+  stats and stock photography. Fixed the 35 bugs found in a code audit plus the
+  issues surfaced by a new end-to-end suite, including stale results
+  after edits, minimum-KB enforcement, EXIF orientation in merges, the 2600 px
+  cap on compress/merge/ID, service-worker staleness, iPad install, dialog
+  focus, paste routing and mobile overflow.
+- v5.0 — Categorised catalog of 40+ exams with search and filters; extra
+  document slots; guided Studio; news board; installable PWA; mobile dock.
+- v4.0 — Cinematic redesign; Studio with drag & drop, clipboard paste, framing
+  editor, KB-targeted encoding, signature clean-up, ZIP download; photo sheet,
+  quick compress and merge tools; light / dark theme.
 - v3.0 — Individual format selectors for photo, signature and ID; improved PDF
   conversion.
 - v2.0 — Preview section with file size tracking.
