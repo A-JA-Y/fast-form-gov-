@@ -1,15 +1,13 @@
 {
-  "name": "GovForms — Auto Document Formatter",
+  "name": "GovForms – Exam photo & signature resizer",
   "short_name": "GovForms",
-  "description": "Format exam photos, signatures and ID documents to exact pixel sizes and KB limits, entirely on your device.",
+  "description": "Resize exam photos and signatures to the exact pixel size and KB limit for SSC, RRB, IBPS, UPSC, NEET and more. Runs in your browser.",
   "id": "./",
   "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
-  "orientation": "portrait",
-  "background_color": "#050915",
-  "theme_color": "#050915",
+  "background_color": "#f5f6f8",
+  "theme_color": "#f5f6f8",
   "lang": "en-IN",
   "categories": ["productivity", "utilities", "education"],
   "icons": [
@@ -40,22 +38,34 @@
   ],
   "shortcuts": [
     {
-      "name": "Open the Studio",
-      "short_name": "Studio",
+      "name": "Format photo",
       "url": "./?source=pwa#studio",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
-      "name": "Merge into one PDF",
-      "short_name": "Merge",
+      "name": "Merge PDF",
       "url": "./?source=pwa#merge",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
-      "name": "Vacancy news",
-      "short_name": "News",
+      "name": "Exam news",
       "url": "./?source=pwa#news",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

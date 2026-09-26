@@ -35,7 +35,7 @@
     },
   ];
   const SSC_PHOTO = P(200, 240, "jpeg", 20, 50);
-  const SSC_SIGN = P(240, 80, "png", 10, 20);
+  const SSC_SIGN = P(240, 80, "jpeg", 10, 20);
   const UPSC_PHOTO = P(350, 350, "jpeg", 20, 300);
   const UPSC_SIGN = P(350, 350, "jpeg", 20, 300);
   const NTA_PHOTO = {
@@ -52,45 +52,44 @@
     {
       id: "ssc",
       name: "SSC",
-      blurb:
-        "Staff Selection Commission — CGL, CHSL, MTS, GD, CPO, JE, Stenographer",
-      icon: "i-target",
+      short: "SSC",
+      blurb: "Staff Selection Commission — CGL, CHSL, MTS, GD, CPO, JE, Stenographer",
     },
     {
       id: "railway",
       name: "Railways",
+      short: "Railways",
       blurb: "RRB NTPC, Group D, ALP, JE, RPF and metro recruitment",
-      icon: "i-layers",
     },
     {
       id: "banking",
       name: "Banking & Insurance",
+      short: "Banking",
       blurb: "IBPS, SBI, RBI, LIC, NABARD and other bank portals",
-      icon: "i-shield",
     },
     {
       id: "upsc",
       name: "UPSC & State PSC",
+      short: "UPSC & PSC",
       blurb: "Civil services, NDA / CDS and state public service commissions",
-      icon: "i-bolt",
     },
     {
       id: "defence",
       name: "Defence & Police",
+      short: "Defence",
       blurb: "Agniveer, AFCAT, Navy, CAPF and state police forces",
-      icon: "i-shield",
     },
     {
       id: "entrance",
       name: "Entrance & Teaching",
+      short: "Entrance",
       blurb: "NEET, JEE, CUET, GATE, CAT, CTET and UGC NET",
-      icon: "i-sparkle",
     },
     {
       id: "documents",
       name: "Passport, PAN & Visa",
+      short: "Documents",
       blurb: "Identity documents and international visa photo standards",
-      icon: "i-id",
     },
   ];
 
@@ -100,16 +99,7 @@
       name: "SSC CGL / CHSL / MTS / GD",
       org: "Staff Selection Commission",
       category: "ssc",
-      tags: [
-        "ssc",
-        "cgl",
-        "chsl",
-        "mts",
-        "havaldar",
-        "gd constable",
-        "selection post",
-        "otr",
-      ],
+      tags: ["ssc", "cgl", "chsl", "mts", "havaldar", "gd constable", "selection post", "otr"],
       photo: SSC_PHOTO,
       sign: SSC_SIGN,
     },
@@ -138,6 +128,8 @@
       tags: ["rrb", "railway", "ntpc", "group d", "level 1", "rrc"],
       photo: P(200, 230, "png"),
       sign: P(150, 50, "png"),
+      verify: true,
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     rrb_alp_je: {
       name: "RRB ALP / Technician / JE",
@@ -146,6 +138,8 @@
       tags: ["rrb", "railway", "alp", "loco pilot", "technician", "je"],
       photo: P(200, 230, "png"),
       sign: P(150, 50, "png"),
+      verify: true,
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     rpf: {
       name: "RPF Constable / SI",
@@ -154,6 +148,8 @@
       tags: ["rpf", "railway police", "constable", "sub inspector"],
       photo: P(200, 230, "png"),
       sign: P(150, 50, "png"),
+      verify: true,
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
 
     /* ---------------- Banking & Insurance ---------------- */
@@ -214,17 +210,7 @@
       name: "UPSC CSE / IFoS / ESE / CMS",
       org: "Union Public Service Commission (OTR)",
       category: "upsc",
-      tags: [
-        "upsc",
-        "civil services",
-        "ias",
-        "ips",
-        "ifos",
-        "ese",
-        "cms",
-        "otr",
-        "prelims",
-      ],
+      tags: ["upsc", "civil services", "ias", "ips", "ifos", "ese", "cms", "otr", "prelims"],
       photo: UPSC_PHOTO,
       sign: UPSC_SIGN,
       note: "OTR accepts 350–1000 px squares. CSE photos must be recent and may need a name-and-date placard.",
@@ -244,6 +230,8 @@
       tags: ["bpsc", "bihar", "pcs", "state psc"],
       photo: P(150, 180, "png"),
       sign: P(120, 60, "png"),
+      verify: true,
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     uppsc: {
       name: "UPPSC PCS",
@@ -285,14 +273,7 @@
       name: "TNPSC",
       org: "Tamil Nadu Public Service Commission",
       category: "upsc",
-      tags: [
-        "tnpsc",
-        "tamil nadu",
-        "group 1",
-        "group 2",
-        "group 4",
-        "state psc",
-      ],
+      tags: ["tnpsc", "tamil nadu", "group 1", "group 2", "group 4", "state psc"],
       photo: { ...GENERIC_PHOTO, maxKb: 50 },
       sign: { ...GENERIC_SIGN, maxKb: 30 },
       verify: true,
@@ -348,16 +329,7 @@
       name: "CAPF / BSF / CRPF / CISF (via SSC GD)",
       org: "Staff Selection Commission",
       category: "defence",
-      tags: [
-        "capf",
-        "bsf",
-        "crpf",
-        "cisf",
-        "itbp",
-        "ssb",
-        "gd constable",
-        "ssc",
-      ],
+      tags: ["capf", "bsf", "crpf", "cisf", "itbp", "ssb", "gd constable", "ssc"],
       photo: SSC_PHOTO,
       sign: SSC_SIGN,
     },
@@ -365,14 +337,7 @@
       name: "State Police Constable / SI",
       org: "UP, Bihar, MP, Rajasthan and other state police boards",
       category: "defence",
-      tags: [
-        "police",
-        "constable",
-        "sub inspector",
-        "up police",
-        "bihar police",
-        "mp police",
-      ],
+      tags: ["police", "constable", "sub inspector", "up police", "bihar police", "mp police"],
       photo: { ...GENERIC_PHOTO, minKb: 20, maxKb: 50 },
       sign: { ...GENERIC_SIGN, minKb: 10, maxKb: 30 },
       verify: true,
@@ -462,6 +427,7 @@
 
     /* ---------------- Passport, PAN & Visa ---------------- */
     passport_in: {
+      signOptional: true,
       name: "Indian Passport (Passport Seva)",
       org: "Ministry of External Affairs",
       category: "documents",
@@ -471,6 +437,7 @@
       note: "Plain white background, neutral expression, no glasses glare.",
     },
     us_visa: {
+      signOptional: true,
       name: "US Visa (DS-160)",
       org: "US Department of State",
       category: "documents",
@@ -480,6 +447,7 @@
       note: "Square, 600–1200 px, plain white background, under 240 KB.",
     },
     schengen: {
+      signOptional: true,
       name: "Schengen / UK visa (35 × 45 mm)",
       org: "ICAO passport-photo standard",
       category: "documents",
@@ -498,6 +466,7 @@
       verify: true,
     },
     passport: {
+      signOptional: true,
       name: "Passport / Visa 2 × 2 in",
       org: "600 × 600 px at 300 DPI",
       category: "documents",
@@ -506,12 +475,15 @@
       sign: P(300, 100, "png"),
     },
     mm3545: {
+      signOptional: true,
       name: "35 × 45 mm ID photo",
       org: "413 × 531 px at 300 DPI",
       category: "documents",
       tags: ["35x45", "id photo", "generic", "300 dpi"],
       photo: { ...mm(35, 45, 300), format: "jpeg" },
       sign: { ...mm(35, 15, 300), format: "png" },
+      verify: true,
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     custom: {
       name: "Custom",

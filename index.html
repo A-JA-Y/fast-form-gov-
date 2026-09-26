@@ -1,2284 +1,826 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
+    <meta charset="utf-8" />
     <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-X94MBNQ1LK"
-    ></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X94MBNQ1LK"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
       }
       gtag("js", new Date());
-
       gtag("config", "G-X94MBNQ1LK");
     </script>
 
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover"
-    />
-    <meta
-      name="description"
-      content="GovForms formats exam photos, signatures and ID documents to exact pixel sizes and KB limits for SSC, Railways, Banking, UPSC, Defence and entrance exams — entirely in your browser."
-    />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: dark)"
-      content="#050915"
-    />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: light)"
-      content="#f3f6fc"
-    />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>GovForms – Exam photo &amp; signature resizer</title>
+    <meta name="description" content="Resize exam photos and signatures to the exact pixel size and KB limit for SSC, RRB, IBPS, UPSC, NEET and more. Runs in your browser." />
+    <meta name="theme-color" content="#f5f6f8" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="application-name" content="GovForms" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="GovForms" />
-    <meta property="og:title" content="GovForms — Auto Document Formatter" />
-    <meta
-      property="og:description"
-      content="Exact-size exam photos, signatures and PDFs in seconds. 100% on-device."
-    />
+    <link rel="canonical" href="https://hellcoader-chill.github.io/fast-form-gov-/" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="icons/icon-512.png" />
-
-    <title>GovForms — Auto Document Formatter</title>
+    <meta property="og:url" content="https://hellcoader-chill.github.io/fast-form-gov-/" />
+    <meta property="og:title" content="GovForms – Exam photo & signature resizer" />
+    <meta property="og:description" content="Resize exam photos and signatures to the exact pixel size and KB limit for SSC, RRB, IBPS, UPSC, NEET and more. Runs in your browser." />
+    <meta property="og:image" content="https://hellcoader-chill.github.io/fast-form-gov-/icons/icon-512.png" />
 
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 
     <script>
-      document.documentElement.classList.add("js");
-      try {
-        var t = localStorage.getItem("govforms-theme");
-        if (t === "light" || t === "dark")
-          document.documentElement.setAttribute("data-theme", t);
-      } catch (e) {}
-      // boot progress for the intro (counts the deferred libraries as they land)
-      window.__boot = {
-        total: 8,
-        loaded: 0,
-        tick: function () {
-          this.loaded++;
-          document.documentElement.style.setProperty(
-            "--boot",
-            Math.min(1, this.loaded / this.total),
-          );
-          document.dispatchEvent(new CustomEvent("govforms:boot"));
-        },
-      };
+      // theme bootstrap: saved choice wins, otherwise the system preference
+      (function () {
+        var root = document.documentElement;
+        root.classList.add("js");
+        var t = null;
+        try {
+          t = localStorage.getItem("govforms-theme");
+        } catch (e) {}
+        if (t === "light" || t === "dark") root.setAttribute("data-theme", t);
+        var dark = t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.content = dark ? "#0f1115" : "#f5f6f8";
+      })();
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
-    <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin />
-    <!-- fonts load asynchronously so a slow font CDN never blocks scripts or first paint -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
-      rel="stylesheet"
-      media="print"
-      crossorigin="anonymous"
-      onload="this.media = 'all'"
-    />
-    <noscript>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
-        rel="stylesheet"
-      />
-    </noscript>
-    <link rel="stylesheet" href="./gov.css" />
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" crossorigin="anonymous" />
+    <link rel="stylesheet" href="gov.css?v=6" />
 
-    <!-- jsPDF for single-image PDF output -->
-    <script
-      defer
-      crossorigin="anonymous"
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-    ></script>
-    <!-- pdf-lib for merging PDFs and embedding images -->
-    <script
-      defer
-      crossorigin="anonymous"
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"
-    ></script>
-    <!-- JSZip for bundled downloads -->
-    <script
-      defer
-      crossorigin="anonymous"
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
-    ></script>
-    <!-- GSAP + ScrollTrigger for scroll-driven cinematics -->
-    <script
-      defer
-      crossorigin="anonymous"
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"
-    ></script>
-    <script
-      defer
-      crossorigin="anonymous"
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"
-    ></script>
-    <!-- Lenis for buttery smooth scrolling -->
-    <script
-      defer
-      crossorigin="anonymous"
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="https://cdn.jsdelivr.net/npm/lenis@1.3.4/dist/lenis.min.js"
-    ></script>
-    <!-- Three.js for the 3D hero scene -->
-    <script
-      defer
-      crossorigin="anonymous"
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
-    ></script>
-    <script
-      defer
-      onload="__boot.tick()"
-      onerror="__boot.tick()"
-      src="./templates.js"
-    ></script>
-    <script defer src="./script.js"></script>
-    <script defer src="./fx.js"></script>
+    <script defer src="templates.js?v=6"></script>
+    <script defer src="script.js?v=6"></script>
   </head>
 
   <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript
-      ><iframe
-        src="https://www.googletagmanager.com/ns.html?id=GTM-PQWZ9JCR"
-        height="0"
-        width="0"
-        style="display: none; visibility: hidden"
-      ></iframe
-    ></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    <a class="skip" href="#templateField">Skip to the exam picker</a>
 
-    <!-- Icon sprite -->
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      style="display: none"
-      aria-hidden="true"
-    >
-      <symbol
-        id="i-upload"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 16V4m0 0-4 4m4-4 4 4" />
-        <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
-      </symbol>
-      <symbol
-        id="i-photo"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <rect x="3" y="4" width="18" height="16" rx="3" />
-        <circle cx="9" cy="10" r="2" />
-        <path d="m21 16-5-5-9 9" />
-      </symbol>
-      <symbol
-        id="i-pen"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M3 20c3-1 4-3 5-6s3-4 4-2-1 5 1 5 3-3 4-3 1 2 4 2" />
-        <path d="m14 5 3-3 3 3-3 3z" />
-      </symbol>
-      <symbol
-        id="i-thumb"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 2c3.5 0 6 3 6 7.5V15a6 6 0 0 1-12 0V9.5C6 5 8.5 2 12 2z" />
-        <path
-          d="M9 9c1-1.5 5-1.5 6 0M8.5 12c1.5-2 5.5-2 7 0M9 15c1-1.5 5-1.5 6 0"
-        />
-      </symbol>
-      <symbol
-        id="i-id"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <rect x="2" y="5" width="20" height="14" rx="3" />
-        <circle cx="8" cy="12" r="2.2" />
-        <path d="M13 10h5M13 14h5M5 17c.6-1.6 1.7-2.4 3-2.4s2.4.8 3 2.4" />
-      </symbol>
-      <symbol
-        id="i-pdf"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path
-          d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
-        />
-        <path d="M14 2v6h6M8 15h8M8 11h3M8 19h5" />
-      </symbol>
-      <symbol
-        id="i-zip"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <rect x="3" y="4" width="18" height="16" rx="3" />
-        <path d="M10 4v2h2v2h-2v2h2v2h-2v2h2v2h-2" />
-      </symbol>
-      <symbol
-        id="i-sun"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-      >
-        <circle cx="12" cy="12" r="4" />
-        <path
-          d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"
-        />
-      </symbol>
-      <symbol
-        id="i-moon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" />
-      </symbol>
-      <symbol
-        id="i-arrow"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M5 12h14m-6-6 6 6-6 6" />
-      </symbol>
-      <symbol
-        id="i-check"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="m5 12 5 5 9-10" />
-      </symbol>
-      <symbol
-        id="i-x"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-      >
-        <path d="M6 6l12 12M18 6 6 18" />
-      </symbol>
-      <symbol
-        id="i-eye"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
-        <circle cx="12" cy="12" r="3" />
-      </symbol>
-      <symbol
-        id="i-rotate"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M20 12a8 8 0 1 1-2.3-5.7" />
-        <path d="M20 4v5h-5" />
-      </symbol>
-      <symbol
-        id="i-reset"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M4 12a8 8 0 1 0 2.3-5.7" />
-        <path d="M4 4v5h5" />
-      </symbol>
-      <symbol id="i-grip" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="9" cy="6" r="1.6" />
-        <circle cx="15" cy="6" r="1.6" />
-        <circle cx="9" cy="12" r="1.6" />
-        <circle cx="15" cy="12" r="1.6" />
-        <circle cx="9" cy="18" r="1.6" />
-        <circle cx="15" cy="18" r="1.6" />
-      </symbol>
-      <symbol
-        id="i-up"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 19V5m-6 6 6-6 6 6" />
-      </symbol>
-      <symbol
-        id="i-down"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 5v14m6-6-6 6-6-6" />
-      </symbol>
-      <symbol
-        id="i-download"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.9"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 4v11m0 0 4-4m-4 4-4-4" />
-        <path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
-      </symbol>
-      <symbol
-        id="i-bolt"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linejoin="round"
-      >
-        <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
-      </symbol>
-      <symbol
-        id="i-shield"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z" />
-        <path d="m9 12 2 2 4-4" />
-      </symbol>
-      <symbol
-        id="i-target"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-      >
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="12" r="5" />
-        <circle cx="12" cy="12" r="1.2" fill="currentColor" />
-      </symbol>
-      <symbol
-        id="i-layers"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linejoin="round"
-      >
-        <path d="m12 3 9 5-9 5-9-5z" />
-        <path d="m3 13 9 5 9-5M3 17l9 5 9-5" />
-      </symbol>
-      <symbol
-        id="i-scissors"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <circle cx="6" cy="6" r="3" />
-        <circle cx="6" cy="18" r="3" />
-        <path d="M20 4 8.5 15.5M8.5 8.5 20 20" />
-      </symbol>
-      <symbol
-        id="i-sparkle"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linejoin="round"
-      >
-        <path
-          d="M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7z"
-        />
-        <path
-          d="M19 15c.3 1.6 1.2 2.5 3 3-1.8.3-2.7 1.2-3 3-.3-1.8-1.2-2.7-3-3 1.8-.5 2.7-1.4 3-3z"
-        />
-      </symbol>
-      <symbol
-        id="i-grid"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-      >
-        <rect x="3" y="3" width="8" height="8" rx="1.5" />
-        <rect x="13" y="3" width="8" height="8" rx="1.5" />
-        <rect x="3" y="13" width="8" height="8" rx="1.5" />
-        <rect x="13" y="13" width="8" height="8" rx="1.5" />
-      </symbol>
-      <symbol
-        id="i-compress"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5m11-5v5h-5" />
-        <rect x="9" y="9" width="6" height="6" rx="1" />
-      </symbol>
-      <symbol
-        id="i-merge"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M6 4v6a4 4 0 0 0 4 4h4a4 4 0 0 1 4 4v2" />
-        <path d="M18 4v6a4 4 0 0 1-4 4" />
-        <path d="m15 17 3 3 3-3" />
-      </symbol>
-      <symbol
-        id="i-home"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
-      </symbol>
-      <symbol
-        id="i-news"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z" />
-        <path d="M19 8h1a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2" />
-        <path d="M7 9h6M7 13h9M7 17h9" />
-      </symbol>
-      <symbol
-        id="i-search"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.9"
-        stroke-linecap="round"
-      >
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </symbol>
-      <symbol
-        id="i-install"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <rect x="6" y="2" width="12" height="20" rx="3" />
-        <path d="M12 7v7m0 0 3-3m-3 3-3-3M10 18h4" />
-      </symbol>
-      <symbol
-        id="i-share"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 3v12m0-12-4 4m4-4 4 4" />
-        <path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8" />
-      </symbol>
-      <symbol
-        id="i-plus-square"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-      >
-        <rect x="3" y="3" width="18" height="18" rx="4" />
-        <path d="M12 8v8m-4-4h8" />
-      </symbol>
-      <symbol
-        id="i-external"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.9"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M14 4h6v6M20 4l-9 9" />
-        <path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" />
-      </symbol>
-      <symbol
-        id="i-calendar"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-      >
-        <rect x="3" y="5" width="18" height="16" rx="3" />
-        <path d="M3 10h18M8 3v4m8-4v4" />
-      </symbol>
-      <symbol
-        id="i-chevron"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="m6 9 6 6 6-6" />
-      </symbol>
-      <symbol
-        id="i-tools"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="m14.5 6.5 3 3L7 20H4v-3z" />
-        <path d="m13 8 3-3a2.1 2.1 0 0 1 3 3l-3 3" />
-        <path d="M4 20h16" />
-      </symbol>
-      <symbol
-        id="i-heart"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linejoin="round"
-      >
-        <path
-          d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"
-        />
-      </symbol>
-      <symbol
-        id="i-info"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 11v5m0-8h.01" />
-      </symbol>
-      <symbol
-        id="i-image-off"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <rect x="3" y="4" width="18" height="16" rx="3" />
-        <path d="m3 20 7-7 4 4 3-3 4 4" />
-      </symbol>
-    </svg>
-
-    <!-- Intro -->
-    <div id="intro" class="intro" aria-hidden="true">
-      <div class="intro-inner">
-        <svg class="intro-logo" viewBox="0 0 120 120" aria-hidden="true">
-          <defs>
-            <linearGradient id="introRing" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#4f8cff" />
-              <stop offset=".55" stop-color="#22d3ee" />
-              <stop offset="1" stop-color="#ffb547" />
-            </linearGradient>
-          </defs>
-          <circle class="il-ring" cx="60" cy="60" r="44" />
-          <rect class="il-sheet" x="42" y="34" width="36" height="46" rx="6" />
-          <circle class="il-head" cx="60" cy="50" r="7.5" />
-          <path class="il-body" d="M47 72c2-8 8-12 13-12s11 4 13 12v2H47z" />
-          <path class="il-sig" d="M46 88c7-9 10 7 17 0s10 6 15-2" />
-        </svg>
-        <div class="intro-word" aria-hidden="true">
-          <span>G</span><span>o</span><span>v</span><span class="hi">F</span
-          ><span class="hi">o</span><span class="hi">r</span
-          ><span class="hi">m</span><span class="hi">s</span>
-        </div>
-        <div class="intro-tag">Frame it. Fit it. Ship it.</div>
-        <div class="intro-bar"><i></i></div>
-      </div>
-    </div>
-
-    <div class="cursor-glow" aria-hidden="true"></div>
-    <div class="aurora" aria-hidden="true">
-      <span class="blob b1"></span>
-      <span class="blob b2"></span>
-      <span class="blob b3"></span>
-    </div>
-    <div class="grain" aria-hidden="true"></div>
-
-    <!-- NAV -->
     <header class="nav" id="nav">
       <div class="nav-inner">
-        <a class="brand" href="#top" aria-label="GovForms home">
-          <span class="brand-mark"></span>
-          <span class="brand-text">Gov<b>Forms</b></span>
+        <a class="brand" href="#top" aria-label="GovForms, back to top">
+          <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2" />
+            <rect x="8.5" y="7" width="7" height="9" rx="1.5" fill="var(--accent)" />
+          </svg>
+          <span>GovForms</span>
         </a>
         <nav class="nav-links" aria-label="Sections">
-          <a href="#how" data-nav="how">How it works</a>
-          <a href="#templates" data-nav="templates">Exams</a>
-          <a href="#studio" data-nav="studio">Studio</a>
-          <a href="#tools" data-nav="tools">Tools</a>
-          <a href="#news" data-nav="news">News</a>
-          <a href="#faq" data-nav="faq">FAQ</a>
+          <a href="#templates">Exams</a>
+          <a href="#tools">Tools</a>
+          <a href="#news">News</a>
+          <a href="#faq">Questions</a>
         </nav>
         <div class="nav-actions">
-          <button
-            class="icon-btn"
-            id="installBtn"
-            type="button"
-            hidden
-            aria-label="Install GovForms as an app"
-            title="Install app"
-          >
-            <svg class="ic"><use href="#i-install" /></svg>
+          <button class="btn btn-secondary btn-sm" id="installBtn" type="button" hidden>
+            <svg class="ic" aria-hidden="true"><use href="#i-install" /></svg>
+            Install
           </button>
-          <button
-            class="icon-btn"
-            id="themeToggle"
-            type="button"
-            aria-label="Toggle light and dark theme"
-            title="Toggle theme"
-          >
-            <svg class="ic ic-sun"><use href="#i-sun" /></svg>
-            <svg class="ic ic-moon"><use href="#i-moon" /></svg>
+          <button class="icon-btn" id="themeToggle" type="button" aria-label="Switch to dark theme">
+            <svg class="ic ic-sun" aria-hidden="true"><use href="#i-sun" /></svg>
+            <svg class="ic ic-moon" aria-hidden="true"><use href="#i-moon" /></svg>
           </button>
-          <a class="btn btn-primary btn-sm nav-cta" href="#studio"
-            >Open Studio</a
-          >
         </div>
       </div>
-      <div class="scroll-progress" id="scrollProgress"></div>
     </header>
 
-    <!-- MOBILE DOCK -->
-    <nav class="dock" id="dock" aria-label="Quick navigation">
-      <a class="dock-item" href="#top" data-dock="hero">
-        <svg class="ic"><use href="#i-home" /></svg><span>Home</span>
-      </a>
-      <a class="dock-item" href="#templates" data-dock="templates">
-        <svg class="ic"><use href="#i-grid" /></svg><span>Exams</span>
-      </a>
-      <button
-        class="dock-cta"
-        id="dockCta"
-        type="button"
-        aria-label="Open the Studio"
-      >
-        <span class="dock-cta-ring"></span>
-        <svg class="ic" id="dockCtaIcon"><use href="#i-sparkle" /></svg>
-        <span class="dock-cta-label" id="dockCtaLabel">Studio</span>
-      </button>
-      <a class="dock-item" href="#tools" data-dock="tools">
-        <svg class="ic"><use href="#i-tools" /></svg><span>Tools</span>
-      </a>
-      <a class="dock-item" href="#news" data-dock="news">
-        <svg class="ic"><use href="#i-news" /></svg><span>News</span>
-      </a>
-    </nav>
-
     <main id="top">
-      <!-- HERO -->
-      <section class="hero" id="hero">
-        <canvas id="heroCanvas" class="hero-canvas" aria-hidden="true"></canvas>
-        <div class="hero-inner">
-          <span class="eyebrow" data-reveal="up">
-            <svg class="ic"><use href="#i-shield" /></svg>
-            100% on-device · nothing is uploaded
-          </span>
-          <h1 class="hero-title" data-split>
-            Exam photos &amp; signatures, <em>exactly right,</em> in seconds.
-          </h1>
-          <p class="hero-sub" data-reveal="up" data-delay="0.35">
-            Pick your exam, drop a photo, drag it into frame. GovForms crops to
-            the exact pixels, squeezes under the KB limit and hands you a
-            ready-to-upload file for SSC, Railways, Banking, UPSC, Defence and
-            every major entrance test.
-          </p>
-          <div class="hero-cta" data-reveal="up" data-delay="0.5">
-            <a class="btn btn-primary btn-lg magnetic" href="#studio">
-              Open the Studio
-              <svg class="ic"><use href="#i-arrow" /></svg>
-            </a>
-            <a class="btn btn-ghost btn-lg magnetic" href="#templates"
-              >Browse exams</a
-            >
-          </div>
-          <div class="hero-stats" data-reveal-stagger>
-            <div class="stat">
-              <div class="stat-num">
-                <span data-count="40" id="statTemplates">0</span
-                ><span class="stat-suffix">+</span>
-              </div>
-              <div class="stat-label">exam &amp; document templates</div>
-            </div>
-            <div class="stat">
-              <div class="stat-num">
-                <span data-count="100">0</span
-                ><span class="stat-suffix">%</span>
-              </div>
-              <div class="stat-label">processed in your browser</div>
-            </div>
-            <div class="stat">
-              <div class="stat-num">
-                <span class="stat-prefix">&lt;</span
-                ><span data-count="3">0</span><span class="stat-suffix">s</span>
-              </div>
-              <div class="stat-label">per document</div>
-            </div>
-          </div>
-        </div>
-        <a class="scroll-cue" href="#showcase" aria-label="Scroll down">
-          <span></span>
-        </a>
-      </section>
-
-      <!-- MARQUEE -->
-      <div class="marquee" aria-hidden="true">
-        <div class="marquee-track">
-          <span>SSC CGL</span><span>SSC CHSL</span><span>RRB NTPC</span
-          ><span>IBPS PO</span><span>SBI Clerk</span><span>UPSC CSE</span
-          ><span>NDA</span><span>Agniveer</span><span>NEET</span
-          ><span>JEE Main</span><span>CUET</span><span>GATE</span
-          ><span>CTET</span><span>BPSC</span><span>Passport</span
-          ><span>PAN</span> <span>SSC CGL</span><span>SSC CHSL</span
-          ><span>RRB NTPC</span><span>IBPS PO</span><span>SBI Clerk</span
-          ><span>UPSC CSE</span><span>NDA</span><span>Agniveer</span
-          ><span>NEET</span><span>JEE Main</span><span>CUET</span
-          ><span>GATE</span><span>CTET</span><span>BPSC</span
-          ><span>Passport</span><span>PAN</span>
-        </div>
-      </div>
-
-      <!-- SHOWCASE (photo bento) -->
-      <section class="section showcase" id="showcase">
+      <!-- 1. STUDIO -->
+      <section class="section studio" id="studio">
         <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">01 — Every board, one workflow</span>
-            <h2>From the notice board to the upload button.</h2>
-            <p>
-              Seven categories, forty-plus templates. Tap a board to jump
-              straight to its exams.
-            </p>
-          </div>
-          <div class="bento" data-reveal-stagger>
-            <a class="tile tile-lg" href="#templates" data-cat="railway">
-              <img data-img="railway" alt="" loading="lazy" decoding="async" />
-              <span class="tile-body"
-                ><span class="tile-kicker">Railways</span
-                ><span class="tile-title"
-                  >RRB NTPC · Group D · ALP · RPF</span
-                ></span
-              >
-            </a>
-            <a class="tile" href="#templates" data-cat="banking">
-              <img data-img="banking" alt="" loading="lazy" decoding="async" />
-              <span class="tile-body"
-                ><span class="tile-kicker">Banking &amp; Insurance</span
-                ><span class="tile-title">IBPS · SBI · RBI · LIC</span></span
-              >
-            </a>
-            <a class="tile" href="#templates" data-cat="defence">
-              <img data-img="defence" alt="" loading="lazy" decoding="async" />
-              <span class="tile-body"
-                ><span class="tile-kicker">Defence &amp; Police</span
-                ><span class="tile-title">Agniveer · AFCAT · CAPF</span></span
-              >
-            </a>
-            <a class="tile tile-tall" href="#templates" data-cat="ssc">
-              <img data-img="ssc" alt="" loading="lazy" decoding="async" />
-              <span class="tile-body"
-                ><span class="tile-kicker">SSC</span
-                ><span class="tile-title"
-                  >CGL · CHSL · MTS · GD · CPO</span
-                ></span
-              >
-            </a>
-            <a class="tile" href="#templates" data-cat="upsc">
-              <img data-img="upsc" alt="" loading="lazy" decoding="async" />
-              <span class="tile-body"
-                ><span class="tile-kicker">UPSC &amp; State PSC</span
-                ><span class="tile-title"
-                  >CSE · NDA · CDS · BPSC · UPPSC</span
-                ></span
-              >
-            </a>
-            <a class="tile" href="#templates" data-cat="documents">
-              <img
-                data-img="documents"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-              <span class="tile-body"
-                ><span class="tile-kicker">Passport, PAN &amp; Visa</span
-                ><span class="tile-title"
-                  >Passport Seva · DS-160 · Schengen</span
-                ></span
-              >
-            </a>
-            <a class="tile" href="#templates" data-cat="entrance">
-              <img data-img="entrance" alt="" loading="lazy" decoding="async" />
-              <span class="tile-body"
-                ><span class="tile-kicker">Entrance &amp; Teaching</span
-                ><span class="tile-title"
-                  >NEET · JEE · CUET · GATE · CTET</span
-                ></span
-              >
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- HOW IT WORKS -->
-      <section class="section how" id="how">
-        <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">02 — The pipeline</span>
-            <h2>Three steps. No guesswork.</h2>
-            <p>
-              Every document goes through the same on-device pipeline: frame it,
-              fit it to the rules, download it. The line below draws itself as
-              you scroll.
-            </p>
+          <div class="page-title">
+            <h1>Format your exam photo and signature.</h1>
+            <p>Exact pixel sizes and KB limits for every portal, done on your device.</p>
           </div>
 
-          <div class="pipeline">
-            <svg
-              class="pipeline-svg"
-              viewBox="0 0 1200 220"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient id="pipeGrad" x1="0" x2="1">
-                  <stop offset="0" stop-color="#4f8cff" />
-                  <stop offset="1" stop-color="#22d3ee" />
-                </linearGradient>
-              </defs>
-              <path
-                id="pipePath"
-                class="pipe-path"
-                d="M 60 110 C 260 20, 340 200, 600 110 S 940 20, 1140 110"
-              />
-              <circle class="pipe-dot" r="7" />
-            </svg>
+          <div class="studio-grid">
+            <div class="studio-controls surface">
+              <!-- exam picker -->
+              <div class="block" id="templateField" tabindex="-1">
+                <span class="label" id="templateLabel">Exam</span>
+                <div class="picker">
+                  <button type="button" class="picker-btn" id="templateBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="templatePop" aria-labelledby="templateLabel templateBtnLabel">
+                    <span class="picker-main">
+                      <span id="templateBtnLabel">Choose your exam</span>
+                      <small id="templateBtnSub">SSC, Railways, Banking, UPSC, NEET, passport…</small>
+                    </span>
+                    <span class="picker-change" id="templateChange" hidden>Change exam</span>
+                    <svg class="ic" aria-hidden="true"><use href="#i-chevron" /></svg>
+                  </button>
+                  <div class="picker-pop" id="templatePop" hidden>
+                    <label class="search sm">
+                      <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg>
+                      <span class="sr-only">Search exam or board</span>
+                      <input type="search" id="templatePopSearch" placeholder="Search exams and documents" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-controls="templatePopList" aria-expanded="true" />
+                    </label>
+                    <div class="picker-list" id="templatePopList" role="listbox" aria-label="Exams and documents"></div>
+                  </div>
+                </div>
+                <p class="hint" id="templateHint">Photo and signature sizes fill in automatically.</p>
+                <p class="hint last-used" id="lastUsed" hidden>
+                  Last used: <b id="lastUsedName"></b>
+                  <button type="button" class="linklike" id="lastUsedBtn">Continue</button>
+                </p>
+                <div id="customBox" class="custom-box" hidden>
+                  <div class="row-4">
+                    <div class="field">
+                      <label for="customW">Photo width</label>
+                      <div class="suffix"><input type="number" id="customW" value="200" min="16" max="4000" inputmode="numeric" pattern="[0-9]*" /><span>px</span></div>
+                    </div>
+                    <div class="field">
+                      <label for="customH">Photo height</label>
+                      <div class="suffix"><input type="number" id="customH" value="240" min="16" max="4000" inputmode="numeric" pattern="[0-9]*" /><span>px</span></div>
+                    </div>
+                    <div class="field">
+                      <label for="customSW">Signature width</label>
+                      <div class="suffix"><input type="number" id="customSW" value="240" min="16" max="4000" inputmode="numeric" pattern="[0-9]*" /><span>px</span></div>
+                    </div>
+                    <div class="field">
+                      <label for="customSH">Signature height</label>
+                      <div class="suffix"><input type="number" id="customSH" value="80" min="16" max="4000" inputmode="numeric" pattern="[0-9]*" /><span>px</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <div class="steps">
-              <article
-                class="step-card tilt"
-                data-reveal="up"
-                data-delay="0.05"
-              >
-                <div class="step-num">01</div>
-                <div class="step-icon">
-                  <svg class="ic"><use href="#i-upload" /></svg>
+              <!-- dynamic image slots -->
+              <div id="slotsHost"></div>
+
+              <!-- ID document -->
+              <div class="block id-block" data-slot="id">
+                <button type="button" class="row-toggle" id="idToggle" aria-expanded="false" aria-controls="idPanel">
+                  <svg class="ic" aria-hidden="true"><use href="#i-id" /></svg>
+                  <span>Add ID document <span class="muted">(optional)</span></span>
+                  <svg class="ic chev" aria-hidden="true"><use href="#i-chevron" /></svg>
+                </button>
+                <div id="idPanel" hidden>
+                  <div class="dropzone compact" id="idDrop" data-drop>
+                    <input type="file" id="idFile" hidden />
+                    <button type="button" class="dz-inner" data-open>
+                      <svg class="ic" aria-hidden="true"><use href="#i-upload" /></svg>
+                      <span class="dz-text">Choose a file</span>
+                      <span class="dz-sub">Image or PDF</span>
+                    </button>
+                    <div class="dz-file" id="idMeta" hidden>
+                      <img class="dz-thumb" id="idThumb" alt="" />
+                      <div class="dz-meta"><span class="dz-name" id="idName"></span><span class="dz-size mono" id="idSize"></span></div>
+                      <button type="button" class="icon-btn" data-view="id" aria-label="Preview ID document" title="Preview">
+                        <svg class="ic" aria-hidden="true"><use href="#i-eye" /></svg>
+                      </button>
+                      <button type="button" class="icon-btn" data-clear="id" aria-label="Remove ID document" title="Remove">
+                        <svg class="ic" aria-hidden="true"><use href="#i-x" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row-2">
+                    <div class="field">
+                      <label for="idFormat">Output</label>
+                      <div class="select-wrap">
+                        <select id="idFormat">
+                          <option value="original">Keep original</option>
+                          <option value="pdf">Convert to PDF</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="field" id="idMaxKbField"><label for="idMaxKb">Max size (KB)</label><input type="number" id="idMaxKb" min="10" max="20480" placeholder="keep" inputmode="numeric" pattern="[0-9]*" /></div>
+                  </div>
                 </div>
-                <h3>Drop your files</h3>
-                <p>
-                  Drag &amp; drop, click, or paste from the clipboard. Photos,
-                  signatures, thumb impressions and ID scans in JPG, PNG or
-                  WEBP.
-                </p>
-                <div class="step-vis vis-upload"><i></i><i></i><i></i></div>
-              </article>
-              <article class="step-card tilt" data-reveal="up" data-delay="0.2">
-                <div class="step-num">02</div>
-                <div class="step-icon">
-                  <svg class="ic"><use href="#i-target" /></svg>
-                </div>
-                <h3>Frame &amp; fit</h3>
-                <p>
-                  Pan, zoom and rotate inside the exact template frame. Set a KB
-                  ceiling and GovForms finds the best quality that fits.
-                </p>
-                <div class="step-vis vis-frame">
-                  <span class="vf-frame"><span class="vf-face"></span></span>
-                </div>
-              </article>
-              <article
-                class="step-card tilt"
-                data-reveal="up"
-                data-delay="0.35"
-              >
-                <div class="step-num">03</div>
-                <div class="step-icon">
-                  <svg class="ic"><use href="#i-download" /></svg>
-                </div>
-                <h3>Download, bundled</h3>
-                <p>
-                  Get each file individually or as one ZIP. Convert anything to
-                  PDF, or merge everything into a single document.
-                </p>
-                <div class="step-vis vis-download">
-                  <span class="vd-bar"><i></i></span
-                  ><span class="vd-chip">photo.jpg</span
-                  ><span class="vd-chip">sign.png</span
-                  ><span class="vd-chip">id.pdf</span>
-                </div>
-              </article>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- ANATOMY (2D diagram) -->
-      <section class="section anatomy" id="anatomy">
-        <div class="container anatomy-grid">
-          <div class="anatomy-copy">
-            <div class="section-head left" data-reveal="right">
-              <span class="kicker">03 — Anatomy of a compliant photo</span>
-              <h2>What the portal actually checks.</h2>
-              <p>
-                Most rejections come down to four things: wrong pixel size, file
-                over the KB limit, a busy background, or a face that is too
-                small in the frame. The diagram measures them out as you scroll.
+            <aside class="studio-output surface" aria-label="Output">
+              <div class="output-head">
+                <h2>Output</h2>
+              </div>
+              <div class="output-frames" id="outputFrames"></div>
+              <p class="readiness" id="readiness"></p>
+              <p class="on-device">
+                <svg class="ic" aria-hidden="true"><use href="#i-shield" /></svg>Processed on your device. Nothing is uploaded.
               </p>
-            </div>
-            <ul class="rule-list" data-reveal-stagger>
-              <li>
-                <b>Exact pixels.</b> Portals validate width × height, not the
-                aspect ratio. GovForms exports at the precise size.
-              </li>
-              <li>
-                <b>Under the ceiling.</b> A binary search over JPEG quality
-                lands the file just under your KB limit.
-              </li>
-              <li>
-                <b>Plain background.</b> Choose white or light blue fill for any
-                letter-boxed area.
-              </li>
-              <li>
-                <b>Face fills 70–80%.</b> Zoom in the editor until the head sits
-                inside the guide.
-              </li>
-            </ul>
+              <button id="processBtn" class="btn btn-primary btn-block" type="button" title="Ctrl + Enter">Process</button>
+              <label class="check" id="zipRow" hidden><input type="checkbox" id="zipToggle" /><span>Download as one ZIP</span></label>
+              <div class="status-row">
+                <p class="status" id="status" role="status"><i class="dot" aria-hidden="true"></i><span id="statusText"></span></p>
+                <button type="button" class="linklike" id="processAgain" hidden>Process again</button>
+              </div>
+              <ul class="results" id="results"></ul>
+            </aside>
           </div>
+        </div>
+      </section>
 
-          <div class="anatomy-figure card" data-reveal="left">
-            <svg
-              id="anatomySvg"
-              class="anatomy-svg"
-              viewBox="0 0 560 440"
-              role="img"
-              aria-label="Diagram of a compliant photo with dimension lines"
-            >
-              <defs>
-                <linearGradient id="faceGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#4f8cff" stop-opacity=".55" />
-                  <stop offset="1" stop-color="#22d3ee" stop-opacity=".15" />
-                </linearGradient>
-              </defs>
-              <rect
-                class="a-draw frame"
-                x="140"
-                y="40"
-                width="200"
-                height="240"
-                rx="8"
-              />
-              <path
-                class="a-draw shoulders"
-                d="M 140 280 C 172 214, 308 214, 340 280"
-              />
+      <!-- 2. RULES -->
+      <section class="section" id="rules">
+        <div class="container">
+          <div class="section-head">
+            <h2>What the portal checks.</h2>
+            <p>Most rejections come from one of these four things.</p>
+          </div>
+          <div class="rules-grid">
+            <div>
+              <ul class="rule-list">
+                <li><b>Exact pixels</b> — width × height is validated, not the ratio.</li>
+                <li><b>Under the limit</b> — JPEG quality is lowered until the file fits.</li>
+                <li><b>Plain background</b> — white unless the notice says otherwise.</li>
+                <li><b>Face fills the frame</b> — zoom until the head sits inside the guide.</li>
+              </ul>
+              <p class="mono rules-spec" id="rulesSpec"><span data-an="prefix">Example (SSC): </span>Photo <span data-an="width">200</span> × <span data-an="height">240</span> px · <span data-an="kb">≤ 50 KB as JPG</span> · Signature <span data-an="sig">240 × 80 px</span></p>
+            </div>
+            <svg id="anatomySvg" class="anatomy-svg" viewBox="0 0 600 440" role="img" aria-label="Diagram of a compliant photo with dimension lines">
+              <rect class="a-draw a-frame" x="140" y="40" width="200" height="240" rx="8" />
+              <path class="a-draw shoulders" d="M 140 280 C 172 214, 308 214, 340 280" />
               <ellipse class="a-draw head" cx="240" cy="132" rx="48" ry="62" />
               <line class="a-draw eyes" x1="150" y1="122" x2="330" y2="122" />
-              <text class="a-text" x="334" y="118" text-anchor="end">
-                eye line
-              </text>
+              <text class="a-text" x="150" y="116">eye line</text>
               <line class="a-draw dim" x1="140" y1="22" x2="340" y2="22" />
               <line class="a-draw tick" x1="140" y1="14" x2="140" y2="30" />
               <line class="a-draw tick" x1="340" y1="14" x2="340" y2="30" />
-              <text
-                class="a-text mono"
-                x="240"
-                y="12"
-                text-anchor="middle"
-                id="anWidth"
-              >
-                200 px
+              <text class="a-text mono" x="240" y="12" text-anchor="middle">
+                <tspan data-an="width">200</tspan>
+                px
               </text>
               <line class="a-draw dim" x1="362" y1="40" x2="362" y2="280" />
               <line class="a-draw tick" x1="354" y1="40" x2="370" y2="40" />
               <line class="a-draw tick" x1="354" y1="280" x2="370" y2="280" />
-              <text class="a-text mono" x="380" y="164" id="anHeight">
-                240 px
+              <text class="a-text mono" x="380" y="164">
+                <tspan data-an="height">240</tspan>
+                px
               </text>
               <line class="a-draw dim" x1="118" y1="70" x2="118" y2="194" />
               <line class="a-draw tick" x1="110" y1="70" x2="126" y2="70" />
               <line class="a-draw tick" x1="110" y1="194" x2="126" y2="194" />
-              <text class="a-text" x="104" y="136" text-anchor="end">
-                70–80% face
-              </text>
+              <text class="a-text" x="104" y="136" text-anchor="end">70–80% face</text>
               <path class="a-draw leader" d="M 300 62 L 400 62 L 420 48" />
-              <text class="a-text callout" x="426" y="52">
-                plain, light background
-              </text>
+              <text class="a-text callout" x="426" y="52">plain, light background</text>
               <path class="a-draw leader" d="M 340 250 L 400 250 L 420 262" />
-              <text class="a-text callout" x="426" y="266" id="anKb">
-                ≤ 50 KB as JPEG
-              </text>
-              <rect
-                class="a-draw frame sig"
-                x="140"
-                y="322"
-                width="240"
-                height="80"
-                rx="8"
-              />
-              <path
-                class="a-draw scribble"
-                d="M 160 372 C 180 330, 195 400, 215 362 S 245 330, 262 372 S 300 400, 318 352 S 350 350, 362 370"
-              />
+              <text class="a-text callout" x="426" y="266" data-an="kb">≤ 50 KB as JPG</text>
+              <rect class="a-draw a-frame" x="140" y="322" width="240" height="80" rx="8" />
+              <path class="a-draw scribble" d="M 160 372 C 180 330, 195 400, 215 362 S 245 330, 262 372 S 300 400, 318 352 S 350 350, 362 370" />
               <line class="a-draw dim" x1="140" y1="418" x2="380" y2="418" />
               <line class="a-draw tick" x1="140" y1="410" x2="140" y2="426" />
               <line class="a-draw tick" x1="380" y1="410" x2="380" y2="426" />
-              <text
-                class="a-text mono"
-                x="260"
-                y="438"
-                text-anchor="middle"
-                id="anSig"
-              >
-                240 × 80 px
-              </text>
-              <text class="a-text callout" x="400" y="366">
-                signature, dark ink
-              </text>
+              <text class="a-text mono" x="260" y="438" text-anchor="middle" data-an="sig">240 × 80 px</text>
+              <text class="a-text callout" x="400" y="366">signature, dark ink</text>
             </svg>
-            <div class="figure-caption">
-              Live values follow the template selected in the Studio.
-            </div>
           </div>
         </div>
       </section>
 
-      <!-- 3D EXPLODED STACK -->
-      <section class="section stack" id="stack">
-        <div class="container stack-grid" id="stackPin">
-          <div class="stack-copy">
-            <div class="section-head left">
-              <span class="kicker">04 — One upload, four deliverables</span>
-              <h2>Every layer, separated.</h2>
-              <p>
-                Scroll to pull the stack apart. Each sheet is a file GovForms
-                can hand back to you, all built from the same inputs.
-              </p>
-            </div>
-            <ol class="layer-list" id="layerList">
-              <li data-layer="0">
-                <b>Photo</b> — cropped to spec, KB-limited JPEG or PNG.
-              </li>
-              <li data-layer="1">
-                <b>Signature</b> — background cleaned, dark ink preserved.
-              </li>
-              <li data-layer="2">
-                <b>ID document</b> — kept original or wrapped in a PDF.
-              </li>
-              <li data-layer="3">
-                <b>Merged PDF</b> — all of it, in the order you choose.
-              </li>
-            </ol>
-          </div>
-          <div class="stack-scene" aria-hidden="true">
-            <div class="stack-3d" id="stack3d">
-              <div class="layer layer-photo" style="--i: 0">
-                <div class="layer-inner">
-                  <span class="lp-frame"
-                    ><span class="lp-head"></span
-                    ><span class="lp-body"></span></span
-                  ><span class="layer-tag">photo_200x240.jpg</span>
-                </div>
-              </div>
-              <div class="layer layer-sign" style="--i: 1">
-                <div class="layer-inner">
-                  <svg viewBox="0 0 240 80" class="lp-sig">
-                    <path
-                      d="M 20 52 C 40 10, 55 80, 75 42 S 105 10, 122 52 S 160 80, 178 32 S 210 30, 222 50"
-                    /></svg
-                  ><span class="layer-tag">signature_240x80.png</span>
-                </div>
-              </div>
-              <div class="layer layer-id" style="--i: 2">
-                <div class="layer-inner">
-                  <span class="lp-card"><i></i><i></i><i></i></span
-                  ><span class="layer-tag">id_document.pdf</span>
-                </div>
-              </div>
-              <div class="layer layer-pdf" style="--i: 3">
-                <div class="layer-inner">
-                  <span class="lp-pdf">PDF</span
-                  ><span class="layer-tag">merged.pdf</span>
-                </div>
-              </div>
-              <div class="stack-shadow"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TEMPLATES -->
-      <section class="section templates" id="templates">
+      <!-- 3. EXAMS -->
+      <section class="section" id="templates">
         <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">05 — Exams &amp; documents</span>
-            <h2>Find your exam. Dimensions are pre-filled.</h2>
-            <p>
-              Search by name, board or abbreviation, or browse by category.
-              Click a card to load it into the Studio.
-            </p>
+          <div class="section-head">
+            <h2>All exams and documents.</h2>
+            <p>Sizes follow the official notifications — re-check the current one, and use Custom if yours differs.</p>
           </div>
-          <div class="finder" data-reveal="up" data-delay="0.1">
+          <div class="finder">
             <label class="search" for="templateSearch">
-              <svg class="ic"><use href="#i-search" /></svg>
-              <input
-                type="search"
-                id="templateSearch"
-                placeholder="Search SSC, IBPS, NEET, passport…"
-                autocomplete="off"
-              />
-              <kbd>/</kbd>
+              <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg>
+              <span class="sr-only">Search exams and documents</span>
+              <input type="search" id="templateSearch" placeholder="Search exams and documents" autocomplete="off" enterkeyhint="search" />
+              <kbd aria-hidden="true">/</kbd>
             </label>
-            <div
-              class="chips"
-              id="catChips"
-              role="tablist"
-              aria-label="Categories"
-            ></div>
+            <div class="chips" id="catChips" role="group" aria-label="Category"></div>
           </div>
-          <div class="finder-meta">
-            <span id="templateCount" class="mono"></span
-            ><span class="hint"
-              >Sizes follow official notifications — always re-check the current
-              one.</span
-            >
-          </div>
+          <p class="finder-meta mono" id="templateCount" role="status"></p>
           <div class="template-grid" id="templateGrid"></div>
-          <div class="finder-empty card" id="templateEmpty" hidden>
-            <svg class="ic"><use href="#i-search" /></svg>
-            <p>
-              No template matches that. Try a shorter word, or use
-              <button type="button" class="linklike" id="useCustomBtn">
-                Custom dimensions</button
-              >.
-            </p>
+          <div class="empty" id="templateEmpty" hidden>
+            <p>No matches. Try a shorter word, or enter your own sizes.</p>
+            <button type="button" class="btn btn-secondary btn-sm" id="useCustomBtn">Use Custom sizes</button>
           </div>
         </div>
       </section>
 
-      <!-- STUDIO -->
-      <section class="section studio" id="studio">
+      <!-- 4. TOOLS -->
+      <section class="section" id="tools">
         <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">06 — The Studio</span>
-            <h2>Frame it. Fit it. Ship it.</h2>
-            <p>
-              Everything below runs on this device. Drag inside a frame to pan,
-              scroll or use the slider to zoom.
-            </p>
+          <div class="section-head">
+            <h2>More tools.</h2>
+            <p>Print a passport-photo sheet, shrink any image under a KB limit, or merge images and PDFs into one file.</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Tools">
+            <button type="button" role="tab" id="tab-sheet" class="tab" aria-selected="true" aria-controls="sheet" data-tab="sheet">
+              <svg class="ic" aria-hidden="true"><use href="#i-printer" /></svg>Photo sheet
+            </button>
+            <button type="button" role="tab" id="tab-compress" class="tab" aria-selected="false" aria-controls="compress" data-tab="compress" tabindex="-1">
+              <svg class="ic" aria-hidden="true"><use href="#i-compress" /></svg>Compress
+            </button>
+            <button type="button" role="tab" id="tab-merge" class="tab" aria-selected="false" aria-controls="merge" data-tab="merge" tabindex="-1">
+              <svg class="ic" aria-hidden="true"><use href="#i-merge" /></svg>Merge PDF
+            </button>
           </div>
 
-          <ol class="stepper" id="stepper" data-reveal="up" data-delay="0.1">
-            <li class="step" data-step="1">
-              <span class="step-dot">1</span
-              ><span class="step-text"
-                ><b>Template</b><small>Pick the exam</small></span
-              >
-            </li>
-            <li class="step" data-step="2">
-              <span class="step-dot">2</span
-              ><span class="step-text"
-                ><b>Upload</b><small>Photo &amp; signature</small></span
-              >
-            </li>
-            <li class="step" data-step="3">
-              <span class="step-dot">3</span
-              ><span class="step-text"
-                ><b>Adjust</b><small>Frame, format, KB</small></span
-              >
-            </li>
-            <li class="step" data-step="4">
-              <span class="step-dot">4</span
-              ><span class="step-text"
-                ><b>Export</b><small>Process &amp; download</small></span
-              >
-            </li>
-          </ol>
-
-          <div class="studio-grid">
-            <div class="studio-controls card" data-reveal="up">
-              <div class="field" id="templateField">
-                <label for="templateBtn">Exam / template</label>
-                <div class="picker">
-                  <button
-                    type="button"
-                    class="picker-btn"
-                    id="templateBtn"
-                    aria-haspopup="listbox"
-                    aria-expanded="false"
-                  >
-                    <span class="picker-main"
-                      ><span id="templateBtnLabel">Choose a template…</span
-                      ><small id="templateBtnSub"
-                        >Search 40+ exams and documents</small
-                      ></span
-                    >
-                    <svg class="ic"><use href="#i-chevron" /></svg>
+          <div class="surface tool-panel" id="sheet" role="tabpanel" aria-labelledby="tab-sheet">
+            <div class="tool-grid">
+              <div>
+                <div class="dropzone compact" id="sheetDrop" data-drop>
+                  <input type="file" id="sheetFile" accept="image/*" hidden />
+                  <button type="button" class="dz-inner" data-open>
+                    <svg class="ic" aria-hidden="true"><use href="#i-upload" /></svg>
+                    <span class="dz-text">Add a photo</span>
+                    <span class="dz-sub">JPG, PNG or WEBP</span>
                   </button>
-                  <div class="picker-pop" id="templatePop" hidden>
-                    <label class="search sm">
-                      <svg class="ic"><use href="#i-search" /></svg>
-                      <input
-                        type="search"
-                        id="templatePopSearch"
-                        placeholder="Type to filter…"
-                        autocomplete="off"
-                        aria-label="Filter templates"
-                      />
-                    </label>
-                    <div
-                      class="picker-list"
-                      id="templatePopList"
-                      role="listbox"
-                      aria-label="Templates"
-                    ></div>
-                  </div>
-                </div>
-                <div class="hint" id="templateHint">
-                  Select a template to pre-fill dimensions and size limits.
-                </div>
-              </div>
-
-              <div id="customBox" class="custom-box" hidden>
-                <div class="row-4">
-                  <div class="field">
-                    <label for="customW">Photo width</label
-                    ><input
-                      type="number"
-                      id="customW"
-                      value="200"
-                      min="16"
-                      max="4000"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="customH">Photo height</label
-                    ><input
-                      type="number"
-                      id="customH"
-                      value="240"
-                      min="16"
-                      max="4000"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="customSW">Sign width</label
-                    ><input
-                      type="number"
-                      id="customSW"
-                      value="240"
-                      min="16"
-                      max="4000"
-                    />
-                  </div>
-                  <div class="field">
-                    <label for="customSH">Sign height</label
-                    ><input
-                      type="number"
-                      id="customSH"
-                      value="80"
-                      min="16"
-                      max="4000"
-                    />
-                  </div>
-                </div>
-                <div class="hint">Values are in pixels.</div>
-              </div>
-
-              <!-- dynamic image slots (photo, signature, template extras) -->
-              <div id="slotsHost"></div>
-
-              <!-- ID document -->
-              <div class="upload-block" data-slot="id">
-                <div class="upload-head">
-                  <div class="upload-title">
-                    <svg class="ic"><use href="#i-id" /></svg
-                    ><span>ID document</span>
-                  </div>
-                  <span class="badge">optional</span>
-                </div>
-                <div
-                  class="dropzone compact"
-                  id="idDrop"
-                  tabindex="0"
-                  role="button"
-                  aria-label="Upload ID document"
-                >
-                  <input type="file" id="idFile" hidden />
-                  <div class="dz-inner">
-                    <span class="dz-icon"
-                      ><svg class="ic"><use href="#i-upload" /></svg
-                    ></span>
-                    <span class="dz-text"
-                      ><b>Drop an ID</b> scan, image or PDF</span
-                    >
-                  </div>
-                  <div class="dz-file" id="idMeta" hidden>
-                    <img class="dz-thumb" id="idThumb" alt="" />
-                    <div class="dz-meta">
-                      <span class="dz-name" id="idName"></span
-                      ><span class="dz-size mono" id="idSize"></span>
-                    </div>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      data-view="id"
-                      title="Preview"
-                      aria-label="Preview ID document"
-                    >
-                      <svg class="ic"><use href="#i-eye" /></svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn danger"
-                      data-clear="id"
-                      title="Remove"
-                      aria-label="Remove ID document"
-                    >
-                      <svg class="ic"><use href="#i-x" /></svg>
+                  <div class="dz-file" id="sheetMeta" hidden>
+                    <img class="dz-thumb" id="sheetThumb" alt="" />
+                    <div class="dz-meta"><span class="dz-name" id="sheetName"></span><span class="dz-size mono" id="sheetSize"></span></div>
+                    <button type="button" class="icon-btn" data-clear="sheet" aria-label="Remove sheet photo" title="Remove">
+                      <svg class="ic" aria-hidden="true"><use href="#i-x" /></svg>
                     </button>
                   </div>
                 </div>
-                <div class="row-2">
+                <button type="button" class="btn btn-secondary btn-sm" id="sheetUseStudio">Use the photo added above</button>
+                <div class="row-3">
                   <div class="field">
-                    <label for="idFormat">Output</label>
+                    <label for="sheetPaper">Paper</label>
                     <div class="select-wrap">
-                      <select id="idFormat">
-                        <option value="original">Keep original</option>
-                        <option value="pdf">Convert to PDF</option>
+                      <select id="sheetPaper">
+                        <option value="a4">A4 (210×297 mm)</option>
+                        <option value="a5">A5 (148×210 mm)</option>
+                        <option value="letter">Letter (216×279 mm)</option>
+                        <option value="4x6">4×6 in (102×152 mm)</option>
                       </select>
                     </div>
                   </div>
                   <div class="field">
-                    <label for="idMaxKb">Max size (KB, images only)</label
-                    ><input
-                      type="number"
-                      id="idMaxKb"
-                      min="10"
-                      max="20480"
-                      placeholder="keep"
-                    />
+                    <label for="sheetPhoto">Photo size</label>
+                    <div class="select-wrap">
+                      <select id="sheetPhoto">
+                        <option value="35x45">35 × 45 mm (passport)</option>
+                        <option value="51x51">2 × 2 in (51 × 51 mm)</option>
+                        <option value="25x35">25 × 35 mm (stamp)</option>
+                        <option value="35x35">35 × 35 mm</option>
+                        <option value="custom">Custom…</option>
+                      </select>
+                    </div>
                   </div>
+                  <div class="field"><label for="sheetGap">Gap (mm)</label><input type="number" id="sheetGap" value="3" min="0" max="20" inputmode="numeric" pattern="[0-9]*" /></div>
+                </div>
+                <div class="row-2" id="sheetCustom" hidden>
+                  <div class="field"><label for="sheetCW">Width (mm)</label><input type="number" id="sheetCW" value="35" min="10" max="150" inputmode="numeric" pattern="[0-9]*" /></div>
+                  <div class="field"><label for="sheetCH">Height (mm)</label><input type="number" id="sheetCH" value="45" min="10" max="150" inputmode="numeric" pattern="[0-9]*" /></div>
+                </div>
+              </div>
+              <div>
+                <div class="sheet-preview"><canvas id="sheetPreview"></canvas></div>
+                <label class="check"><input type="checkbox" id="sheetGuides" checked /><span>Cut guides</span></label>
+                <p class="hint mono" id="sheetInfo">Add a photo to preview the sheet.</p>
+                <div class="actions">
+                  <button class="btn btn-primary" id="sheetJpgBtn" type="button" disabled>Download JPEG</button>
+                  <button class="btn btn-secondary" id="sheetPdfBtn" type="button" disabled>Download PDF</button>
                 </div>
               </div>
             </div>
+          </div>
 
-            <aside
-              class="studio-output card"
-              data-reveal="left"
-              data-delay="0.15"
-            >
-              <div class="output-head">
-                <h3>Live output</h3>
-                <span class="mono" id="outputSpec">no template</span>
-              </div>
-              <div class="output-frames" id="outputFrames"></div>
-              <div class="readiness" id="readiness"></div>
-              <div class="actions">
-                <button id="processBtn" class="btn btn-primary" type="button">
-                  <svg class="ic"><use href="#i-sparkle" /></svg>Process
-                </button>
-                <button
-                  id="downloadBtn"
-                  class="btn btn-ghost"
-                  type="button"
-                  disabled
-                >
-                  <svg class="ic"><use href="#i-download" /></svg>Download
-                </button>
-              </div>
-              <label class="check"
-                ><input type="checkbox" id="zipToggle" checked /><span
-                  >Bundle everything as one ZIP</span
-                ></label
-              >
-              <div class="status" id="status" role="status" aria-live="polite">
-                Ready
-              </div>
-              <ul class="results" id="results" aria-live="polite"></ul>
-              <div class="kbd-hint">
-                <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to process ·
-                <kbd>Ctrl</kbd> + <kbd>V</kbd> to paste an image ·
-                <kbd>/</kbd> to search exams
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-
-      <!-- PREVIEW / BEFORE-AFTER -->
-      <section class="section preview-section" id="preview">
-        <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">07 — Before &amp; after</span>
-            <h2>Watch the bytes fall.</h2>
-          </div>
-          <div class="preview-grid" id="previewGrid"></div>
-          <div
-            class="preview-empty-state card"
-            id="previewEmptyState"
-            data-reveal="up"
-          >
-            <svg class="ic"><use href="#i-photo" /></svg>
-            <p>
-              Upload files in the Studio to see previews and size comparisons
-              here.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- TOOLS -->
-      <section class="section tools" id="tools">
-        <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">08 — Extra tools</span>
-            <h2>Print sheets and quick squeezes.</h2>
-          </div>
-          <div class="tools-grid">
-            <div class="card tool-card" data-reveal="up">
-              <div class="tool-head">
-                <svg class="ic"><use href="#i-grid" /></svg>
-                <div>
-                  <h3>Passport photo sheet</h3>
-                  <p>
-                    Tile one photo across A4, A5, Letter or 4×6 at 300 DPI with
-                    cut guides.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="dropzone compact"
-                id="sheetDrop"
-                tabindex="0"
-                role="button"
-                aria-label="Upload photo for sheet"
-              >
-                <input type="file" id="sheetFile" accept="image/*" hidden />
-                <div class="dz-inner">
-                  <span class="dz-icon"
-                    ><svg class="ic"><use href="#i-upload" /></svg
-                  ></span>
-                  <span class="dz-text"
-                    ><b>Drop a photo</b> or
-                    <button type="button" class="linklike" id="sheetUseStudio">
-                      use the Studio photo
-                    </button></span
-                  >
-                </div>
-                <div class="dz-file" id="sheetMeta" hidden>
-                  <img class="dz-thumb" id="sheetThumb" alt="" />
-                  <div class="dz-meta">
-                    <span class="dz-name" id="sheetName"></span
-                    ><span class="dz-size mono" id="sheetSize"></span>
-                  </div>
-                  <button
-                    type="button"
-                    class="icon-btn danger"
-                    data-clear="sheet"
-                    title="Remove"
-                    aria-label="Remove sheet photo"
-                  >
-                    <svg class="ic"><use href="#i-x" /></svg>
+          <div class="surface tool-panel" id="compress" role="tabpanel" aria-labelledby="tab-compress" hidden>
+            <div class="tool-grid">
+              <div>
+                <div class="dropzone compact" id="compDrop" data-drop>
+                  <input type="file" id="compFile" accept="image/*" hidden />
+                  <button type="button" class="dz-inner" data-open>
+                    <svg class="ic" aria-hidden="true"><use href="#i-upload" /></svg>
+                    <span class="dz-text">Add an image</span>
+                    <span class="dz-sub">JPG, PNG or WEBP</span>
                   </button>
-                </div>
-              </div>
-              <div class="row-3">
-                <div class="field">
-                  <label for="sheetPaper">Paper</label>
-                  <div class="select-wrap">
-                    <select id="sheetPaper">
-                      <option value="a4">A4 (210×297 mm)</option>
-                      <option value="a5">A5 (148×210 mm)</option>
-                      <option value="letter">Letter (216×279 mm)</option>
-                      <option value="4x6">4×6 in (102×152 mm)</option>
-                    </select>
+                  <div class="dz-file" id="compMeta" hidden>
+                    <img class="dz-thumb" id="compThumb" alt="" />
+                    <div class="dz-meta"><span class="dz-name" id="compName"></span><span class="dz-size mono" id="compSize"></span></div>
+                    <button type="button" class="icon-btn" data-clear="comp" aria-label="Remove image" title="Remove">
+                      <svg class="ic" aria-hidden="true"><use href="#i-x" /></svg>
+                    </button>
                   </div>
                 </div>
-                <div class="field">
-                  <label for="sheetPhoto">Photo size</label>
-                  <div class="select-wrap">
-                    <select id="sheetPhoto">
-                      <option value="35x45">35 × 45 mm (passport)</option>
-                      <option value="51x51">2 × 2 in (51 × 51 mm)</option>
-                      <option value="25x35">25 × 35 mm (stamp)</option>
-                      <option value="35x35">35 × 35 mm</option>
-                      <option value="custom">Custom…</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="sheetGap">Gap (mm)</label
-                  ><input
-                    type="number"
-                    id="sheetGap"
-                    value="3"
-                    min="0"
-                    max="20"
-                  />
-                </div>
-              </div>
-              <div class="row-3" id="sheetCustom" hidden>
-                <div class="field">
-                  <label for="sheetCW">Width (mm)</label
-                  ><input
-                    type="number"
-                    id="sheetCW"
-                    value="35"
-                    min="10"
-                    max="150"
-                  />
-                </div>
-                <div class="field">
-                  <label for="sheetCH">Height (mm)</label
-                  ><input
-                    type="number"
-                    id="sheetCH"
-                    value="45"
-                    min="10"
-                    max="150"
-                  />
-                </div>
-                <div class="field">
-                  <label class="check"
-                    ><input type="checkbox" id="sheetGuides" checked /><span
-                      >Cut guides</span
-                    ></label
-                  >
-                </div>
-              </div>
-              <div class="sheet-preview">
-                <canvas id="sheetPreview"></canvas>
-                <div class="sheet-info mono" id="sheetInfo">
-                  Add a photo to preview the sheet.
-                </div>
-              </div>
-              <div class="actions">
-                <button
-                  class="btn btn-primary"
-                  id="sheetJpgBtn"
-                  type="button"
-                  disabled
-                >
-                  Download JPEG
-                </button>
-                <button
-                  class="btn btn-ghost"
-                  id="sheetPdfBtn"
-                  type="button"
-                  disabled
-                >
-                  Download PDF
-                </button>
-              </div>
-            </div>
-
-            <div class="card tool-card" data-reveal="up" data-delay="0.15">
-              <div class="tool-head">
-                <svg class="ic"><use href="#i-compress" /></svg>
-                <div>
-                  <h3>Quick compress</h3>
-                  <p>
-                    Squeeze any image under a KB limit without changing the
-                    template. Optionally cap the longest side.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="dropzone compact"
-                id="compDrop"
-                tabindex="0"
-                role="button"
-                aria-label="Upload image to compress"
-              >
-                <input type="file" id="compFile" accept="image/*" hidden />
-                <div class="dz-inner">
-                  <span class="dz-icon"
-                    ><svg class="ic"><use href="#i-upload" /></svg
-                  ></span>
-                  <span class="dz-text"
-                    ><b>Drop an image</b> or click to browse</span
-                  >
-                </div>
-                <div class="dz-file" id="compMeta" hidden>
-                  <img class="dz-thumb" id="compThumb" alt="" />
-                  <div class="dz-meta">
-                    <span class="dz-name" id="compName"></span
-                    ><span class="dz-size mono" id="compSize"></span>
-                  </div>
-                  <button
-                    type="button"
-                    class="icon-btn danger"
-                    data-clear="comp"
-                    title="Remove"
-                    aria-label="Remove image"
-                  >
-                    <svg class="ic"><use href="#i-x" /></svg>
-                  </button>
-                </div>
-              </div>
-              <div class="row-3">
-                <div class="field">
-                  <label for="compKb">Target (KB)</label
-                  ><input
-                    type="number"
-                    id="compKb"
-                    value="100"
-                    min="2"
-                    max="20480"
-                  />
-                </div>
-                <div class="field">
-                  <label for="compMaxDim">Max side (px)</label
-                  ><input
-                    type="number"
-                    id="compMaxDim"
-                    placeholder="keep"
-                    min="16"
-                    max="10000"
-                  />
-                </div>
-                <div class="field">
-                  <label for="compFormat">Format</label>
-                  <div class="select-wrap">
-                    <select id="compFormat">
-                      <option value="jpeg">JPEG</option>
-                      <option value="webp">WEBP</option>
-                      <option value="png">PNG</option>
-                    </select>
+                <div class="row-3">
+                  <div class="field"><label for="compKb">Max size (KB)</label><input type="number" id="compKb" value="100" min="2" max="20480" inputmode="numeric" pattern="[0-9]*" /></div>
+                  <div class="field"><label for="compMaxDim">Max side (px)</label><input type="number" id="compMaxDim" placeholder="keep" min="16" max="10000" inputmode="numeric" pattern="[0-9]*" /></div>
+                  <div class="field">
+                    <label for="compFormat">Format</label>
+                    <div class="select-wrap">
+                      <select id="compFormat">
+                        <option value="jpeg">JPG</option>
+                        <option value="webp">WEBP</option>
+                        <option value="png">PNG</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="comp-result" id="compResult" hidden>
-                <div class="comp-row">
-                  <span>Before</span><b class="mono" id="compBefore">—</b>
+              <div>
+                <dl class="kv" id="compResult" hidden>
+                  <div>
+                    <dt>Before</dt>
+                    <dd class="mono" id="compBefore">—</dd>
+                  </div>
+                  <div>
+                    <dt>After</dt>
+                    <dd class="mono" id="compAfter">—</dd>
+                  </div>
+                  <div>
+                    <dt>Quality</dt>
+                    <dd class="mono" id="compQ">—</dd>
+                  </div>
+                  <div>
+                    <dt>Size</dt>
+                    <dd class="mono" id="compDims">—</dd>
+                  </div>
+                </dl>
+                <div class="actions">
+                  <button class="btn btn-primary" id="compBtn" type="button" disabled>Compress</button>
+                  <button class="btn btn-secondary" id="compDownloadBtn" type="button" disabled>Download</button>
                 </div>
-                <div class="comp-row">
-                  <span>After</span><b class="mono" id="compAfter">—</b>
-                </div>
-                <div class="comp-row">
-                  <span>Quality used</span><b class="mono" id="compQ">—</b>
-                </div>
-                <div class="comp-row">
-                  <span>Dimensions</span><b class="mono" id="compDims">—</b>
-                </div>
-              </div>
-              <div class="actions">
-                <button
-                  class="btn btn-primary"
-                  id="compBtn"
-                  type="button"
-                  disabled
-                >
-                  Compress
-                </button>
-                <button
-                  class="btn btn-ghost"
-                  id="compDownloadBtn"
-                  type="button"
-                  disabled
-                >
-                  Download
-                </button>
-              </div>
-              <div class="status" id="compStatus" role="status">
-                Add an image to begin.
+                <p class="status" id="compStatus" role="status"><i class="dot" aria-hidden="true"></i><span></span></p>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- MERGE -->
-      <section class="section merge-section" id="merge">
-        <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">09 — Merge</span>
-            <h2>Many files, one PDF.</h2>
-            <p>
-              Drop images and PDFs, drag to reorder, and export a single
-              document.
-            </p>
-          </div>
-          <div class="card merge-card" data-reveal="up">
-            <div
-              class="dropzone"
-              id="mergeDrop"
-              tabindex="0"
-              role="button"
-              aria-label="Add files to merge"
-            >
-              <input
-                type="file"
-                id="mergeFiles"
-                accept=".pdf,image/*"
-                multiple
-                hidden
-              />
-              <div class="dz-inner">
-                <span class="dz-icon"
-                  ><svg class="ic"><use href="#i-merge" /></svg
-                ></span>
-                <span class="dz-text"
-                  ><b>Drop images or PDFs</b> or click to browse</span
-                >
-                <span class="dz-sub"
-                  >Select several at once · drag rows to reorder</span
-                >
-              </div>
+          <div class="surface tool-panel" id="merge" role="tabpanel" aria-labelledby="tab-merge" hidden>
+            <div class="dropzone" id="mergeDrop" data-drop>
+              <input type="file" id="mergeFiles" accept=".pdf,image/*" multiple hidden />
+              <button type="button" class="dz-inner" data-open>
+                <svg class="ic" aria-hidden="true"><use href="#i-upload" /></svg>
+                <span class="dz-text">Add images or PDFs</span>
+                <span class="dz-sub"><span class="fine-only">Drag rows to reorder</span><span class="coarse-only">Use the arrows to reorder</span></span>
+              </button>
             </div>
-            <div id="mergeList" class="merge-list">
-              <p class="merge-empty">
-                No files yet. Add files to start merging.
-              </p>
-            </div>
-            <div class="merge-foot">
-              <div class="row-2 grow">
-                <div class="field">
-                  <label for="mergePageSize">Image pages</label>
-                  <div class="select-wrap">
-                    <select id="mergePageSize">
-                      <option value="original">Original pixel size</option>
-                      <option value="a4">Fit to A4 portrait</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="mergeName">File name</label
-                  ><input type="text" id="mergeName" value="merged" />
+            <div id="mergeList" class="merge-list"><p class="merge-empty">No files yet.</p></div>
+            <div class="row-3 merge-foot">
+              <div class="field">
+                <label for="mergePageSize">Image pages</label>
+                <div class="select-wrap">
+                  <select id="mergePageSize">
+                    <option value="original">Original size</option>
+                    <option value="a4">Fit to A4</option>
+                  </select>
                 </div>
               </div>
-              <div class="merge-summary mono" id="mergeSummary"></div>
+              <div class="field"><label for="mergeName">File name</label><input type="text" id="mergeName" value="merged" /></div>
+              <div class="field">
+                <span class="label">Files</span>
+                <p class="mono muted merge-summary" id="mergeSummary">—</p>
+              </div>
             </div>
             <div class="actions">
-              <button
-                id="mergeBtn"
-                class="btn btn-primary"
-                type="button"
-                disabled
-              >
-                <svg class="ic"><use href="#i-pdf" /></svg>Merge into one PDF
-              </button>
-              <button
-                id="mergeClearBtn"
-                class="btn btn-ghost"
-                type="button"
-                disabled
-              >
-                Clear list
-              </button>
+              <button id="mergeBtn" class="btn btn-primary" type="button" disabled>Merge into one PDF</button>
+              <button id="mergeClearBtn" class="btn btn-secondary" type="button" disabled>Clear</button>
             </div>
-            <div class="status" id="mergeStatus" role="status">
-              Select files to merge.
-            </div>
+            <p class="status" id="mergeStatus" role="status"><i class="dot" aria-hidden="true"></i><span></span></p>
           </div>
         </div>
       </section>
 
-      <!-- NEWS -->
-      <section class="section news" id="news">
+      <!-- 5. NEWS -->
+      <section class="section" id="news">
         <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">10 — Vacancy &amp; exam news</span>
-            <h2>What's new on the notice boards.</h2>
-            <p>
-              Fresh headlines about notifications, admit cards, results and exam
-              dates, refreshed every day. Each story opens at its source.
-            </p>
+          <div class="section-head">
+            <h2>Exam news.</h2>
+            <p>Notifications, admit cards, results and dates, refreshed daily from Google News India — confirm on the official board.</p>
+            <p class="hint" id="newsMeta">Loading headlines…</p>
           </div>
-
-          <div class="news-hero card" data-reveal="up" data-delay="0.1">
-            <img
-              id="newsHeroImg"
-              data-img="news"
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-            <div class="news-hero-body">
-              <span class="pill live"><i></i>Auto-refreshed daily</span>
-              <h3>Sarkari notice board</h3>
-              <p id="newsMeta">Loading the latest headlines…</p>
-            </div>
-          </div>
-
-          <div class="finder" data-reveal="up" data-delay="0.15">
+          <div class="finder">
             <label class="search" for="newsSearch">
-              <svg class="ic"><use href="#i-search" /></svg>
-              <input
-                type="search"
-                id="newsSearch"
-                placeholder="Filter headlines — e.g. admit card, result, CGL…"
-                autocomplete="off"
-              />
+              <svg class="ic" aria-hidden="true"><use href="#i-search" /></svg>
+              <span class="sr-only">Filter headlines</span>
+              <input type="search" id="newsSearch" placeholder="Filter headlines" autocomplete="off" enterkeyhint="search" />
             </label>
-            <div
-              class="chips"
-              id="newsChips"
-              role="tablist"
-              aria-label="News categories"
-            ></div>
+            <div class="chips" id="newsChips" role="group" aria-label="News category"></div>
           </div>
-
-          <div class="news-layout">
-            <div>
-              <div class="news-grid" id="newsGrid" aria-live="polite"></div>
-              <div class="finder-empty card" id="newsEmpty" hidden>
-                <svg class="ic"><use href="#i-news" /></svg>
-                <p id="newsEmptyText">No headlines match that filter.</p>
-              </div>
-              <div class="news-more">
-                <button
-                  class="btn btn-ghost"
-                  id="newsMore"
-                  type="button"
-                  hidden
-                >
-                  Show more
-                </button>
-              </div>
-            </div>
-            <aside class="news-aside">
-              <div class="card aside-card" data-reveal="left">
-                <h4>
-                  <svg class="ic"><use href="#i-external" /></svg> Official
-                  notice boards
-                </h4>
-                <ul class="source-list" id="sourceList"></ul>
-              </div>
-              <div class="card aside-card" data-reveal="left" data-delay="0.1">
-                <h4>
-                  <svg class="ic"><use href="#i-calendar" /></svg> Typical
-                  yearly windows
-                </h4>
-                <ul class="calendar-list" id="calendarList"></ul>
-                <p class="hint">
-                  Indicative months based on recent cycles. Dates move — trust
-                  the notification.
-                </p>
-              </div>
-            </aside>
+          <div class="news-grid" id="newsGrid"></div>
+          <p id="newsCount" class="sr-only" role="status"></p>
+          <div class="empty" id="newsEmpty" hidden><p id="newsEmptyText">No headlines match.</p></div>
+          <div class="news-more"><button class="btn btn-secondary" id="newsMore" type="button" hidden>Show more</button></div>
+          <div class="sources">
+            <span class="label">Official boards</span>
+            <ul class="source-list" id="sourceList"></ul>
           </div>
         </div>
       </section>
 
-      <!-- FEATURES -->
-      <section class="section features" id="features">
-        <div class="container">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">11 — Why GovForms</span>
-            <h2>Built for the last five minutes before a deadline.</h2>
-          </div>
-          <div class="feature-grid" data-reveal-stagger>
-            <div class="feature-card card tilt">
-              <div class="feature-icon">
-                <svg class="ic"><use href="#i-bolt" /></svg>
-              </div>
-              <h3>Instant</h3>
-              <p>
-                Canvas-based processing finishes before a progress bar could
-                load.
-              </p>
-            </div>
-            <div class="feature-card card tilt">
-              <div class="feature-icon">
-                <svg class="ic"><use href="#i-target" /></svg>
-              </div>
-              <h3>Pixel-exact</h3>
-              <p>
-                Output is the precise width × height the template demands, never
-                off by one.
-              </p>
-            </div>
-            <div class="feature-card card tilt">
-              <div class="feature-icon">
-                <svg class="ic"><use href="#i-shield" /></svg>
-              </div>
-              <h3>Private by design</h3>
-              <p>
-                No uploads, no accounts. Your documents never leave the tab.
-              </p>
-            </div>
-            <div class="feature-card card tilt">
-              <div class="feature-icon">
-                <svg class="ic"><use href="#i-compress" /></svg>
-              </div>
-              <h3>KB-aware</h3>
-              <p>
-                Set a ceiling and the encoder searches for the best quality
-                under it.
-              </p>
-            </div>
-            <div class="feature-card card tilt">
-              <div class="feature-icon">
-                <svg class="ic"><use href="#i-scissors" /></svg>
-              </div>
-              <h3>Real framing</h3>
-              <p>
-                Pan, zoom and rotate in the actual frame instead of trusting a
-                blind centre crop.
-              </p>
-            </div>
-            <div class="feature-card card tilt">
-              <div class="feature-icon">
-                <svg class="ic"><use href="#i-install" /></svg>
-              </div>
-              <h3>Installable</h3>
-              <p>
-                Add it to your home screen and it works offline, like a native
-                app.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- FAQ -->
-      <section class="section faq" id="faq">
+      <!-- 6. FAQ -->
+      <section class="section" id="faq">
         <div class="container narrow">
-          <div class="section-head" data-reveal="up">
-            <span class="kicker">12 — FAQ</span>
-            <h2>Questions people ask at 11:58 pm.</h2>
-          </div>
-          <div class="faq-list" data-reveal-stagger>
+          <div class="section-head"><h2>Questions.</h2></div>
+          <div class="faq-list">
             <details class="faq-item">
               <summary>Are my files uploaded anywhere?</summary>
-              <div class="faq-body">
-                No. Every crop, compression and merge runs in your browser using
-                the Canvas API. The page loads a few libraries from public CDNs,
-                but your files never leave this device.
-              </div>
+              <p>No. Cropping, compression and merging run in your browser. Only the page's libraries and the news list are downloaded.</p>
             </details>
             <details class="faq-item">
-              <summary>Which dimensions should I use?</summary>
-              <div class="faq-body">
-                Templates carry the values most commonly quoted for each exam,
-                but portals do change them. Check the official notification and
-                use the Custom template if yours differs. Cards marked “verify”
-                use generic passport-size defaults.
-              </div>
+              <summary>Are the sizes always right?</summary>
+              <p>They follow the most recent notifications, but portals change their rules. Check the current notice, and use Custom if yours differs. Exams marked “check sizes” use passport-size defaults.</p>
             </details>
             <details class="faq-item">
-              <summary>My PNG is bigger than the limit. Why?</summary>
-              <div class="faq-body">
-                PNG is lossless, so its size cannot be tuned much. Switch the
-                output format to JPEG and set a Max size in KB, and GovForms
-                will find the highest quality that fits.
-              </div>
+              <summary>Why is my PNG over the limit?</summary>
+              <p>PNG files cannot be shrunk to a KB target. Save the file as JPG instead and GovForms finds the highest quality that fits.</p>
             </details>
             <details class="faq-item">
-              <summary>
-                How do I get a clean signature from a phone photo?
-              </summary>
-              <div class="faq-body">
-                Sign on plain white paper, photograph it in good light, and keep
-                the “Remove paper background” toggle on. GovForms lifts the
-                paper to pure white and deepens the ink.
-              </div>
+              <summary>How do I get a clean signature from a phone photo?</summary>
+              <p>Sign on white paper, photograph it in daylight and keep “Clean paper background” on.</p>
             </details>
             <details class="faq-item">
-              <summary>
-                What about thumb impressions and handwritten declarations?
-              </summary>
-              <div class="faq-body">
-                Bank exams such as IBPS, SBI and RBI ask for them. Pick that
-                template and the extra upload slots appear automatically with
-                the right sizes and KB limits.
-              </div>
+              <summary>Where do I add a thumb impression or declaration?</summary>
+              <p>Pick a bank exam (IBPS, SBI, RBI) and the extra slots appear with the right sizes.</p>
             </details>
             <details class="faq-item">
-              <summary>Can I install GovForms on my phone?</summary>
-              <div class="faq-body">
-                Yes. On Android and desktop Chrome, tap the install icon in the
-                top bar. On iPhone, open the Share menu in Safari and choose
-                “Add to Home Screen”. Once installed it works offline.
-              </div>
+              <summary>Can I install it as an app?</summary>
+              <p>Yes. Android and desktop Chrome: tap Install in the header. iPhone or iPad: Safari → Share → Add to Home Screen.</p>
             </details>
             <details class="faq-item">
-              <summary>Where does the news come from?</summary>
-              <div class="faq-body">
-                Headlines are pulled daily from Google News (India edition)
-                using searches for each exam category, then de-duplicated. Every
-                story links to its original publisher. Always confirm dates on
-                the official notice board.
-              </div>
+              <summary>Are there keyboard shortcuts?</summary>
+              <p><kbd>/</kbd> opens the exam picker, <kbd>Ctrl</kbd> + <kbd>Enter</kbd> processes, <kbd>Ctrl</kbd> + <kbd>V</kbd> pastes an image and <kbd>Esc</kbd> closes.</p>
             </details>
-          </div>
-        </div>
-      </section>
-
-      <!-- CREDITS -->
-      <section class="section credits" id="credits">
-        <div class="container">
-          <div class="credits-card card" data-reveal="scale">
-            <div class="credits-media">
-              <img
-                id="creditsImg"
-                data-img="credits"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div class="credits-body">
-              <span class="kicker">Built with care</span>
-              <h2>
-                Made by Amit Kumar &amp;
-                <a
-                  href="https://portfolio-astro-two.vercel.app/"
-                  target="_blank"
-                  rel="noopener"
-                  >Ajay Kumar</a
-                >.
-              </h2>
-              <p>
-                GovForms started as a fix for a rejected upload the night before
-                a deadline. It is free, open and runs entirely on your device.
-              </p>
-              <div class="credits-links">
-                <a
-                  class="btn btn-primary"
-                  href="https://portfolio-astro-two.vercel.app/"
-                  target="_blank"
-                  rel="noopener"
-                  >Ajay's portfolio
-                  <svg class="ic"><use href="#i-external" /></svg
-                ></a>
-                <a
-                  class="btn btn-ghost"
-                  href="https://github.com/A-JA-Y/fast-form-gov-"
-                  target="_blank"
-                  rel="noopener"
-                  >Source on GitHub</a
-                >
-              </div>
-            </div>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <div class="container footer-grid">
-        <div>
-          <a class="brand" href="#top"
-            ><span class="brand-mark"></span
-            ><span class="brand-text">Gov<b>Forms</b></span></a
-          >
-          <p class="footer-note">
-            Transforming document formatting. Fast · Secure · Professional.
-          </p>
-          <p class="footer-note">
-            Built by Amit Kumar &amp;
-            <a
-              href="https://portfolio-astro-two.vercel.app/"
-              target="_blank"
-              rel="noopener"
-              >Ajay Kumar</a
-            >.
-          </p>
-        </div>
-        <div class="footer-links">
-          <a href="#templates">Exams</a>
-          <a href="#studio">Studio</a>
-          <a href="#tools">Tools</a>
-          <a href="#merge">Merge PDF</a>
-          <a href="#news">News</a>
-          <a href="#faq">FAQ</a>
-        </div>
-        <div class="footer-fine">
-          <p>
-            © 2026 GovForms. All processing happens locally in your browser.
-          </p>
-          <details class="photo-credits">
-            <summary>Photo credits</summary>
-            <ul id="photoCredits"></ul>
-          </details>
-        </div>
+      <div class="container footer-row">
+        <span class="footer-brand">GovForms</span>
+        <span>Built by Amit Kumar and <a href="https://portfolio-astro-two.vercel.app/" target="_blank" rel="noopener">Ajay Kumar</a>.</span>
+        <a href="https://github.com/A-JA-Y/fast-form-gov-" target="_blank" rel="noopener"
+          >Source on GitHub <svg class="ic" aria-hidden="true"><use href="#i-external" /></svg
+        ></a>
+        <span class="muted">© 2026 GovForms</span>
       </div>
     </footer>
 
-    <button class="to-top" id="toTop" type="button" aria-label="Back to top">
-      <svg class="ic"><use href="#i-up" /></svg>
-    </button>
-
-    <div
-      class="toasts"
-      id="toasts"
-      aria-live="polite"
-      aria-atomic="false"
-    ></div>
-
-    <div
-      id="viewerModal"
-      class="viewer-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="viewerTitle"
-    >
-      <div class="viewer-content card">
-        <div class="viewer-header">
-          <div id="viewerTitle">Document Preview</div>
-          <button
-            id="closeViewerBtn"
-            class="icon-btn"
-            type="button"
-            aria-label="Close preview"
-          >
-            <svg class="ic"><use href="#i-x" /></svg>
+    <div id="viewerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="viewerTitle" hidden>
+      <div class="modal-card surface">
+        <div class="modal-head">
+          <h2 id="viewerTitle">Preview</h2>
+          <button id="closeViewerBtn" class="icon-btn" type="button" aria-label="Close preview">
+            <svg class="ic" aria-hidden="true"><use href="#i-x" /></svg>
           </button>
         </div>
-        <div class="viewer-body" id="viewerBody">
-          <p class="viewer-empty">Select a file to preview.</p>
+        <div class="modal-body" id="viewerBody"></div>
+      </div>
+    </div>
+
+    <div id="installSheet" class="modal sheet" role="dialog" aria-modal="true" aria-labelledby="installTitle" hidden>
+      <div class="modal-card surface">
+        <div class="modal-head">
+          <h2 id="installTitle">Install GovForms</h2>
+          <button id="installSheetClose" class="icon-btn" type="button" aria-label="Close">
+            <svg class="ic" aria-hidden="true"><use href="#i-x" /></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Add it to your home screen to open it full-screen and offline.</p>
+          <ol class="install-steps">
+            <li>
+              Tap <b>Share</b> <svg class="ic" aria-hidden="true"><use href="#i-share" /></svg> in Safari.
+            </li>
+            <li>
+              Choose <b>Add to Home Screen</b> <svg class="ic" aria-hidden="true"><use href="#i-plus-square" /></svg>.
+            </li>
+            <li>Tap <b>Add</b>.</li>
+          </ol>
+          <button class="btn btn-primary btn-block" id="installSheetDone" type="button">Done</button>
         </div>
       </div>
     </div>
 
-    <script>
-      // safety net: never leave the intro curtain up if the animation layer fails to load
-      setTimeout(function () {
-        var i = document.getElementById("intro");
-        if (i && !i.classList.contains("done")) i.classList.add("done");
-      }, 6000);
-    </script>
+    <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 
-    <div
-      id="installSheet"
-      class="sheet"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="installTitle"
-      hidden
-    >
-      <div class="sheet-card card">
-        <div class="sheet-grab"></div>
-        <h3 id="installTitle">Install GovForms</h3>
-        <p>Add it to your home screen for a full-screen, offline-ready app.</p>
-        <ol class="install-steps" id="installSteps">
-          <li>
-            Tap the <b>Share</b> button
-            <svg class="ic"><use href="#i-share" /></svg> in Safari.
-          </li>
-          <li>
-            Choose <b>Add to Home Screen</b>
-            <svg class="ic"><use href="#i-plus-square" /></svg>.
-          </li>
-          <li>Tap <b>Add</b>. GovForms appears next to your apps.</li>
-        </ol>
-        <div class="actions">
-          <button class="btn btn-primary" id="installSheetClose" type="button">
-            Got it
-          </button>
-        </div>
-      </div>
+    <div class="actionbar" id="actionbar" hidden>
+      <span class="actionbar-status" id="actionStatus"></span>
+      <button class="btn btn-primary" id="dockCta" type="button">
+        <svg class="ic" id="dockCtaIcon" aria-hidden="true"><use href="#i-crop" /></svg>
+        <span id="dockCtaLabel">Choose exam</span>
+      </button>
     </div>
+
+    <nav class="dock" id="dock" aria-label="Sections">
+      <a class="dock-item" href="#studio" data-dock="studio"
+        ><svg class="ic" aria-hidden="true"><use href="#i-crop" /></svg><span>Format</span></a
+      >
+      <a class="dock-item" href="#templates" data-dock="templates"
+        ><svg class="ic" aria-hidden="true"><use href="#i-grid" /></svg><span>Exams</span></a
+      >
+      <a class="dock-item" href="#tools" data-dock="tools"
+        ><svg class="ic" aria-hidden="true"><use href="#i-tools" /></svg><span>Tools</span></a
+      >
+      <a class="dock-item" href="#news" data-dock="news"
+        ><svg class="ic" aria-hidden="true"><use href="#i-news" /></svg><span>News</span></a
+      >
+    </nav>
+
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Icons: Lucide (ISC) — https://lucide.dev -->
+      <symbol id="i-upload" viewBox="0 0 24 24">
+        <path d="M12 3v12" />
+        <path d="m17 8-5-5-5 5" />
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      </symbol>
+      <symbol id="i-photo" viewBox="0 0 24 24">
+        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+        <circle cx="9" cy="9" r="2" />
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+      </symbol>
+      <symbol id="i-pen" viewBox="0 0 24 24">
+        <path d="M13 21h8" />
+        <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+      </symbol>
+      <symbol id="i-thumb" viewBox="0 0 24 24">
+        <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+        <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+        <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+        <path d="M2 12a10 10 0 0 1 18-6" />
+        <path d="M2 16h.01" />
+        <path d="M21.8 16c.2-2 .131-5.354 0-6" />
+        <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" />
+        <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+        <path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
+      </symbol>
+      <symbol id="i-file-text" viewBox="0 0 24 24">
+        <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
+        <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+        <path d="M10 9H8" />
+        <path d="M16 13H8" />
+        <path d="M16 17H8" />
+      </symbol>
+      <symbol id="i-id" viewBox="0 0 24 24">
+        <path d="M13 19a4 4 0 00-8 0" />
+        <path d="M16 10h2" />
+        <path d="M16 14h2" />
+        <circle cx="9" cy="12" r="3" />
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+      </symbol>
+      <symbol id="i-archive" viewBox="0 0 24 24">
+        <path d="M13.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v11.5" />
+        <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+        <path d="M8 12v-1" />
+        <path d="M8 18v-2" />
+        <path d="M8 7V6" />
+        <circle cx="8" cy="20" r="2" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 15V3" />
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <path d="m7 10 5 5 5-5" />
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path d="m16 9-5.5 5.5L8 12" />
+      </symbol>
+      <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </symbol>
+      <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></symbol>
+      <symbol id="i-rotate" viewBox="0 0 24 24">
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+        <path d="M21 3v5h-5" />
+      </symbol>
+      <symbol id="i-reset" viewBox="0 0 24 24">
+        <path d="M9 14 4 9l5-5" />
+        <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
+      </symbol>
+      <symbol id="i-crop" viewBox="0 0 24 24">
+        <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+        <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+      </symbol>
+      <symbol id="i-palette" viewBox="0 0 24 24">
+        <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
+        <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+        <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+        <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+        <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      </symbol>
+      <symbol id="i-eraser" viewBox="0 0 24 24">
+        <path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21" />
+        <path d="m5.082 11.09 8.828 8.828" />
+      </symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24">
+        <path d="M10 5H3" />
+        <path d="M12 19H3" />
+        <path d="M14 3v4" />
+        <path d="M16 17v4" />
+        <path d="M21 12h-9" />
+        <path d="M21 19h-5" />
+        <path d="M21 5h-7" />
+        <path d="M8 10v4" />
+        <path d="M8 12H3" />
+      </symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6" /></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+      <symbol id="i-grip" viewBox="0 0 24 24">
+        <circle cx="9" cy="12" r="1" />
+        <circle cx="9" cy="5" r="1" />
+        <circle cx="9" cy="19" r="1" />
+        <circle cx="15" cy="12" r="1" />
+        <circle cx="15" cy="5" r="1" />
+        <circle cx="15" cy="19" r="1" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <path d="m21 21-4.34-4.34" />
+        <circle cx="11" cy="11" r="8" />
+      </symbol>
+      <symbol id="i-external" viewBox="0 0 24 24">
+        <path d="M15 3h6v6" />
+        <path d="M10 14 21 3" />
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      </symbol>
+      <symbol id="i-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2" />
+        <path d="M12 20v2" />
+        <path d="m4.93 4.93 1.41 1.41" />
+        <path d="m17.66 17.66 1.41 1.41" />
+        <path d="M2 12h2" />
+        <path d="M20 12h2" />
+        <path d="m6.34 17.66-1.41 1.41" />
+        <path d="m19.07 4.93-1.41 1.41" />
+      </symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol>
+      <symbol id="i-install" viewBox="0 0 24 24">
+        <path d="M12 17V3" />
+        <path d="m6 11 6 6 6-6" />
+        <path d="M19 21H5" />
+      </symbol>
+      <symbol id="i-share" viewBox="0 0 24 24">
+        <path d="M12 2v13" />
+        <path d="m16 6-4-4-4 4" />
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      </symbol>
+      <symbol id="i-plus-square" viewBox="0 0 24 24">
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <path d="M8 12h8" />
+        <path d="M12 8v8" />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect width="7" height="7" x="3" y="3" rx="1" />
+        <rect width="7" height="7" x="14" y="3" rx="1" />
+        <rect width="7" height="7" x="14" y="14" rx="1" />
+        <rect width="7" height="7" x="3" y="14" rx="1" />
+      </symbol>
+      <symbol id="i-tools" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" /></symbol>
+      <symbol id="i-news" viewBox="0 0 24 24">
+        <path d="M15 18h-5" />
+        <path d="M18 14h-8" />
+        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2" />
+        <rect width="8" height="4" x="10" y="6" rx="1" />
+      </symbol>
+      <symbol id="i-printer" viewBox="0 0 24 24">
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+        <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" />
+        <rect x="6" y="14" width="12" height="8" rx="1" />
+      </symbol>
+      <symbol id="i-compress" viewBox="0 0 24 24">
+        <path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8" />
+        <path d="M9 19.8V15m0 0H4.2M9 15l-6 6" />
+        <path d="M15 4.2V9m0 0h4.8M15 9l6-6" />
+        <path d="M9 4.2V9m0 0H4.2M9 9 3 3" />
+      </symbol>
+      <symbol id="i-merge" viewBox="0 0 24 24">
+        <path d="M11 21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1" />
+        <path d="M16 16a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1" />
+        <path d="M21 6a2 2 0 0 0-.586-1.414l-2-2A2 2 0 0 0 17 2h-3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1z" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+        <path d="m9 12 2 2 4-4" />
+      </symbol>
+      <symbol id="i-paste" viewBox="0 0 24 24">
+        <path d="M11 14h10" />
+        <path d="M16 4h2a2 2 0 0 1 2 2v1.344" />
+        <path d="m17 18 4-4-4-4" />
+        <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113" />
+        <rect x="8" y="2" width="8" height="4" rx="1" />
+      </symbol>
+      <symbol id="i-image-off" viewBox="0 0 24 24">
+        <line x1="2" x2="22" y1="2" y2="22" />
+        <path d="M10.41 10.41a2 2 0 1 1-2.83-2.83" />
+        <line x1="13.5" x2="6" y1="13.5" y2="21" />
+        <line x1="18" x2="21" y1="12" y2="15" />
+        <path d="M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59" />
+        <path d="M21 15V5a2 2 0 0 0-2-2H9" />
+      </symbol>
+    </svg>
   </body>
 </html>
