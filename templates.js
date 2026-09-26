@@ -129,7 +129,7 @@
       photo: P(200, 230, "png"),
       sign: P(150, 50, "png"),
       verify: true,
-      note: "PNG size cannot be tuned — check the notice for a KB limit.",
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     rrb_alp_je: {
       name: "RRB ALP / Technician / JE",
@@ -139,7 +139,7 @@
       photo: P(200, 230, "png"),
       sign: P(150, 50, "png"),
       verify: true,
-      note: "PNG size cannot be tuned — check the notice for a KB limit.",
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     rpf: {
       name: "RPF Constable / SI",
@@ -149,7 +149,7 @@
       photo: P(200, 230, "png"),
       sign: P(150, 50, "png"),
       verify: true,
-      note: "PNG size cannot be tuned — check the notice for a KB limit.",
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
 
     /* ---------------- Banking & Insurance ---------------- */
@@ -231,7 +231,7 @@
       photo: P(150, 180, "png"),
       sign: P(120, 60, "png"),
       verify: true,
-      note: "PNG size cannot be tuned — check the notice for a KB limit.",
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     uppsc: {
       name: "UPPSC PCS",
@@ -427,6 +427,7 @@
 
     /* ---------------- Passport, PAN & Visa ---------------- */
     passport_in: {
+      signOptional: true,
       name: "Indian Passport (Passport Seva)",
       org: "Ministry of External Affairs",
       category: "documents",
@@ -436,6 +437,7 @@
       note: "Plain white background, neutral expression, no glasses glare.",
     },
     us_visa: {
+      signOptional: true,
       name: "US Visa (DS-160)",
       org: "US Department of State",
       category: "documents",
@@ -445,6 +447,7 @@
       note: "Square, 600–1200 px, plain white background, under 240 KB.",
     },
     schengen: {
+      signOptional: true,
       name: "Schengen / UK visa (35 × 45 mm)",
       org: "ICAO passport-photo standard",
       category: "documents",
@@ -463,6 +466,7 @@
       verify: true,
     },
     passport: {
+      signOptional: true,
       name: "Passport / Visa 2 × 2 in",
       org: "600 × 600 px at 300 DPI",
       category: "documents",
@@ -471,6 +475,7 @@
       sign: P(300, 100, "png"),
     },
     mm3545: {
+      signOptional: true,
       name: "35 × 45 mm ID photo",
       org: "413 × 531 px at 300 DPI",
       category: "documents",
@@ -478,7 +483,7 @@
       photo: { ...mm(35, 45, 300), format: "jpeg" },
       sign: { ...mm(35, 15, 300), format: "png" },
       verify: true,
-      note: "PNG size cannot be tuned — check the notice for a KB limit.",
+      note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     custom: {
       name: "Custom",

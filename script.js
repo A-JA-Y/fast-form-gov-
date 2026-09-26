@@ -23,6 +23,7 @@
   };
   const icon = (name, cls = "ic") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
   const coarse = window.matchMedia("(pointer: coarse)").matches;
+  const SHARE_FILES = coarse && typeof navigator.share === "function" && typeof navigator.canShare === "function";
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isMobile = () => window.matchMedia("(max-width: 900px)").matches;
 
@@ -48,16 +49,20 @@
   }
 
   const toastsEl = $("toasts");
-  function toast(msg, type = "info", ms = 3000) {
+  function toast(msg, type = "info", ms = 3000, action = null) {
     if (!toastsEl) return;
     const t = document.createElement("div");
     t.className = "toast " + type;
     t.textContent = msg;
+    if (action) t.setAttribute("role", "button");
     const kill = () => {
       t.classList.add("out");
       setTimeout(() => t.remove(), 220);
     };
-    t.addEventListener("click", kill);
+    t.addEventListener("click", () => {
+      if (action) action();
+      kill();
+    });
     toastsEl.appendChild(t);
     setTimeout(kill, ms);
   }
@@ -110,17 +115,27 @@
     const lib = LIBS[name];
     if (lib.ready()) return Promise.resolve();
     let restore = null;
-    if (btn) {
+    if (btn && !btn.dataset.loading) {
       const prev = btn.innerHTML;
+      btn.dataset.loading = "1";
       btn.textContent = label;
-      restore = () => (btn.innerHTML = prev);
+      restore = () => {
+        btn.innerHTML = prev;
+        delete btn.dataset.loading;
+      };
     }
     if (!libPromises[name]) {
       libPromises[name] = new Promise((res, rej) => {
         const s = document.createElement("script");
         s.src = lib.url;
         s.crossOrigin = "anonymous";
-        s.onload = () => (lib.ready() ? res() : rej(new Error("Library failed to initialise.")));
+        s.onload = () => {
+          if (lib.ready()) res();
+          else {
+            delete libPromises[name];
+            rej(new Error("Library failed to initialise."));
+          }
+        };
         s.onerror = () => {
           delete libPromises[name];
           rej(new Error("Could not load a required library. Check your connection and try again."));
@@ -137,6 +152,7 @@
     templates: { custom: { name: "Custom", org: "Enter your own pixel sizes", category: "custom", tags: [], custom: true } },
   };
   const TEMPLATES = CATALOG.templates;
+  const hasTpl = (k) => !!k && Object.prototype.hasOwnProperty.call(TEMPLATES, k);
   const CATEGORIES = CATALOG.categories;
   const catOf = (id) => CATEGORIES.find((c) => c.id === id);
   const catName = (id) => (catOf(id) || { name: id === "custom" ? "Custom" : id }).name;
@@ -165,7 +181,6 @@
   const resultsEl = $("results");
   const zipToggle = $("zipToggle");
   const zipRow = $("zipRow");
-  const outputSpec = $("outputSpec");
   const idFormat = $("idFormat");
   const idMaxKb = $("idMaxKb");
   const idMaxKbField = $("idMaxKbField");
@@ -175,7 +190,7 @@
   const actionbar = $("actionbar");
 
   /* ---------- state ---------- */
-  const state = { templateKey: "", results: [], lastSlot: null, category: "all", search: "", processing: false };
+  const state = { templateKey: "", results: [], lastSlot: null, category: "all", search: "", processing: false, downloading: false, gen: 0 };
   const defaultView = (mode) => ({ zoom: 1, px: 0, py: 0, rot: 0, mode });
   const slots = new Map();
   const idSlot = { file: null, bmp: null, url: null };
@@ -334,13 +349,16 @@
     }
     const total = bytes.length + segs.reduce((a, s) => a + s.length, 0);
     const out = new Uint8Array(total);
-    out.set(bytes.subarray(0, 2), 0);
-    let o = 2;
+    // JFIF requires APP0 right after SOI, so the padding goes after any leading APPn segments
+    let head = 2;
+    while (head + 4 <= bytes.length && bytes[head] === 0xff && bytes[head + 1] >= 0xe0 && bytes[head + 1] <= 0xef) head += 2 + ((bytes[head + 2] << 8) | bytes[head + 3]);
+    out.set(bytes.subarray(0, head), 0);
+    let o = head;
     for (const s of segs) {
       out.set(s, o);
       o += s.length;
     }
-    out.set(bytes.subarray(2), o);
+    out.set(bytes.subarray(head), o);
     return out;
   }
   // Pads a PNG with a tEXt chunk before IEND.
@@ -413,7 +431,7 @@
     if (under && (!maxBytes || minBytes <= maxBytes)) {
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const out = mime === "image/png" ? padPng(bytes, minBytes) : padJpeg(bytes, minBytes);
-      if (out.length >= minBytes) {
+      if (out.length >= minBytes && (!maxBytes || out.length <= maxBytes)) {
         blob = new Blob([out], { type: mime });
         padded = true;
         under = false;
@@ -475,7 +493,7 @@
   const normFmt = (f) => (f === "jpeg" || f === "jpg" ? "jpg" : f || "jpg");
   function currentSpec() {
     const key = state.templateKey;
-    if (!key || !TEMPLATES[key]) return null;
+    if (!hasTpl(key)) return null;
     const t = TEMPLATES[key];
     if (t.custom) {
       const w = clamp(parseInt(customW.value, 10) || 200, 16, 4000);
@@ -490,7 +508,7 @@
     if (!spec) return [];
     const defs = [
       { key: "photo", name: "Photo", icon: "photo", kind: "photo", required: true, spec: spec.photo, guide: true, bg: true, clean: false, defaultMode: "fill" },
-      { key: "sign", name: "Signature", icon: "pen", kind: "sign", required: true, spec: spec.sign, guide: false, bg: false, clean: true, defaultMode: "fit", hint: "Sign on white paper; the background is removed automatically." },
+      { key: "sign", name: "Signature", icon: "pen", kind: "sign", required: !spec.signOptional, spec: spec.sign, guide: false, bg: false, clean: true, defaultMode: "fit", hint: "Sign on white paper; the background is removed automatically." },
     ];
     (spec.extras || []).forEach((e) => {
       defs.push({
@@ -513,10 +531,10 @@
   const describeSize = (s) => `${s.w}×${s.h} px · ${fmtLabel(normFmt(s.format))}${s.maxKb ? " · " + kbRange(s) : ""}`;
   function describeSpec(spec) {
     if (!spec) return "Photo and signature sizes fill in automatically.";
-    const parts = [`Photo ${describeSize(spec.photo)}`, `Signature ${describeSize(spec.sign)}`];
-    (spec.extras || []).forEach((e) => parts.push(`${e.name} ${describeSize(e)}`));
-    let html = esc(parts.join(" — "));
-    if (spec.note) html += ` · ${esc(spec.note)}`;
+    const parts = [`Photo ${spec.photo.w}×${spec.photo.h}`, `Signature ${spec.sign.w}×${spec.sign.h}`];
+    (spec.extras || []).forEach((e) => parts.push(`${e.name} ${e.w}×${e.h}`));
+    let html = esc(parts.join(" · ")) + " px";
+    if (spec.note) html += `<br>${esc(spec.note)}`;
     if (spec.verify) html += ` <span class="tag warn" title="Generic passport-size defaults — verify with your notification">${icon("info")}check sizes</span>`;
     return html;
   }
@@ -537,19 +555,20 @@
         <input type="file" data-input accept="image/*" hidden />
         <button type="button" class="dz-inner" data-open>
           ${icon("upload")}
-          <span class="dz-text" data-open-text>Add ${noun}</span>
+          <span class="dz-text">Add ${noun}</span>
           <span class="dz-sub">JPG, PNG or WEBP</span>
           <span class="dz-paste">or paste with Ctrl+V</span>
         </button>
         <div class="dz-file" data-meta hidden>
           <img class="dz-thumb" data-thumb alt="" />
           <div class="dz-meta"><span class="dz-name" data-name></span><span class="dz-size mono" data-size></span></div>
+          <button type="button" class="icon-btn" data-replace aria-label="Replace ${esc(def.name.toLowerCase())}" title="Replace">${icon("upload")}</button>
           <button type="button" class="icon-btn" data-view aria-label="Preview original ${esc(def.name.toLowerCase())}" title="Preview original">${icon("eye")}</button>
           <button type="button" class="icon-btn" data-clear aria-label="Remove ${esc(def.name.toLowerCase())}" title="Remove">${icon("x")}</button>
         </div>
       </div>
       <div class="editor" data-editor hidden>
-        <p class="hint editor-hint">Drag to move · scroll, pinch or slide to zoom${def.guide ? " until the face fills the guide" : ""}.</p>
+        <p class="hint editor-hint">Drag to move, ${coarse ? "pinch" : "scroll"} to zoom.${def.guide ? " Fit the face inside the guide." : ""}</p>
         <div class="editor-stage">
           <div class="editor-frame">
             <canvas class="editor-canvas" data-canvas aria-label="Framing editor for ${esc(def.name.toLowerCase())}"></canvas>
@@ -558,8 +577,8 @@
         </div>
         <div class="editor-tools">
           <div class="editor-zoom">
-            <label class="label" data-zoom-label>Zoom</label>
-            <input type="range" data-zoom min="1" max="3" step="0.01" value="1" />
+            <span class="label" data-zoom-label aria-hidden="true">Zoom</span>
+            <input type="range" data-zoom min="1" max="3" step="0.01" value="1" aria-label="Zoom ${esc(def.name.toLowerCase())}" />
             <span class="mono" data-zoom-val>1.0×</span>
           </div>
           <div class="editor-actions">
@@ -576,7 +595,7 @@
                 <button type="button" class="swatch" role="radio" aria-checked="true" data-color="#ffffff" style="--c:#ffffff" aria-label="White" title="White"></button>
                 <button type="button" class="swatch" role="radio" aria-checked="false" data-color="#dbeafe" style="--c:#dbeafe" aria-label="Light blue" title="Light blue"></button>
                 <button type="button" class="swatch" role="radio" aria-checked="false" data-color="#f1f5f9" style="--c:#f1f5f9" aria-label="Light grey" title="Light grey"></button>
-                <label class="swatch custom" title="Custom colour"><input type="color" data-bgcustom value="#ffffff" aria-label="Custom background colour" /></label>
+                <label class="swatch custom" title="Custom colour" role="radio" aria-checked="false" aria-label="Custom colour"><input type="color" data-bgcustom value="#ffffff" tabindex="-1" aria-hidden="true" /></label>
               </div>`
                 : def.clean
                   ? `<label class="toggle"><input type="checkbox" data-clean checked /><span class="toggle-track"><span class="toggle-thumb"></span></span><span>Clean paper background</span></label>`
@@ -586,7 +605,7 @@
         </div>
       </div>
       <details class="slot-options" data-options>
-        <summary>${icon("sliders")}<span data-summary>Output</span>${icon("chevron", "ic chev")}</summary>
+        <summary>${icon("sliders")}<span data-summary>Save as</span>${icon("chevron", "ic chev")}</summary>
         <div class="row-2">
           <div class="field">
             <label>Format</label>
@@ -596,7 +615,7 @@
           </div>
           <div class="field">
             <label>Max size (KB)</label>
-            <input type="number" data-maxkb min="2" max="10240" placeholder="auto" inputmode="numeric" pattern="[0-9]*" aria-label="Maximum size in KB for ${esc(def.name.toLowerCase())}" />
+            <input type="number" data-maxkb min="2" max="10240" placeholder="auto" inputmode="numeric" pattern="[0-9]*" aria-label="Max size (KB) for ${esc(def.name.toLowerCase())}" />
           </div>
         </div>
       </details>`;
@@ -606,7 +625,7 @@
     frame.dataset.slot = def.key;
     frame.innerHTML = `<div class="frame-stage"><canvas data-out width="200" height="240"></canvas></div>
       <div class="frame-foot"><span data-flabel>${esc(def.name)}</span><span class="mono" data-fdims>—</span></div>
-      <div class="frame-row"><span class="frame-state" data-fstate>${icon("circle")}Waiting</span><button type="button" class="icon-btn sm" data-fdl hidden aria-label="Download">${icon("download")}</button></div>`;
+      <div class="frame-row"><span class="frame-state" data-fstate>${icon("circle")}No file yet</span></div>`;
     const slot = {
       key: def.key,
       def,
@@ -621,7 +640,6 @@
         block,
         drop: q("[data-drop]"),
         input: q("[data-input]"),
-        openText: q("[data-open-text]"),
         meta: q("[data-meta]"),
         thumb: q("[data-thumb]"),
         name: q("[data-name]"),
@@ -645,7 +663,6 @@
         fdims: frame.querySelector("[data-fdims]"),
         flabel: frame.querySelector("[data-flabel]"),
         fstate: frame.querySelector("[data-fstate]"),
-        fdl: frame.querySelector("[data-fdl]"),
       },
     };
     if (def.clean) slot.el.out.getContext("2d", { willReadFrequently: true });
@@ -666,6 +683,7 @@
     });
     on(el.block.querySelector("[data-view]"), "click", () => openViewer(slot.file, `${slot.def.name} (original)`));
     on(el.block.querySelector("[data-clear]"), "click", () => clearSlot(slot));
+    on(el.block.querySelector("[data-replace]"), "click", () => el.input.click());
     const edited = () => {
       drawEditor(slot);
       renderLive();
@@ -676,7 +694,6 @@
     let pinch = null,
       lastTap = 0;
     el.canvas.addEventListener("pointerdown", (e) => {
-      el.canvas.classList.add("active");
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       el.canvas.setPointerCapture(e.pointerId);
       if (pointers.size === 2) {
@@ -755,9 +772,17 @@
           edited();
         }),
       );
+      const customSwatch = el.bgCustom.parentElement;
+      customSwatch.addEventListener("keydown", (e) => {
+        if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          el.bgCustom.click();
+        }
+      });
+      customSwatch.tabIndex = 0;
       on(el.bgCustom, "input", () => {
         slot.bg = el.bgCustom.value;
-        setSwatch(el.bgCustom.parentElement);
+        setSwatch(customSwatch);
         edited();
       });
     }
@@ -771,20 +796,16 @@
         invalidateResults();
       }),
     );
-    on(el.fdl, "click", () => {
-      const r = state.results.find((x) => x.key === slot.key);
-      if (r) downloadFile(r.file);
-    });
   }
 
   function updateSlotSummary(slot) {
     const fmt = slot.el.fmt.value;
     const max = parseFloat(slot.el.maxKb.value);
     const dims = slotSpecDims(slot);
-    let limit = "no limit";
-    if (max > 0) limit = `≤ ${max} KB`;
+    let limit = "no size limit";
+    if (max > 0) limit = `up to ${max} KB`;
     else if (dims.maxKb) limit = kbRange(dims);
-    slot.el.summary.textContent = `Output: ${fmtLabel(fmt)} · ${limit}`;
+    slot.el.summary.textContent = `Save as ${fmtLabel(fmt)} · ${limit}`;
   }
   function applySlotSpec(slot, def, resetOutputs) {
     slot.def = def;
@@ -883,7 +904,7 @@
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = "#94a3b8";
+    ctx.fillStyle = "#7c8494";
     const size = Math.max(11, Math.min(W, H) / 8);
     ctx.font = `500 ${size}px Satoshi, system-ui, sans-serif`;
     ctx.textAlign = "center";
@@ -914,13 +935,12 @@
         slot.el.frame.classList.toggle("empty", !slot.bmp);
         const pv = previewDims(dims.w, dims.h);
         if (!slot.bmp) {
-          paintPlaceholder(slot.el.out, pv.w, pv.h, spec ? slot.def.name.toLowerCase() : "Choose an exam");
+          paintPlaceholder(slot.el.out, pv.w, pv.h, slot.def.name);
           return;
         }
         renderFrame(slot.el.out, slot.bmp, pv.w, pv.h, slot.view, slot.bg);
         if (withClean && slot.el.clean && slot.el.clean.checked) cleanSignature(slot.el.out);
       });
-      if (outputSpec) outputSpec.textContent = spec ? `${spec.photo.w}×${spec.photo.h} / ${spec.sign.w}×${spec.sign.h}` : "";
       updateReadiness();
       if (!withClean) {
         clearTimeout(liveFinal);
@@ -932,16 +952,14 @@
   function setFrameState(slot) {
     const st = slot.el.fstate;
     const r = state.results.find((x) => x.key === slot.key);
-    slot.el.fdl.hidden = !r;
     if (r) {
-      slot.el.fdl.setAttribute("aria-label", "Download " + r.file.name);
       const size = kb(r.file.size);
       if (r.over) {
         st.className = "frame-state bad";
         st.innerHTML = `${icon("alert")}<span data-kb>${size}</span> KB · over ${kb(r.max)} KB`;
       } else if (r.under) {
         st.className = "frame-state warn";
-        st.innerHTML = `${icon("alert")}<span data-kb>${size}</span> KB · under ${kb(r.min)} KB minimum`;
+        st.innerHTML = `${icon("alert")}<span data-kb>${size}</span> KB · under ${kb(r.min)} KB`;
       } else {
         st.className = "frame-state ok";
         st.innerHTML = `${icon("circle-check")}<span data-kb>${size}</span> KB`;
@@ -950,10 +968,10 @@
     }
     if (slot.bmp) {
       st.className = "frame-state ready";
-      st.innerHTML = `${icon("circle-check")}Ready`;
+      st.innerHTML = `${icon("check")}Added`;
     } else {
       st.className = "frame-state";
-      st.innerHTML = `${icon("circle")}Waiting`;
+      st.innerHTML = `${icon("circle")}No file yet`;
     }
   }
 
@@ -964,19 +982,25 @@
       return;
     }
     clearSlot(slot, true);
+    invalidateResults();
+    setFrameState(slot);
+    updateDock();
     slot.file = file;
     slot.el.name.textContent = file.name;
     slot.el.size.textContent = formatFileSize(file.size);
     slot.el.meta.hidden = false;
     slot.el.drop.classList.add("has-file");
-    slot.el.openText.textContent = "Replace " + (slot.def.kind === "photo" ? "photo" : slot.def.kind === "sign" ? "signature" : "image");
     try {
       const { bmp, url } = await loadBitmap(file);
-      if (slot.file !== file) return;
+      if (slot.file !== file) {
+        URL.revokeObjectURL(url);
+        return;
+      }
       slot.bmp = bmp;
       slot.url = url;
       slot.el.thumb.src = url;
     } catch (err) {
+      if (slot.file !== file) return;
       toast(err.message, "err");
       clearSlot(slot);
       return;
@@ -996,7 +1020,6 @@
     slot.el.drop.classList.remove("has-file");
     slot.el.thumb.removeAttribute("src");
     slot.el.editor.hidden = true;
-    slot.el.openText.textContent = "Add " + (slot.def.kind === "photo" ? "photo" : slot.def.kind === "sign" ? "signature" : "image");
     if (!silent) {
       invalidateResults();
       renderLive();
@@ -1021,7 +1044,11 @@
   }
   async function setIdFile(file) {
     if (!file) return;
+    if (!isImage(file) && !isPdf(file)) return toast("The ID document must be an image or a PDF.", "err");
+    if (file.size > 50 * 1024 * 1024) return toast("That file is over 50 MB. Choose a smaller one.", "err");
     clearId(true);
+    invalidateResults();
+    updateReadiness();
     idSlot.file = file;
     idEls.name.textContent = file.name;
     idEls.size.textContent = formatFileSize(file.size);
@@ -1030,11 +1057,15 @@
     if (isImage(file)) {
       try {
         const { bmp, url } = await loadBitmap(file, 0);
-        if (idSlot.file !== file) return;
+        if (idSlot.file !== file) {
+          URL.revokeObjectURL(url);
+          return;
+        }
         idSlot.bmp = bmp;
         idSlot.url = url;
         idEls.thumb.src = url;
       } catch (err) {
+        if (idSlot.file !== file) return;
         toast(err.message, "err");
         clearId();
         return;
@@ -1126,7 +1157,7 @@
       exam: ["crop", "Choose exam"],
       photo: ["upload", "Add " + (missing ? missing.def.name.toLowerCase() : "photo")],
       process: ["check", "Process"],
-      download: ["download", "Download all"],
+      download: [SHARE_FILES ? "share" : "download", SHARE_FILES ? "Share files" : "Download all"],
     };
     dockCtaIcon.querySelector("use").setAttribute("href", "#i-" + map[s][0]);
     dockCtaLabel.textContent = map[s][1];
@@ -1148,15 +1179,27 @@
   });
   // action bar shows while the Studio is on screen and no text field has focus
   const studioSection = $("studio");
-  let studioVisible = false;
+  let studioVisible = false,
+    ctaVisible = false;
+  const syncActionbar = () => {
+    if (actionbar) actionbar.hidden = !studioVisible || ctaVisible;
+  };
   if (actionbar && studioSection && "IntersectionObserver" in window) {
     new IntersectionObserver(
       ([en]) => {
         studioVisible = en.isIntersecting;
-        actionbar.hidden = !studioVisible;
+        syncActionbar();
       },
       { threshold: 0 },
     ).observe(studioSection);
+    if (processBtn)
+      new IntersectionObserver(
+        ([en]) => {
+          ctaVisible = en.isIntersecting;
+          syncActionbar();
+        },
+        { threshold: 0.6 },
+      ).observe(processBtn);
   }
   const typingNow = () => {
     const a = document.activeElement;
@@ -1193,7 +1236,7 @@
 
   /* ---------- template selection ---------- */
   function selectTemplate(key, opts = {}) {
-    if (!TEMPLATES[key]) key = "";
+    if (!hasTpl(key)) key = "";
     const changed = key !== state.templateKey;
     state.templateKey = key;
     const spec = currentSpec();
@@ -1221,6 +1264,7 @@
     const p = spec ? spec.photo : { w: 200, h: 240, maxKb: 50, format: "jpg" };
     const s = spec ? spec.sign : { w: 240, h: 80 };
     const set = (k, v) => document.querySelectorAll(`[data-an="${k}"]`).forEach((el) => (el.textContent = v));
+    set("prefix", spec ? "" : "Example (SSC): ");
     set("width", String(p.w));
     set("height", String(p.h));
     set("sig", `${s.w} × ${s.h} px`);
@@ -1253,14 +1297,15 @@
       const entries = Object.entries(TEMPLATES).filter(([, t]) => (t.category || "custom") === cat && matches(t, f));
       if (!entries.length) return;
       any = true;
-      html += `<div class="picker-group" role="presentation">${esc(catName(cat))}</div>`;
+      html += `<div class="picker-group" role="group" aria-label="${esc(catName(cat))}"><div class="picker-group-name" aria-hidden="true">${esc(catName(cat))}</div>`;
       entries.forEach(([key, t]) => {
         const dims = t.custom ? "any size" : `${t.photo.w}×${t.photo.h} · ${t.sign.w}×${t.sign.h}`;
         const sel = key === state.templateKey;
-        html += `<button type="button" class="picker-item ${sel ? "selected" : ""}" role="option" id="opt-${key}" data-key="${key}" aria-selected="${sel}"><span>${esc(t.name)}</span><small>${dims}</small></button>`;
+        html += `<button type="button" tabindex="-1" class="picker-item ${sel ? "selected" : ""}" role="option" id="opt-${key}" data-key="${key}" aria-selected="${sel}"><span>${esc(t.name)}</span><small>${dims}</small></button>`;
       });
+      html += "</div>";
     });
-    templatePopList.innerHTML = any ? html : '<div class="picker-empty">No matches. Try “SSC”, “bank” or “passport”.</div>';
+    templatePopList.innerHTML = any ? html : '<div class="picker-empty">No matches. Try a shorter word.</div>';
     pickerFocus = -1;
     templatePopSearch.removeAttribute("aria-activedescendant");
   }
@@ -1292,13 +1337,14 @@
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       if (!items.length) return;
+      if (document.activeElement !== templatePopSearch) templatePopSearch.focus();
       pickerFocus = (pickerFocus + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
       items.forEach((it, i) => it.classList.toggle("focus", i === pickerFocus));
       items[pickerFocus].scrollIntoView({ block: "nearest" });
       templatePopSearch.setAttribute("aria-activedescendant", items[pickerFocus].id);
     } else if (e.key === "Enter") {
       const focused = e.target.closest && e.target.closest(".picker-item");
-      const target = focused || (pickerFocus >= 0 ? items[pickerFocus] : items[0]);
+      const target = pickerFocus >= 0 ? items[pickerFocus] : focused || items[0];
       if (!target) return;
       e.preventDefault();
       selectTemplate(target.dataset.key);
@@ -1318,6 +1364,7 @@
   });
 
   /* ---------- exam gallery ---------- */
+  const EXTRA_SHORT = { thumb: "thumb impression", declaration: "declaration", postcard: "postcard photo" };
   function buildGallery() {
     const grid = $("templateGrid");
     if (!grid) return;
@@ -1331,14 +1378,14 @@
       const tags = [];
       if (!t.custom) {
         tags.push(`<span class="tag">${fmtLabel(normFmt(t.photo.format))}</span>`);
-        if (t.extras && t.extras.length) tags.push(`<span class="tag">+ ${t.extras.map((e) => e.key).join(", ")}</span>`);
+        if (t.extras && t.extras.length) tags.push(`<span class="tag">+ ${t.extras.map((e) => EXTRA_SHORT[e.key] || e.name.toLowerCase()).join(", ")}</span>`);
         if (t.verify) tags.push(`<span class="tag warn">${icon("info")}check sizes</span>`);
       } else tags.push(`<span class="tag">any size</span>`);
       const dims = t.custom ? "W × H" : `${t.photo.w}×${t.photo.h} · ${t.sign.w}×${t.sign.h}`;
       const limit = t.custom ? "" : kbRange(t.photo);
       card.innerHTML = `<span class="tc-name">${esc(t.name)}</span><span class="tc-org">${esc(t.org)}</span>
         <span class="tc-dims mono">${dims}${limit ? `<small>${limit}</small>` : ""}</span>
-        <span class="tc-tags">${tags.join("")}</span><span class="tc-use">Use</span>`;
+        <span class="tc-tags">${tags.join("")}</span>`;
       card.addEventListener("click", () => selectTemplate(key, { scroll: true }));
       grid.appendChild(card);
     });
@@ -1383,7 +1430,7 @@
       }
     });
     const count = $("templateCount");
-    if (count) count.textContent = shown === total ? `${total} exams` : `${shown} of ${total} exams`;
+    if (count) count.textContent = shown === total ? `${total} exams and documents` : `${shown} of ${total}`;
     const empty = $("templateEmpty");
     if (empty) empty.hidden = shown > 0;
   }
@@ -1401,11 +1448,13 @@
   /* ---------- processing ---------- */
   function setProcessMode(hasResults) {
     if (!processBtn) return;
-    processBtn.innerHTML = hasResults ? `${icon("download")}Download all` : "Process";
+    processBtn.innerHTML = hasResults ? (SHARE_FILES ? `${icon("share")}Share files` : `${icon("download")}Download all`) : "Process";
     processBtn.title = hasResults ? "" : "Ctrl + Enter";
     if (processAgain) processAgain.hidden = !hasResults;
+    if (zipRow) zipRow.hidden = coarse || !hasResults || state.results.length < 2;
   }
   function invalidateResults() {
+    state.gen++;
     if (!state.results.length) return;
     state.results = [];
     resultsEl.innerHTML = "";
@@ -1423,7 +1472,7 @@
   async function encodeSlot(slot) {
     const dims = slotSpecDims(slot);
     const fmt = slot.el.fmt.value;
-    const maxBytes = kbOf(slot.el.maxKb);
+    const maxBytes = kbOf(slot.el.maxKb) || (dims.maxKb || 0) * 1024;
     const minBytes = (dims.minKb || 0) * 1024;
     const canvas = document.createElement("canvas");
     if (slot.def.clean) canvas.getContext("2d", { willReadFrequently: true });
@@ -1432,7 +1481,9 @@
     const base = `${baseName(slot)}_${dims.w}x${dims.h}`;
     const common = { key: slot.key, label: slot.def.name, before: slot.file.size, min: minBytes, max: maxBytes };
     if (fmt === "pdf") {
-      const file = await canvasToPDF(canvas, `${base}.pdf`, { btn: processBtn });
+      let quality;
+      if (maxBytes) ({ quality } = await encodeUnderLimit(canvas, "image/jpeg", Math.max(1024, maxBytes - 2048)));
+      const file = await canvasToPDF(canvas, `${base}.pdf`, { btn: processBtn, quality });
       return { ...common, file, over: !!maxBytes && file.size > maxBytes, under: !!minBytes && file.size < minBytes, padded: false };
     }
     const mime = fmt === "png" ? "image/png" : "image/jpeg";
@@ -1446,13 +1497,19 @@
     const common = { key: "id", label: "ID document", before: idSlot.file.size, min: 0, max: maxBytes, under: false, padded: false };
     if (idSlot.bmp) {
       const c = document.createElement("canvas");
+      // re-encoded IDs are capped at 4096 px on the long side: enough for any portal, safe on phones
+      const idScale = Math.min(1, 4096 / Math.max(idSlot.bmp.w, idSlot.bmp.h));
+      const iw = Math.round(idSlot.bmp.w * idScale),
+        ih = Math.round(idSlot.bmp.h * idScale);
       if (wantPdf) {
-        renderFrame(c, idSlot.bmp, idSlot.bmp.w, idSlot.bmp.h, defaultView("fill"), "#ffffff");
-        const file = await canvasToPDF(c, "id_document.pdf", { btn: processBtn });
+        renderFrame(c, idSlot.bmp, iw, ih, defaultView("fill"), "#ffffff");
+        let quality;
+        if (maxBytes) ({ quality } = await encodeUnderLimit(c, "image/jpeg", Math.max(1024, maxBytes - 2048)));
+        const file = await canvasToPDF(c, "id_document.pdf", { btn: processBtn, quality });
         return { ...common, file, over: !!maxBytes && file.size > maxBytes };
       }
       if (maxBytes && idSlot.file.size > maxBytes) {
-        renderFrame(c, idSlot.bmp, idSlot.bmp.w, idSlot.bmp.h, defaultView("fill"), "#ffffff");
+        renderFrame(c, idSlot.bmp, iw, ih, defaultView("fill"), "#ffffff");
         const { blob, over } = await encodeUnderLimit(c, "image/jpeg", maxBytes);
         return { ...common, file: new File([blob], "id_document.jpg", { type: "image/jpeg" }), over };
       }
@@ -1505,6 +1562,11 @@
       setTimeout(openPicker, 0);
       return;
     }
+    const loading = Array.from(slots.values()).some((s) => s.file && !s.bmp) || (idSlot.file && isImage(idSlot.file) && !idSlot.bmp);
+    if (loading) {
+      setStatus(statusEl, "Still reading your file — try again in a moment.", "busy");
+      return;
+    }
     const missing = requiredMissing();
     if (missing.length) {
       setStatus(statusEl, `Add the ${missing.map((s) => s.def.name.toLowerCase()).join(" and ")} first.`, "err");
@@ -1512,6 +1574,7 @@
       return;
     }
     state.processing = true;
+    const gen = state.gen;
     processBtn.disabled = true;
     if (dockCta) dockCta.disabled = true;
     setStatus(statusEl, "Processing…", "busy");
@@ -1520,6 +1583,11 @@
       for (const slot of slots.values()) if (slot.bmp) out.push(await encodeSlot(slot));
       const id = await processId();
       if (id) out.push(id);
+      if (gen !== state.gen) {
+        setStatus(statusEl, "Something changed while processing — press Process again.", "warn");
+        updateDock();
+        return;
+      }
       state.results = out;
       renderResults();
       setProcessMode(true);
@@ -1536,11 +1604,13 @@
       const under = out.find((r) => r.under);
       const padded = out.filter((r) => r.padded);
       if (over) {
-        setStatus(statusEl, `${over.label} is ${kb(over.file.size)} KB, the limit is ${kb(over.max)} KB — lower Max size or use JPG.`, "err");
+        const isPng = over.file.type === "image/png";
+        setStatus(statusEl, `${over.label} is ${kb(over.file.size)} KB but the limit is ${kb(over.max)} KB. ${isPng ? "PNG cannot be shrunk — save it as JPG instead." : "Try a plainer background or a smaller source image."}`, "err");
       } else if (under) {
-        setStatus(statusEl, `${under.label} is ${kb(under.file.size)} KB, the portal minimum is ${kb(under.min)} KB — a higher-resolution source helps.`, "warn");
+        setStatus(statusEl, `${under.label} is ${kb(under.file.size)} KB but the portal wants at least ${kb(under.min)} KB. A larger or sharper source image helps.`, "warn");
       } else if (padded.length) {
-        setStatus(statusEl, `Done — ${out.length} file${out.length > 1 ? "s" : ""} ready. ${padded.map((r) => r.label).join(" and ")} padded to the portal minimum.`, "ok");
+        const names = padded.map((r) => r.label).join(" and ");
+        setStatus(statusEl, `Done — ${out.length} file${out.length > 1 ? "s" : ""} ready. ${names} ${padded.length > 1 ? "were" : "was"} below the minimum size, so ${padded.length > 1 ? "they were" : "it was"} topped up to it.`, "ok");
       } else setStatus(statusEl, `Done — ${out.length} file${out.length > 1 ? "s" : ""} ready.`, "ok");
       if (idSlot.file && !idSlot.bmp && kbOf(idMaxKb)) toast("KB limit ignored for non-image ID files", "info");
       updateDock();
@@ -1559,7 +1629,10 @@
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
   async function downloadAll() {
-    if (!state.results.length) return;
+    if (!state.results.length || state.downloading) return;
+    state.downloading = true;
+    processBtn.disabled = true;
+    if (dockCta) dockCta.disabled = true;
     const files = state.results.map((r) => r.file);
     try {
       if (zipToggle && zipToggle.checked && files.length > 1) {
@@ -1576,7 +1649,7 @@
       if (coarse && navigator.canShare && navigator.canShare({ files })) {
         try {
           await navigator.share({ files, title: "GovForms files" });
-          setStatus(statusEl, "Shared.", "ok");
+          setStatus(statusEl, "Files shared.", "ok");
           return;
         } catch (e) {
           if (e && e.name === "AbortError") return;
@@ -1590,14 +1663,16 @@
     } catch (err) {
       console.error(err);
       setStatus(statusEl, "Error: " + err.message, "err");
+    } finally {
+      state.downloading = false;
+      processBtn.disabled = false;
+      if (dockCta) dockCta.disabled = false;
     }
   }
   on(processBtn, "click", () => (state.results.length ? downloadAll() : processAll()));
   on(processAgain, "click", processAll);
-  on($("downloadBtn"), "click", downloadAll);
   [idFormat, idMaxKb].forEach((el) => on(el, "change", invalidateResults));
   if (zipToggle) zipToggle.checked = !coarse;
-  if (zipRow) zipRow.hidden = coarse;
 
   /* ---------- dialogs (viewer, install sheet) ---------- */
   const viewerModal = $("viewerModal");
@@ -1675,7 +1750,7 @@
     } else {
       const p = document.createElement("p");
       p.className = "muted";
-      p.textContent = `Preview not supported for "${file.type || "this file type"}". Download it to verify.`;
+      p.textContent = "This file type cannot be previewed here. Download it to check it.";
       viewerBody.appendChild(p);
     }
     openDialog(viewerModal, $("closeViewerBtn"));
@@ -1717,7 +1792,9 @@
   const mergeName = $("mergeName");
   const mergeItems = [];
   let mergeSeq = 0;
+  let mergeBusy = false;
   function moveItem(from, to) {
+    if (!Number.isInteger(from) || !Number.isInteger(to)) return;
     if (from === to || from < 0 || to < 0 || from >= mergeItems.length || to >= mergeItems.length) return;
     const [it] = mergeItems.splice(from, 1);
     mergeItems.splice(to, 0, it);
@@ -1728,16 +1805,13 @@
     mergeListEl.innerHTML = "";
     const total = mergeItems.reduce((a, b) => a + b.file.size, 0);
     if (mergeSummary) mergeSummary.textContent = mergeItems.length ? `${mergeItems.length} file${mergeItems.length > 1 ? "s" : ""} · ${formatFileSize(total)}` : "—";
-    mergeBtn.disabled = !mergeItems.length;
-    mergeClearBtn.disabled = !mergeItems.length;
-    if (!mergeItems.length) {
-      mergeListEl.innerHTML = '<p class="merge-empty">No files yet.</p>';
-      return;
-    }
+    mergeBtn.disabled = mergeBusy || !mergeItems.length;
+    mergeClearBtn.disabled = mergeBusy || !mergeItems.length;
+    if (!mergeItems.length) return;
     mergeItems.forEach((item, index) => {
       const row = document.createElement("div");
       row.className = "merge-item";
-      row.draggable = !coarse;
+      row.draggable = !coarse && !mergeBusy;
       row.innerHTML = icon("grip", "ic mi-grip");
       const thumb = document.createElement(item.url ? "img" : "div");
       thumb.className = "mi-thumb";
@@ -1756,7 +1830,7 @@
         b.className = "icon-btn " + cls;
         b.title = title;
         b.setAttribute("aria-label", `${title}: ${item.file.name}`);
-        b.disabled = !!disabled;
+        b.disabled = mergeBusy || !!disabled;
         b.innerHTML = icon(name);
         b.addEventListener("click", fn);
         return b;
@@ -1773,6 +1847,7 @@
       );
       row.addEventListener("dragstart", (e) => {
         e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("application/x-govforms-merge", String(index));
         e.dataTransfer.setData("text/plain", String(index));
         row.classList.add("dragging");
       });
@@ -1781,7 +1856,7 @@
         mergeListEl.querySelectorAll(".merge-item").forEach((r) => r.classList.remove("drop-before", "drop-after"));
       });
       row.addEventListener("dragover", (e) => {
-        if (!e.dataTransfer.types.includes("text/plain")) return;
+        if (!e.dataTransfer.types.includes("application/x-govforms-merge")) return;
         e.preventDefault();
         e.stopPropagation();
         const r = row.getBoundingClientRect();
@@ -1791,11 +1866,11 @@
       });
       row.addEventListener("dragleave", () => row.classList.remove("drop-before", "drop-after"));
       row.addEventListener("drop", (e) => {
-        const raw = e.dataTransfer.getData("text/plain");
-        if (raw === "") return;
+        const raw = e.dataTransfer.getData("application/x-govforms-merge");
+        const from = Number(raw);
+        if (raw === "" || !Number.isInteger(from) || from < 0 || from >= mergeItems.length) return;
         e.preventDefault();
         e.stopPropagation();
-        const from = parseInt(raw, 10);
         const r = row.getBoundingClientRect();
         let to = index + (e.clientY < r.top + r.height / 2 ? 0 : 1);
         if (from < to) to--;
@@ -1813,13 +1888,14 @@
     });
     if (!added) return setStatus(mergeStatus, "Only images and PDFs can be merged.", "err");
     renderMergeList();
-    setStatus(mergeStatus, `${mergeItems.length} file${mergeItems.length > 1 ? "s" : ""} queued.`);
+    setStatus(mergeStatus, "");
   });
   on(mergeClearBtn, "click", () => {
+    if (mergeBusy) return;
     mergeItems.forEach((i) => i.url && URL.revokeObjectURL(i.url));
     mergeItems.length = 0;
     renderMergeList();
-    setStatus(mergeStatus, "Add files to merge.");
+    setStatus(mergeStatus, "");
   });
   // EXIF orientation tag (0x0112) of a JPEG, 1 when absent
   function exifOrientation(bytes) {
@@ -1830,9 +1906,8 @@
       while (off + 4 <= v.byteLength) {
         const marker = v.getUint16(off);
         off += 2;
-        if (marker === 0xffe1) {
+        if (marker === 0xffe1 && v.getUint32(off + 2) === 0x45786966) {
           const start = off + 2;
-          if (v.getUint32(start) !== 0x45786966) return 1;
           const tiff = start + 6;
           const little = v.getUint16(tiff) === 0x4949;
           const g16 = (p) => v.getUint16(p, little);
@@ -1859,17 +1934,21 @@
     } catch (e) {
       bmp = null;
     }
+    const paint = (src, w, h) => {
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(src, 0, 0);
+    };
     if (bmp) {
-      c.width = bmp.width;
-      c.height = bmp.height;
-      c.getContext("2d").drawImage(bmp, 0, 0);
+      paint(bmp, bmp.width, bmp.height);
       if (bmp.close) bmp.close();
     } else {
       const { bmp: b, url } = await loadBitmap(file, 0);
       URL.revokeObjectURL(url);
-      c.width = b.w;
-      c.height = b.h;
-      c.getContext("2d").drawImage(b.src, 0, 0);
+      paint(b.src, b.w, b.h);
     }
     return c;
   }
@@ -1882,6 +1961,7 @@
       onProgress && onProgress(i, items.length, file.name);
       if (isPdf(file)) {
         const pdf = await PDFLib.PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+        if (pdf.isEncrypted) throw new Error(`${file.name} is password-protected. Remove the password first (print or save it as a new PDF), then merge.`);
         const pages = await merged.copyPages(pdf, pdf.getPageIndices());
         pages.forEach((p) => merged.addPage(p));
         continue;
@@ -1914,11 +1994,13 @@
     return merged.save();
   }
   on(mergeBtn, "click", async () => {
-    if (!mergeItems.length) return;
-    mergeBtn.disabled = true;
+    if (!mergeItems.length || mergeBusy) return;
+    const items = mergeItems.slice();
+    mergeBusy = true;
+    renderMergeList();
     try {
       await ensureLib("pdflib", mergeBtn);
-      const bytes = await mergeFilesToPdf(mergeItems, mergePageSize.value, (i, n, name) => setStatus(mergeStatus, `Merging ${i + 1} of ${n}: ${name}`, "busy"));
+      const bytes = await mergeFilesToPdf(items, mergePageSize.value, (i, n, name) => setStatus(mergeStatus, `Merging ${i + 1} of ${n}: ${name}`, "busy"));
       const safe = (mergeName.value || "merged").replace(/[^\w\-]+/g, "_");
       const file = new File([bytes], `${safe}.pdf`, { type: "application/pdf" });
       downloadFile(file);
@@ -1927,13 +2009,15 @@
       console.error(err);
       setStatus(mergeStatus, "Error merging files: " + err.message, "err");
     } finally {
+      mergeBusy = false;
       mergeBtn.innerHTML = "Merge into one PDF";
-      mergeBtn.disabled = !mergeItems.length;
+      renderMergeList();
     }
   });
 
   /* ---------- passport photo sheet ---------- */
   const PAPERS = { a4: [210, 297], a5: [148, 210], letter: [215.9, 279.4], "4x6": [101.6, 152.4] };
+  const PAPER_NAMES = { a4: "A4", a5: "A5", letter: "Letter", "4x6": "4 × 6 in" };
   const PHOTO_SIZES = { "35x45": [35, 45], "51x51": [50.8, 50.8], "25x35": [25, 35], "35x35": [35, 35] };
   const DPI = 300;
   const sheet = { bmp: null, url: null, view: defaultView("fill"), bg: "#ffffff", fromStudio: false };
@@ -1995,7 +2079,7 @@
     const has = !!sheet.bmp;
     sheetJpgBtn.disabled = !has || !L.cols || !L.rows;
     sheetPdfBtn.disabled = sheetJpgBtn.disabled;
-    sheetInfo.textContent = has ? `${L.cols * L.rows} photos of ${L.cw} × ${L.ch} mm on ${sheetPaper.value.toUpperCase()} · ${L.cols} × ${L.rows} · 300 DPI` : "Add a photo to preview the sheet.";
+    sheetInfo.textContent = has ? `${L.cols * L.rows} photos of ${L.cw} × ${L.ch} mm on ${PAPER_NAMES[sheetPaper.value] || sheetPaper.value} · ${L.cols} across × ${L.rows} down · 300 DPI` : "";
   }
   [sheetPaper, sheetPhoto, sheetGap, sheetCW, sheetCH, sheetGuides].forEach((el) => on(el, "input", refreshSheet));
   function showSheetFile(name, size, url) {
@@ -2008,18 +2092,23 @@
   async function setSheetFile(file) {
     if (!isImage(file)) return toast("Please choose an image file.", "err");
     clearSheet(true);
+    const token = (sheet.pending = {});
     try {
       const { bmp, url } = await loadBitmap(file);
+      if (sheet.pending !== token) {
+        URL.revokeObjectURL(url);
+        return;
+      }
       Object.assign(sheet, { bmp, url, view: defaultView("fill"), bg: "#ffffff", fromStudio: false });
       showSheetFile(file.name, file.size, url);
       refreshSheet();
     } catch (err) {
-      toast(err.message, "err");
+      if (sheet.pending === token) toast(err.message, "err");
     }
   }
   function clearSheet(silent) {
     if (sheet.url && !sheet.fromStudio) URL.revokeObjectURL(sheet.url);
-    Object.assign(sheet, { bmp: null, url: null, bg: "#ffffff", fromStudio: false });
+    Object.assign(sheet, { bmp: null, url: null, bg: "#ffffff", fromStudio: false, pending: null });
     const meta = $("sheetMeta");
     if (meta) meta.hidden = true;
     const drop = $("sheetDrop");
@@ -2030,13 +2119,13 @@
   on($("sheetUseStudio"), "click", () => {
     const photo = slots.get("photo");
     if (!photo || !photo.bmp) {
-      toast("Add a photo in the Studio first.", "warn");
+      toast("Add a photo at the top of the page first.", "warn");
       scrollToEl("#studio", { focus: false });
       return;
     }
     clearSheet(true);
     Object.assign(sheet, { bmp: photo.bmp, url: photo.url, view: { ...photo.view }, bg: photo.bg, fromStudio: true });
-    showSheetFile(photo.file.name + " (Studio framing)", photo.file.size, photo.url);
+    showSheetFile(photo.file.name + " (as framed above)", photo.file.size, photo.url);
     refreshSheet();
   });
   on(document.querySelector('[data-clear="sheet"]'), "click", () => clearSheet());
@@ -2070,8 +2159,13 @@
   async function setCompFile(file) {
     if (!isImage(file)) return toast("Please choose an image file.", "err");
     clearComp(true);
+    const token = (comp.pending = {});
     try {
       const { bmp, url } = await loadBitmap(file, 0);
+      if (comp.pending !== token) {
+        URL.revokeObjectURL(url);
+        return;
+      }
       Object.assign(comp, { file, bmp, url });
       $("compThumb").src = url;
       $("compName").textContent = file.name;
@@ -2079,20 +2173,31 @@
       $("compMeta").hidden = false;
       $("compDrop").classList.add("has-file");
       compBtn.disabled = false;
-      setStatus(compStatus, `Ready: ${bmp.w} × ${bmp.h} px, ${formatFileSize(file.size)}.`);
+      setStatus(compStatus, `${bmp.w} × ${bmp.h} px · ${formatFileSize(file.size)}`);
     } catch (err) {
-      toast(err.message, "err");
+      if (comp.pending === token) toast(err.message, "err");
     }
   }
   function clearComp(silent) {
     if (comp.url) URL.revokeObjectURL(comp.url);
-    comp.file = comp.bmp = comp.url = comp.out = null;
+    comp.file = comp.bmp = comp.url = comp.out = comp.pending = null;
     $("compMeta").hidden = true;
     $("compDrop").classList.remove("has-file");
     $("compResult").hidden = true;
     compBtn.disabled = true;
     compDownloadBtn.disabled = true;
-    if (!silent) setStatus(compStatus, "Add an image to begin.");
+    if (!silent) setStatus(compStatus, "");
+  }
+  const WEBP_OK = (() => {
+    try {
+      return document.createElement("canvas").toDataURL("image/webp").startsWith("data:image/webp");
+    } catch (e) {
+      return false;
+    }
+  })();
+  if (!WEBP_OK) {
+    const o = document.querySelector('#compFormat option[value="webp"]');
+    if (o) o.remove();
   }
   setupDropzone($("compDrop"), $("compFile"), (files) => setCompFile(files[0]));
   on(document.querySelector('[data-clear="comp"]'), "click", () => clearComp());
@@ -2115,16 +2220,20 @@
       const fmt = $("compFormat").value;
       const mime = fmt === "png" ? "image/png" : fmt === "webp" ? "image/webp" : "image/jpeg";
       const { blob, quality, over } = await encodeUnderLimit(c, mime, target);
+      if (blob.type && blob.type !== mime) throw new Error("This browser cannot save that format. Choose JPG or PNG.");
       const base = comp.file.name.replace(/\.[^.]+$/, "");
-      comp.out = new File([blob], `${base}_compressed.${fmt === "jpeg" ? "jpg" : fmt}`, { type: mime });
+      const keepOriginal = !over && !maxDim && blob.size >= comp.file.size && mime === comp.file.type;
+      comp.out = keepOriginal ? comp.file : new File([blob], `${base}_compressed.${fmt === "jpeg" ? "jpg" : fmt}`, { type: mime });
       $("compBefore").textContent = formatFileSize(comp.file.size);
-      $("compAfter").textContent = formatFileSize(blob.size);
-      $("compQ").textContent = quality == null ? "lossless" : Math.round(quality * 100) + "%";
+      $("compAfter").textContent = formatFileSize(comp.out.size);
+      $("compQ").textContent = keepOriginal ? "unchanged" : quality == null ? "lossless" : Math.round(quality * 100) + "%";
       $("compDims").textContent = `${w} × ${h} px`;
       $("compResult").hidden = false;
       compDownloadBtn.disabled = false;
-      const pct = (((comp.file.size - blob.size) / comp.file.size) * 100).toFixed(1);
-      setStatus(compStatus, over ? `Could not get under ${Math.round(target / 1024)} KB at this size. Lower the max side or the target.` : `Done — ${pct}% smaller.`, over ? "err" : "ok");
+      const pct = ((comp.file.size - comp.out.size) / comp.file.size) * 100;
+      if (over) setStatus(compStatus, `Could not get under ${Math.round(target / 1024)} KB at this size. Lower the max side or raise the limit.`, "err");
+      else if (keepOriginal) setStatus(compStatus, "Already under the limit — the original is kept as is.", "ok");
+      else setStatus(compStatus, pct >= 0 ? `Done — ${pct.toFixed(1)}% smaller.` : `Done — ${Math.abs(pct).toFixed(1)}% larger than the original.`, pct >= 0 ? "ok" : "warn");
     } catch (err) {
       console.error(err);
       setStatus(compStatus, "Error: " + err.message, "err");
@@ -2201,7 +2310,7 @@
     ["Employment News", "https://www.employmentnews.gov.in/"],
     ["Passport Seva", "https://www.passportindia.gov.in/"],
   ];
-  const news = { items: [], updatedAt: null, cat: "all", search: "", shown: 8, loaded: false };
+  const news = { items: [], updatedAt: null, cat: "all", search: "", shown: 8, loaded: false, loading: false };
   const newsGrid = $("newsGrid"),
     newsChips = $("newsChips"),
     newsSearch = $("newsSearch"),
@@ -2241,6 +2350,7 @@
   async function loadNews() {
     if (!newsGrid) return;
     newsGrid.innerHTML = Array.from({ length: 4 }, () => '<div class="news-skel"></div>').join("");
+    news.loading = true;
     try {
       const res = await fetch("./news.json", { cache: "no-cache" });
       if (!res.ok) throw new Error("HTTP " + res.status);
@@ -2252,17 +2362,19 @@
       news.items = [];
       news.loaded = false;
     }
+    news.loading = false;
     renderNews();
   }
+  const safeUrl = (u) => (/^https?:\/\//i.test(String(u || "")) ? String(u) : "#");
   function renderNews() {
-    if (!newsGrid) return;
+    if (!newsGrid || news.loading) return;
     const f = news.search.trim().toLowerCase();
     const list = news.items.filter((it) => (news.cat === "all" || it.category === news.cat) && (!f || it.title.toLowerCase().includes(f) || (it.source || "").toLowerCase().includes(f)));
     if (newsMeta) newsMeta.textContent = news.loaded ? `Updated ${timeAgo(news.updatedAt)} · ${news.items.length} headlines` : "Headlines need an internet connection. Use the official boards below.";
     newsGrid.innerHTML = list
       .slice(0, news.shown)
       .map(
-        (it, i) => `<a class="news-card" href="${esc(it.link)}" target="_blank" rel="noopener" style="animation-delay:${reducedMotion ? 0 : (i % 8) * 40}ms">
+        (it, i) => `<a class="news-card" href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener" style="animation-delay:${reducedMotion ? 0 : (i % 8) * 40}ms">
           <div class="news-top"><span class="news-src">${esc(it.source || "News")}</span><span>${timeAgo(it.date)}</span></div>
           <div class="news-title">${esc(it.title)}</div>
           <div class="news-bottom"><span class="news-cat">${esc((NEWS_CATS.find((c) => c.id === it.category) || { name: it.category }).name)}</span><span class="news-read">Read ${icon("external")}</span></div>
@@ -2286,7 +2398,7 @@
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (hadController && !announced) {
         announced = true;
-        toast("Updated — reload for the new version", "info", 6000);
+        toast("A new version is ready — tap to reload", "info", 8000, () => location.reload());
       }
     });
     window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
@@ -2333,6 +2445,9 @@
     reflectTheme();
   });
   reflectTheme();
+  try {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", reflectTheme);
+  } catch (e) {}
 
   /* ---------- keyboard ---------- */
   document.addEventListener("keydown", (e) => {
@@ -2361,12 +2476,12 @@
   try {
     remembered = localStorage.getItem("govforms-template") || "";
   } catch (e) {}
-  if (examParam && TEMPLATES[examParam]) {
+  if (hasTpl(examParam)) {
     selectTemplate(examParam);
     setTimeout(() => scrollToEl("#templateField", { focus: false }), 50);
   } else {
     selectTemplate("");
-    if (remembered && TEMPLATES[remembered]) {
+    if (hasTpl(remembered)) {
       const lu = $("lastUsed");
       if (lu) {
         $("lastUsedName").textContent = TEMPLATES[remembered].name;
@@ -2375,7 +2490,8 @@
       }
     }
   }
-  if (params.get("cat")) setCategory(params.get("cat"));
+  const catParam = (params.get("cat") || "").trim().toLowerCase();
+  if (catParam && (catParam === "all" || catOf(catParam))) setCategory(catParam);
   renderMergeList();
   refreshSheet();
   updateIdControls();
