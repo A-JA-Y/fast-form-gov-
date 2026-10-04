@@ -876,6 +876,64 @@ main {
 .section + .section {
   border-top: 1px solid var(--border);
 }
+/* sections below the studio are laid out only when they come near the viewport, which keeps the
+   first render small; the placeholder heights are measured, and "auto" keeps each real height once seen */
+#rules,
+#templates,
+#tools,
+#news,
+#faq {
+  content-visibility: auto;
+}
+#rules {
+  contain-intrinsic-block-size: auto 560px;
+}
+#templates {
+  contain-intrinsic-block-size: auto 2200px;
+}
+#tools {
+  contain-intrinsic-block-size: auto 750px;
+}
+#news {
+  contain-intrinsic-block-size: auto 1000px;
+}
+#faq {
+  contain-intrinsic-block-size: auto 720px;
+}
+@media (max-width: 900px) {
+  #rules {
+    contain-intrinsic-block-size: auto 725px;
+  }
+  #templates {
+    contain-intrinsic-block-size: auto 3050px;
+  }
+  #tools {
+    contain-intrinsic-block-size: auto 980px;
+  }
+  #news {
+    contain-intrinsic-block-size: auto 1380px;
+  }
+  #faq {
+    contain-intrinsic-block-size: auto 700px;
+  }
+}
+@media (max-width: 640px) {
+  #rules {
+    contain-intrinsic-block-size: auto 430px;
+  }
+  #templates {
+    contain-intrinsic-block-size: auto 5600px;
+  }
+  #tools {
+    contain-intrinsic-block-size: auto 1120px;
+  }
+  #news {
+    contain-intrinsic-block-size: auto 1650px;
+  }
+  #faq {
+    contain-intrinsic-block-size: auto 810px;
+  }
+}
 .section-head {
   max-width: 640px;
   margin-bottom: 24px;

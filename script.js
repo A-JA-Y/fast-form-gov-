@@ -2347,34 +2347,57 @@
       renderNews();
     });
   }
-  async function loadNews() {
-    if (!newsGrid) return;
-    newsGrid.innerHTML = Array.from({ length: 4 }, () => '<div class="news-skel"></div>').join("");
+  // the live feed (api/news.mjs, a few minutes old at most) first, the daily news.json snapshot as the fallback
+  const NEWS_SOURCES = ["./api/news", "./news.json"];
+  const NEWS_REFRESH_MS = 5 * 60 * 1000;
+  let newsFetchedAt = 0;
+  async function fetchNewsFeed() {
+    for (const url of NEWS_SOURCES) {
+      try {
+        const res = await fetch(url, { cache: "no-cache" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (Array.isArray(data.items) && data.items.length) return data;
+      } catch (err) {}
+    }
+    return null;
+  }
+  async function loadNews(background = false) {
+    if (!newsGrid || news.loading) return;
+    if (!background) newsGrid.innerHTML = Array.from({ length: 4 }, () => '<div class="news-skel"></div>').join("");
     news.loading = true;
-    try {
-      const res = await fetch("./news.json", { cache: "no-cache" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      news.items = Array.isArray(data.items) ? data.items : [];
-      news.updatedAt = data.updatedAt || null;
-      news.loaded = true;
-    } catch (err) {
+    const data = await fetchNewsFeed();
+    newsFetchedAt = Date.now();
+    news.loading = false;
+    if (!data) {
+      if (background) return renderNews(false, false); // keep what is on screen; just refresh "Updated … ago"
       news.items = [];
       news.loaded = false;
+      return renderNews();
     }
-    news.loading = false;
-    renderNews();
+    const changed = !news.loaded || data.items.map((it) => it.link).join("\n") !== news.items.map((it) => it.link).join("\n");
+    news.items = data.items;
+    news.updatedAt = data.updatedAt || null;
+    news.loaded = true;
+    // a background refresh redraws only when the headlines changed, and without replaying the card animation
+    renderNews(!background, !background || changed);
+  }
+  function refreshNewsIfStale() {
+    if (document.hidden || news.loading) return;
+    if (Date.now() - newsFetchedAt >= NEWS_REFRESH_MS) loadNews(true);
+    else if (news.loaded) renderNews(false, false); // keeps "Updated … ago" current
   }
   const safeUrl = (u) => (/^https?:\/\//i.test(String(u || "")) ? String(u) : "#");
-  function renderNews() {
+  function renderNews(animate = true, redraw = true) {
     if (!newsGrid || news.loading) return;
     const f = news.search.trim().toLowerCase();
     const list = news.items.filter((it) => (news.cat === "all" || it.category === news.cat) && (!f || it.title.toLowerCase().includes(f) || (it.source || "").toLowerCase().includes(f)));
     if (newsMeta) newsMeta.textContent = news.loaded ? `Updated ${timeAgo(news.updatedAt)} · ${news.items.length} headlines` : "Headlines need an internet connection. Use the official boards below.";
+    if (!redraw) return;
     newsGrid.innerHTML = list
       .slice(0, news.shown)
       .map(
-        (it, i) => `<a class="news-card" href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener" style="animation-delay:${reducedMotion ? 0 : (i % 8) * 40}ms">
+        (it, i) => `<a class="news-card" href="${esc(safeUrl(it.link))}" target="_blank" rel="noopener" style="${animate && !reducedMotion ? `animation-delay:${(i % 8) * 40}ms` : "animation:none"}">
           <div class="news-top"><span class="news-src">${esc(it.source || "News")}</span><span>${timeAgo(it.date)}</span></div>
           <div class="news-title">${esc(it.title)}</div>
           <div class="news-bottom"><span class="news-cat">${esc((NEWS_CATS.find((c) => c.id === it.category) || { name: it.category }).name)}</span><span class="news-read">Read ${icon("external")}</span></div>
@@ -2497,6 +2520,9 @@
   updateIdControls();
   setProcessMode(false);
   loadNews();
+  // keep the headlines live while the page is open: checked every minute, refetched every 5, and on returning to the tab
+  setInterval(refreshNewsIfStale, 60 * 1000);
+  document.addEventListener("visibilitychange", refreshNewsIfStale);
   routeHash();
   let resizeTimer;
   window.addEventListener("resize", () => {

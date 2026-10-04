@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "api/news.mjs": { "maxDuration": 15 }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -17,6 +20,10 @@
     },
     {
       "source": "/news.json",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/api/(.*)",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     },
     {

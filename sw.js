@@ -1,5 +1,5 @@
 /* GovForms service worker — versioned app shell + runtime cache for fonts and libraries. */
-const VERSION = "govforms-v6.0.2";
+const VERSION = "govforms-v6.0.3";
 const PREFIX = "govforms-";
 const SHELL = ["./", "./index.html", "./gov.css?v=6", "./script.js?v=6", "./templates.js?v=6", "./manifest.webmanifest", "./fonts/jetbrains-mono-500-latin.woff2", "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png"];
 const RUNTIME_HOSTS = ["cdnjs.cloudflare.com", "api.fontshare.com", "cdn.fontshare.com"];
@@ -67,8 +67,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   const sameOrigin = url.origin === self.location.origin;
   if (sameOrigin) {
-    // the shell is one versioned unit: HTML, JS, CSS, manifest and the news feed are network-first
-    if (request.mode === "navigate" || /\.(js|css|webmanifest)$/.test(url.pathname) || url.pathname.endsWith("news.json")) {
+    // the shell is one versioned unit: HTML, JS, CSS, manifest and the news feeds (live API and snapshot) are network-first
+    if (request.mode === "navigate" || /\.(js|css|webmanifest)$/.test(url.pathname) || url.pathname.endsWith("news.json") || url.pathname.includes("/api/")) {
       event.respondWith(networkFirst(request));
     } else {
       event.respondWith(staleWhileRevalidate(event));

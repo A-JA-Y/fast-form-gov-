@@ -112,7 +112,7 @@
               "Passport photo sheet for A4, A5, Letter and 4×6 in paper at 300 DPI",
               "Compress any image under a KB target",
               "Merge images and PDFs into one PDF",
-              "Daily exam news: notifications, admit cards and results",
+              "Live exam news, refreshed every few minutes: notifications, admit cards and results",
               "Runs on your device; files are never uploaded; works offline once installed"
             ],
             "author": [{ "@id": "https://fast-form-gov.vercel.app/#amit-kumar" }, { "@id": "https://fast-form-gov.vercel.app/#ajay-kumar" }],
@@ -159,12 +159,23 @@
       })();
     </script>
 
-    <!-- Satoshi stays on Fontshare's API (its licence forbids publishing the font files in a public repo) and loads
-         without blocking the first paint; JetBrains Mono is self-hosted from fonts/ (SIL OFL) via gov.css -->
+    <!-- Satoshi stays on Fontshare's API (its licence forbids publishing the font files in a public repo). Its stylesheet is
+         attached after the first frame, so the first paint never waits for the font files; text shows in the system font
+         until Satoshi arrives. JetBrains Mono is self-hosted from fonts/ (SIL OFL) via gov.css -->
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
     <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
     <link rel="preload" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" as="style" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" crossorigin="anonymous" media="print" onload="this.media='all'" />
+    <script>
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          var link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.crossOrigin = "anonymous";
+          link.href = "https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap";
+          document.head.appendChild(link);
+        });
+      });
+    </script>
     <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" crossorigin="anonymous" /></noscript>
     <link rel="stylesheet" href="gov.css?v=6" />
 
@@ -598,7 +609,7 @@
         <div class="container">
           <div class="section-head">
             <h2>Exam news.</h2>
-            <p>Notifications, admit cards, results and dates, refreshed daily from Google News India — confirm on the official board.</p>
+            <p>Notifications, admit cards, results and dates, refreshed every few minutes from Google News India — confirm on the official board.</p>
             <p class="hint" id="newsMeta">Loading headlines…</p>
           </div>
           <div class="finder">
