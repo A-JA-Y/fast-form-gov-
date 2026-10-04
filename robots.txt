@@ -1,0 +1,5 @@
+# GovForms: https://fast-form-gov.vercel.app/
+User-agent: *
+Allow: /
+
+Sitemap: https://fast-form-gov.vercel.app/sitemap.xml

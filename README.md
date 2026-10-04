@@ -70,6 +70,9 @@ fast-form-gov/
 ├── news.json                 # generated headlines (refreshed daily by CI)
 ├── manifest.webmanifest      # PWA manifest
 ├── sw.js                     # service worker (network-first shell, runtime cache)
+├── robots.txt, sitemap.xml   # crawler rules and the sitemap
+├── vercel.json               # response headers (X-Robots-Tag, caching)
+├── fonts/                    # self-hosted JetBrains Mono (SIL OFL 1.1)
 ├── icons/                    # app icons (SVG, 192, 512, maskable, Apple touch)
 ├── scripts/update-news.mjs   # news feed updater
 └── .github/workflows/        # daily news refresh
@@ -86,8 +89,10 @@ fast-form-gov/
   compress, merge and ID paths keep full resolution.
 - Minimum-size padding writes a JPEG COM segment or a PNG tEXt chunk so the
   image data is untouched.
-- Typography: [Satoshi](https://www.fontshare.com/fonts/satoshi) via Fontshare
-  and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) via Google Fonts.
+- Typography: [Satoshi](https://www.fontshare.com/fonts/satoshi) via the
+  Fontshare API, loaded without blocking the first paint (its licence does not
+  allow publishing the font files in a public repo), and
+  [JetBrains Mono](https://www.jetbrains.com/lp/mono/) self-hosted in `fonts/`.
   Icons: [Lucide](https://lucide.dev) (ISC licence), inlined as an SVG sprite.
 - Accessible by design: the exam picker is a combobox/listbox, dialogs trap
   focus and make the page inert, tabs and chips carry ARIA state, every control
