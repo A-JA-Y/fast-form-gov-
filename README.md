@@ -8,15 +8,20 @@ Built by **Amit Kumar** and **[Ajay Kumar](https://portfolio-astro-two.vercel.ap
 
 ## What it does
 
-- **Pick an exam** — 40 templates across SSC, Railways, Banking & Insurance,
-  UPSC & State PSC, Defence & Police, Entrance & Teaching, and Passport / PAN /
-  Visa. Search by name or board, or use **Custom** for your own sizes. Bank
-  templates add slots for the left thumb impression and handwritten
-  declaration; the last used exam is remembered.
-- **Add a photo and a signature** — drop, pick or paste. Frame the photo inside
-  the exact output size (drag, scroll or pinch to zoom, rotate, fill or fit,
-  background colour). Signatures photographed on paper are cleaned to white
-  paper and dark ink.
+- **Pick an exam (optional)** — 40 templates across SSC, Railways, Banking &
+  Insurance, UPSC & State PSC, Defence & Police, Entrance & Teaching, and
+  Passport / PAN / Visa fill in the sizes for you. Search by name or board.
+  Bank templates add slots for the left thumb impression and handwritten
+  declaration; the last used exam is remembered. Skip it to use your own sizes.
+- **Add a photo, a signature or both** — every slot is optional: add just a
+  signature and press Process. Drop, pick or paste. Frame each picture inside
+  its output size: drag to move, zoom from 10% to 1000% (scroll, pinch, the
+  − / + buttons or a typed percentage), rotate, fill or fit, background colour.
+  Signatures photographed on paper are cleaned to white paper and dark ink.
+- **Set any size** — under **Output size**, type a width and height in px, cm,
+  mm or inches (with a DPI, written into the file), lock the proportions or
+  match the picture's own shape, and set a minimum and maximum KB. An exam fills
+  these in; any of them can still be changed and reset.
 - **Process** — each file is cropped to the exact pixels and encoded under the
   KB limit (a binary search over JPEG quality). Files that land under a portal's
   minimum are padded up to it; files that cannot fit are flagged. Output as
@@ -31,7 +36,8 @@ Built by **Amit Kumar** and **[Ajay Kumar](https://portfolio-astro-two.vercel.ap
   app shell works offline. Light and dark themes follow the system.
 
 Keyboard: `/` opens the exam picker, `Ctrl/⌘ + Enter` processes,
-`Ctrl/⌘ + V` pastes an image, `Esc` closes.
+`Ctrl/⌘ + V` pastes an image, `Esc` closes. In a framing editor, the arrow
+keys move the picture, `+` / `-` zoom and `0` resets.
 
 ## Template catalog
 
@@ -39,7 +45,8 @@ Keyboard: `/` opens the exam picker, `Ctrl/⌘ + Enter` processes,
 signature sizes, formats, KB ranges, optional extra documents, search tags and
 notes. Entries flagged `verify: true` use generic passport-size defaults and are
 marked "check sizes" in the gallery. Portals change their rules, so cross-check
-the current official notification and use **Custom** when yours differs.
+the current official notification and change the size under **Output size**
+when yours differs.
 
 ## News feed
 
@@ -98,7 +105,10 @@ fast-form-gov/
   Photos and signatures are decoded at up to 2600 px on the longest side; the
   compress, merge and ID paths keep full resolution.
 - Minimum-size padding writes a JPEG COM segment or a PNG tEXt chunk so the
-  image data is untouched.
+  image data is untouched. Sizes set in cm, mm or inches write their DPI into
+  the JFIF header or a PNG pHYs chunk, and set the PDF page size.
+- Output sides run from 10 to 4096 px (4096² is the largest canvas iOS Safari
+  allows).
 - Typography: [Satoshi](https://www.fontshare.com/fonts/satoshi) via the
   Fontshare API, loaded without blocking the first paint (its licence does not
   allow publishing the font files in a public repo), and
@@ -117,8 +127,16 @@ only fetches its fonts, its libraries and the news feed.
 
 ## Version
 
-**Current version**: 6.0
+**Current version**: 6.1
 
+- v6.1 — The exam is optional and no file is required: add just a signature
+  (or just a photo) and process it. Each file gets an **Output size** panel
+  with width and height in px, cm, mm or inches, a DPI, a proportion lock,
+  "match the picture's shape", reset, and a minimum and maximum KB. Zoom now
+  runs from 10% to 1000% with − / + buttons and a typed percentage, a picture
+  smaller than its frame can be moved anywhere inside it, and the framing editor
+  works from the keyboard. Custom is now the same as no exam, so the separate
+  custom-size box is gone.
 - v6.0 — App-first rework: the studio is the first screen, with a sticky output
   panel on desktop and a fixed action bar and dock on phones. Flat visual system
   with Satoshi, JetBrains Mono and Lucide icons; light and dark themes. Removed

@@ -1,7 +1,7 @@
 /* GovForms service worker — versioned app shell + runtime cache for fonts and libraries. */
-const VERSION = "govforms-v6.0.3";
+const VERSION = "govforms-v6.1.0";
 const PREFIX = "govforms-";
-const SHELL = ["./", "./index.html", "./gov.css?v=6", "./script.js?v=6", "./templates.js?v=6", "./manifest.webmanifest", "./fonts/jetbrains-mono-500-latin.woff2", "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png"];
+const SHELL = ["./", "./index.html", "./gov.css?v=6.1", "./script.js?v=6.1", "./templates.js?v=6.1", "./manifest.webmanifest", "./fonts/jetbrains-mono-500-latin.woff2", "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png"];
 const RUNTIME_HOSTS = ["cdnjs.cloudflare.com", "api.fontshare.com", "cdn.fontshare.com"];
 const cacheable = (res) => !!res && (res.ok || res.type === "opaque");
 

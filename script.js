@@ -149,7 +149,7 @@
   /* ---------- catalog ---------- */
   const CATALOG = window.GOVFORMS_CATALOG || {
     categories: [],
-    templates: { custom: { name: "Custom", org: "Enter your own pixel sizes", category: "custom", tags: [], custom: true } },
+    templates: { custom: { name: "Custom size", org: "Any width, height and KB you need", category: "custom", tags: [], custom: true } },
   };
   const TEMPLATES = CATALOG.templates;
   const hasTpl = (k) => !!k && Object.prototype.hasOwnProperty.call(TEMPLATES, k);
@@ -167,11 +167,7 @@
   const templatePop = $("templatePop");
   const templatePopSearch = $("templatePopSearch");
   const templatePopList = $("templatePopList");
-  const customBox = $("customBox");
-  const customW = $("customW");
-  const customH = $("customH");
-  const customSW = $("customSW");
-  const customSH = $("customSH");
+  const templateClear = $("templateClear");
   const slotsHost = $("slotsHost");
   const outputFrames = $("outputFrames");
   const readinessEl = $("readiness");
@@ -192,6 +188,11 @@
   /* ---------- state ---------- */
   const state = { templateKey: "", results: [], lastSlot: null, category: "all", search: "", processing: false, downloading: false, gen: 0 };
   const defaultView = (mode) => ({ zoom: 1, px: 0, py: 0, rot: 0, mode });
+  const ZOOM_MIN = 0.1;
+  const ZOOM_MAX = 10;
+  // output sides are capped at 4096 px: 4096² is the largest canvas iOS Safari allows
+  const SIZE_MIN = 10;
+  const SIZE_MAX = 4096;
   const slots = new Map();
   const idSlot = { file: null, bmp: null, url: null };
 
@@ -250,6 +251,8 @@
   }
 
   /* ---------- framing geometry ---------- */
+  // px / py run from -1 to 1 across the free travel on each axis: an image larger than the frame
+  // slides until its edge meets the frame edge (never a gap); a smaller one slides anywhere inside it
   function geom(iw, ih, W, H, view) {
     const swap = view.rot % 180 !== 0;
     const rw = swap ? ih : iw;
@@ -258,8 +261,8 @@
     const s = base * view.zoom;
     const dw = rw * s;
     const dh = rh * s;
-    const overX = Math.max(0, dw - W);
-    const overY = Math.max(0, dh - H);
+    const overX = Math.abs(dw - W);
+    const overY = Math.abs(dh - H);
     return { s, dw, dh, dx: (W - dw) / 2 + (view.px * overX) / 2, dy: (H - dh) / 2 + (view.py * overY) / 2, overX, overY };
   }
   function renderFrame(canvas, bmp, W, H, view, bg) {
@@ -382,6 +385,50 @@
     out.set(bytes.subarray(cut), cut + chunk.length);
     return out;
   }
+  // Writes the print density into the JFIF header the encoder wrote (same length, so the KB result holds).
+  function setJpegDpi(bytes, dpi) {
+    const jfif = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff && bytes[3] === 0xe0 && String.fromCharCode(...bytes.subarray(6, 11)) === "JFIF\0";
+    if (!jfif) return bytes;
+    bytes[13] = 1; // dots per inch
+    bytes[14] = bytes[16] = (dpi >> 8) & 0xff;
+    bytes[15] = bytes[17] = dpi & 0xff;
+    return bytes;
+  }
+  // Sets the PNG pHYs chunk (pixels per metre): patched in place when present, else added after IHDR.
+  function setPngDpi(bytes, dpi) {
+    if (bytes.length < 33 || String.fromCharCode(...bytes.subarray(12, 16)) !== "IHDR") return bytes;
+    const ppm = Math.round(dpi / 0.0254);
+    const write = (buf, at) => {
+      const dv = new DataView(buf.buffer, buf.byteOffset);
+      dv.setUint32(at, 9);
+      buf.set([0x70, 0x48, 0x59, 0x73], at + 4);
+      dv.setUint32(at + 8, ppm);
+      dv.setUint32(at + 12, ppm);
+      buf[at + 16] = 1;
+      dv.setUint32(at + 17, crc32(buf.subarray(at + 4, at + 17)));
+    };
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    for (let at = 33; at + 12 <= bytes.length; ) {
+      const len = view.getUint32(at);
+      const type = String.fromCharCode(...bytes.subarray(at + 4, at + 8));
+      if (type === "IDAT" || type === "IEND") break;
+      if (type === "pHYs" && len === 9) {
+        write(bytes, at);
+        return bytes;
+      }
+      at += 12 + len;
+    }
+    const out = new Uint8Array(bytes.length + 21);
+    out.set(bytes.subarray(0, 33), 0);
+    write(out, 33);
+    out.set(bytes.subarray(33), 54);
+    return out;
+  }
+  async function withDpi(blob, dpi) {
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const out = blob.type === "image/png" ? setPngDpi(bytes, dpi) : setJpegDpi(bytes, dpi);
+    return new Blob([out], { type: blob.type });
+  }
 
   async function encodeUnderLimit(canvas, mime, maxBytes, minBytes = 0) {
     let blob, quality;
@@ -491,24 +538,19 @@
 
   /* ---------- template spec ---------- */
   const normFmt = (f) => (f === "jpeg" || f === "jpg" ? "jpg" : f || "jpg");
+  // with no exam (or Custom) every file starts at these sizes and the user sets their own
+  const FREE_SPEC = { photo: { w: 200, h: 240, format: "jpg" }, sign: { w: 240, h: 80, format: "jpg" } };
+  const isFreeKey = (k) => !hasTpl(k) || !!TEMPLATES[k].custom;
   function currentSpec() {
     const key = state.templateKey;
-    if (!hasTpl(key)) return null;
+    if (isFreeKey(key)) return { key: "", name: "Your own sizes", org: "", category: "custom", free: true, photo: FREE_SPEC.photo, sign: FREE_SPEC.sign, extras: [] };
     const t = TEMPLATES[key];
-    if (t.custom) {
-      const w = clamp(parseInt(customW.value, 10) || 200, 16, 4000);
-      const h = clamp(parseInt(customH.value, 10) || 240, 16, 4000);
-      const sw = clamp(parseInt(customSW.value, 10) || 240, 16, 4000);
-      const sh = clamp(parseInt(customSH.value, 10) || 80, 16, 4000);
-      return { key, name: "Custom", org: "", category: "custom", custom: true, photo: { w, h, format: "jpg" }, sign: { w: sw, h: sh, format: "png" }, extras: [] };
-    }
     return { key, ...t, extras: t.extras || [] };
   }
   function slotDefs(spec) {
-    if (!spec) return [];
     const defs = [
-      { key: "photo", name: "Photo", icon: "photo", kind: "photo", required: true, spec: spec.photo, guide: true, bg: true, clean: false, defaultMode: "fill" },
-      { key: "sign", name: "Signature", icon: "pen", kind: "sign", required: !spec.signOptional, spec: spec.sign, guide: false, bg: false, clean: true, defaultMode: "fit", hint: "Sign on white paper; the background is removed automatically." },
+      { key: "photo", name: "Photo", icon: "photo", kind: "photo", spec: spec.photo, guide: true, bg: true, clean: false, defaultMode: "fill" },
+      { key: "sign", name: "Signature", icon: "pen", kind: "sign", spec: spec.sign, guide: false, bg: false, clean: true, defaultMode: "fit", hint: "Sign on white paper; the background is removed automatically." },
     ];
     (spec.extras || []).forEach((e) => {
       defs.push({
@@ -516,7 +558,6 @@
         name: e.name,
         icon: e.key === "thumb" ? "thumb" : e.key === "postcard" ? "photo" : "file-text",
         kind: "extra",
-        required: false,
         spec: { w: e.w, h: e.h, format: e.format, minKb: e.minKb, maxKb: e.maxKb },
         guide: !!e.guide,
         bg: e.key === "postcard",
@@ -527,10 +568,9 @@
     });
     return defs;
   }
-  const kbRange = (s) => (s.maxKb ? `${s.minKb ? s.minKb + "–" : "≤ "}${s.maxKb} KB` : "");
-  const describeSize = (s) => `${s.w}×${s.h} px · ${fmtLabel(normFmt(s.format))}${s.maxKb ? " · " + kbRange(s) : ""}`;
+  const kbRange = (s) => (s.maxKb ? `${s.minKb ? s.minKb + "–" : "≤ "}${s.maxKb} KB` : s.minKb ? `≥ ${s.minKb} KB` : "");
   function describeSpec(spec) {
-    if (!spec) return "Photo and signature sizes fill in automatically.";
+    if (spec.free) return "Or skip it — add your files and set any size below.";
     const parts = [`Photo ${spec.photo.w}×${spec.photo.h}`, `Signature ${spec.sign.w}×${spec.sign.h}`];
     (spec.extras || []).forEach((e) => parts.push(`${e.name} ${e.w}×${e.h}`));
     let html = esc(parts.join(" · ")) + " px";
@@ -539,16 +579,27 @@
     return html;
   }
 
+  /* ---------- output size units ---------- */
+  const PER_INCH = { in: 1, cm: 2.54, mm: 25.4 };
+  const toPx = (v, unit, dpi) => clamp(Math.round(unit === "px" ? v : (v / PER_INCH[unit]) * dpi), SIZE_MIN, SIZE_MAX);
+  const fromPx = (px, unit, dpi) => (unit === "px" ? String(px) : String(+((px / dpi) * PER_INCH[unit]).toFixed(unit === "mm" ? 1 : 2)));
+  // zoom buttons step in round percentages: 5% below 100%, 10% up to 200%, 25% above
+  function zoomStep(z, dir) {
+    const step = z < 1 || (z <= 1 && dir < 0) ? 0.05 : z < 2 || (z <= 2 && dir < 0) ? 0.1 : 0.25;
+    return clamp(Math.round((z + dir * step) / step) * step, ZOOM_MIN, ZOOM_MAX);
+  }
+
   /* ---------- slot blocks ---------- */
   function createSlot(def) {
     const block = document.createElement("div");
     block.className = "upload-block";
     block.dataset.slot = def.key;
     const noun = def.kind === "photo" ? "photo" : def.kind === "sign" ? "signature" : "image";
+    const lower = esc(def.name.toLowerCase());
+    const id = (part) => `slot-${def.key}-${part}`;
     block.innerHTML = `
       <div class="upload-head">
         <div class="upload-title">${icon(def.icon)}<span data-title>${esc(def.name)}</span></div>
-        <span class="badge" data-badge>${def.required ? "Required" : "Optional"}</span>
       </div>
       <p class="hint slot-hint" data-hint ${def.hint ? "" : "hidden"}>${esc(def.hint || "")}</p>
       <div class="dropzone" data-drop>
@@ -562,32 +613,33 @@
         <div class="dz-file" data-meta hidden>
           <img class="dz-thumb" data-thumb alt="" />
           <div class="dz-meta"><span class="dz-name" data-name></span><span class="dz-size mono" data-size></span></div>
-          <button type="button" class="icon-btn" data-replace aria-label="Replace ${esc(def.name.toLowerCase())}" title="Replace">${icon("upload")}</button>
-          <button type="button" class="icon-btn" data-view aria-label="Preview original ${esc(def.name.toLowerCase())}" title="Preview original">${icon("eye")}</button>
-          <button type="button" class="icon-btn" data-clear aria-label="Remove ${esc(def.name.toLowerCase())}" title="Remove">${icon("x")}</button>
+          <button type="button" class="icon-btn" data-replace aria-label="Replace ${lower}" title="Replace">${icon("upload")}</button>
+          <button type="button" class="icon-btn" data-view aria-label="Preview original ${lower}" title="Preview original">${icon("eye")}</button>
+          <button type="button" class="icon-btn" data-clear aria-label="Remove ${lower}" title="Remove">${icon("x")}</button>
         </div>
       </div>
       <div class="editor" data-editor hidden>
-        <p class="hint editor-hint">Drag to move, ${coarse ? "pinch" : "scroll"} to zoom.${def.guide ? " Fit the face inside the guide." : ""}</p>
+        <p class="hint editor-hint">Drag to move. Zoom in or out with ${coarse ? "a pinch" : "the scroll wheel"} or the − / + buttons.${def.guide ? " Fit the face inside the guide." : ""}</p>
         <div class="editor-stage">
           <div class="editor-frame">
-            <canvas class="editor-canvas" data-canvas aria-label="Framing editor for ${esc(def.name.toLowerCase())}"></canvas>
+            <canvas class="editor-canvas" data-canvas tabindex="0" aria-label="Framing editor for ${lower}. Arrow keys move the picture, plus and minus zoom."></canvas>
             ${def.guide ? '<div class="editor-guides"><span class="g-head"></span></div>' : ""}
           </div>
         </div>
         <div class="editor-tools">
-          <div class="editor-zoom">
-            <span class="label" data-zoom-label aria-hidden="true">Zoom</span>
-            <input type="range" data-zoom min="1" max="3" step="0.01" value="1" aria-label="Zoom ${esc(def.name.toLowerCase())}" />
-            <span class="mono" data-zoom-val>1.0×</span>
+          <div class="editor-zoom" role="group" aria-label="Zoom ${lower}">
+            <button type="button" class="icon-btn" data-zoom-out aria-label="Zoom out" title="Zoom out">${icon("minus")}</button>
+            <input type="range" data-zoom min="${Math.log2(ZOOM_MIN).toFixed(3)}" max="${Math.log2(ZOOM_MAX).toFixed(3)}" step="0.01" value="0" aria-label="Zoom ${lower}" />
+            <button type="button" class="icon-btn" data-zoom-in aria-label="Zoom in" title="Zoom in">${icon("plus")}</button>
+            <div class="suffix zoom-pct"><input type="number" data-zoom-val min="${ZOOM_MIN * 100}" max="${ZOOM_MAX * 100}" step="5" value="100" inputmode="numeric" aria-label="Zoom percent for ${lower}" /><span>%</span></div>
           </div>
           <div class="editor-actions">
             <div class="seg" role="group" aria-label="Framing">
-              <button type="button" class="seg-btn" data-mode="fill" aria-pressed="${def.defaultMode === "fill"}">Fill</button>
-              <button type="button" class="seg-btn" data-mode="fit" aria-pressed="${def.defaultMode === "fit"}">Fit</button>
+              <button type="button" class="seg-btn" data-mode="fill" aria-pressed="${def.defaultMode === "fill"}" title="Cover the whole frame; edges may be cropped">Fill</button>
+              <button type="button" class="seg-btn" data-mode="fit" aria-pressed="${def.defaultMode === "fit"}" title="Show the whole picture; the background fills the gap">Fit</button>
             </div>
-            <button type="button" class="icon-btn" data-rotate aria-label="Rotate 90°" title="Rotate 90°">${icon("rotate")}</button>
-            <button type="button" class="icon-btn" data-reset aria-label="Reset framing" title="Reset framing">${icon("reset")}</button>
+            <button type="button" class="btn btn-sm" data-rotate title="Rotate 90°">${icon("rotate")}Rotate</button>
+            <button type="button" class="btn btn-sm" data-reset title="Undo zoom, move and rotation">${icon("reset")}Reset</button>
             <span class="spacer"></span>
             ${
               def.bg
@@ -605,17 +657,32 @@
         </div>
       </div>
       <details class="slot-options" data-options>
-        <summary>${icon("sliders")}<span data-summary>Save as</span>${icon("chevron", "ic chev")}</summary>
-        <div class="row-2">
-          <div class="field">
-            <label>Format</label>
-            <div class="select-wrap"><select data-format aria-label="Output format for ${esc(def.name.toLowerCase())}">
-              <option value="jpg">JPG (.jpg)</option><option value="jpeg">JPEG (.jpeg)</option><option value="png">PNG</option><option value="pdf">PDF</option>
-            </select></div>
+        <summary>${icon("sliders")}<span class="so-title">Output size</span><span class="so-sum mono" data-summary></span>${icon("chevron", "ic chev")}</summary>
+        <div class="so-body">
+          <div class="size-row">
+            <div class="field"><label for="${id("w")}">Width</label><input type="number" id="${id("w")}" data-w min="0" step="any" inputmode="decimal" /></div>
+            <button type="button" class="icon-btn lock-btn" data-lock aria-pressed="false" aria-label="Keep proportions for ${lower}" title="Keep proportions">${icon("link")}</button>
+            <div class="field"><label for="${id("h")}">Height</label><input type="number" id="${id("h")}" data-h min="0" step="any" inputmode="decimal" /></div>
+            <div class="field unit-field">
+              <label for="${id("unit")}">Unit</label>
+              <div class="select-wrap"><select id="${id("unit")}" data-unit><option value="px">px</option><option value="cm">cm</option><option value="mm">mm</option><option value="in">inch</option></select></div>
+            </div>
+            <div class="field dpi-field" data-dpi-field hidden><label for="${id("dpi")}">DPI</label><input type="number" id="${id("dpi")}" data-dpi value="300" min="50" max="1200" inputmode="numeric" pattern="[0-9]*" /></div>
           </div>
-          <div class="field">
-            <label>Max size (KB)</label>
-            <input type="number" data-maxkb min="2" max="10240" placeholder="auto" inputmode="numeric" pattern="[0-9]*" aria-label="Max size (KB) for ${esc(def.name.toLowerCase())}" />
+          <p class="size-links">
+            <span class="mono muted" data-px hidden></span>
+            <button type="button" class="linklike" data-match hidden>Match the ${noun}'s shape</button>
+            <button type="button" class="linklike" data-size-reset hidden></button>
+          </p>
+          <div class="row-3">
+            <div class="field fmt-field">
+              <label for="${id("fmt")}">Format</label>
+              <div class="select-wrap"><select id="${id("fmt")}" data-format>
+                <option value="jpg">JPG (.jpg)</option><option value="jpeg">JPEG (.jpeg)</option><option value="png">PNG</option><option value="pdf">PDF</option>
+              </select></div>
+            </div>
+            <div class="field"><label for="${id("min")}">Min KB</label><input type="number" id="${id("min")}" data-minkb min="0" max="20480" step="any" placeholder="none" inputmode="decimal" /></div>
+            <div class="field"><label for="${id("max")}">Max KB</label><input type="number" id="${id("max")}" data-maxkb min="0" max="20480" step="any" placeholder="none" inputmode="decimal" /></div>
           </div>
         </div>
       </details>`;
@@ -634,6 +701,12 @@
       url: null,
       view: defaultView(def.defaultMode),
       bg: "#ffffff",
+      // output size in px; unit and dpi only change how it is shown and typed
+      size: { w: def.spec.w, h: def.spec.h },
+      unit: "px",
+      dpi: 300,
+      ratio: null,
+      opened: false,
       cssW: 0,
       cssH: 0,
       el: {
@@ -644,15 +717,27 @@
         thumb: q("[data-thumb]"),
         name: q("[data-name]"),
         size: q("[data-size]"),
-        badge: q("[data-badge]"),
         hint: q("[data-hint]"),
         title: q("[data-title]"),
         editor: q("[data-editor]"),
         canvas: q("[data-canvas]"),
         zoom: q("[data-zoom]"),
+        zoomIn: q("[data-zoom-in]"),
+        zoomOut: q("[data-zoom-out]"),
         zoomVal: q("[data-zoom-val]"),
         segs: Array.from(block.querySelectorAll(".seg-btn")),
+        options: q("[data-options]"),
+        w: q("[data-w]"),
+        h: q("[data-h]"),
+        lock: q("[data-lock]"),
+        unit: q("[data-unit]"),
+        dpi: q("[data-dpi]"),
+        dpiField: q("[data-dpi-field]"),
+        px: q("[data-px]"),
+        match: q("[data-match]"),
+        sizeReset: q("[data-size-reset]"),
         fmt: q("[data-format]"),
+        minKb: q("[data-minkb]"),
         maxKb: q("[data-maxkb]"),
         clean: q("[data-clean]"),
         swatches: q("[data-swatches]"),
@@ -717,7 +802,7 @@
       if (pointers.size === 2 && pinch) {
         const [a, b] = Array.from(pointers.values());
         const dist = Math.hypot(a.x - b.x, a.y - b.y);
-        slot.view.zoom = clamp((pinch.zoom * dist) / Math.max(1, pinch.dist), 1, 3);
+        slot.view.zoom = clamp((pinch.zoom * dist) / Math.max(1, pinch.dist), ZOOM_MIN, ZOOM_MAX);
         edited();
         return;
       }
@@ -738,15 +823,39 @@
       (e) => {
         if (!slot.bmp) return;
         e.preventDefault();
-        slot.view.zoom = clamp(slot.view.zoom - Math.sign(e.deltaY) * 0.08, 1, 3);
+        slot.view.zoom = clamp(slot.view.zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08), ZOOM_MIN, ZOOM_MAX);
         edited();
       },
       { passive: false },
     );
-    on(el.zoom, "input", () => {
-      slot.view.zoom = parseFloat(el.zoom.value);
+    const setZoom = (z) => {
+      slot.view.zoom = clamp(z, ZOOM_MIN, ZOOM_MAX);
+      edited();
+    };
+    // keyboard: arrows move (Shift for bigger steps), + / - zoom, 0 resets
+    el.canvas.addEventListener("keydown", (e) => {
+      if (!slot.bmp || e.ctrlKey || e.metaKey || e.altKey) return;
+      const step = e.shiftKey ? 0.25 : 0.05;
+      const v = slot.view;
+      if (e.key === "ArrowLeft") v.px = clamp(v.px - step, -1, 1);
+      else if (e.key === "ArrowRight") v.px = clamp(v.px + step, -1, 1);
+      else if (e.key === "ArrowUp") v.py = clamp(v.py - step, -1, 1);
+      else if (e.key === "ArrowDown") v.py = clamp(v.py + step, -1, 1);
+      else if (e.key === "+" || e.key === "=") v.zoom = zoomStep(v.zoom, 1);
+      else if (e.key === "-" || e.key === "_") v.zoom = zoomStep(v.zoom, -1);
+      else if (e.key === "0") slot.view = defaultView(v.mode);
+      else return;
+      e.preventDefault();
       edited();
     });
+    on(el.zoom, "input", () => setZoom(Math.pow(2, parseFloat(el.zoom.value))));
+    on(el.zoomIn, "click", () => setZoom(zoomStep(slot.view.zoom, 1)));
+    on(el.zoomOut, "click", () => setZoom(zoomStep(slot.view.zoom, -1)));
+    on(el.zoomVal, "input", () => {
+      const pct = parseFloat(el.zoomVal.value);
+      if (pct >= ZOOM_MIN * 100 && pct <= ZOOM_MAX * 100) setZoom(pct / 100);
+    });
+    on(el.zoomVal, "change", () => (el.zoomVal.value = Math.round(slot.view.zoom * 100)));
     on(el.block.querySelector("[data-rotate]"), "click", () => {
       slot.view.rot = (slot.view.rot + 90) % 360;
       edited();
@@ -790,7 +899,71 @@
       renderLive();
       invalidateResults();
     });
-    [el.fmt, el.maxKb].forEach((c) =>
+
+    // output size: width × height in px, cm, mm or inches, optionally locked to its current shape
+    const sizeChanged = (skip) => {
+      updateSizeUI(slot, skip);
+      drawEditor(slot);
+      renderLive();
+      invalidateResults();
+    };
+    const onDim = (axis) => () => {
+      const v = parseFloat(el[axis].value);
+      if (!(v > 0)) return;
+      slot.size[axis] = toPx(v, slot.unit, slot.dpi);
+      if (slot.ratio) {
+        if (axis === "w") slot.size.h = clamp(Math.round(slot.size.w / slot.ratio), SIZE_MIN, SIZE_MAX);
+        else slot.size.w = clamp(Math.round(slot.size.h * slot.ratio), SIZE_MIN, SIZE_MAX);
+      }
+      sizeChanged(axis); // leave the field being typed in alone
+    };
+    on(el.w, "input", onDim("w"));
+    on(el.h, "input", onDim("h"));
+    // on blur the fields show the size that will be used (clamped and rounded)
+    [el.w, el.h].forEach((input) => on(input, "change", () => updateSizeUI(slot)));
+    on(el.lock, "click", () => {
+      slot.ratio = slot.ratio ? null : slot.size.w / slot.size.h;
+      updateSizeUI(slot);
+    });
+    on(el.unit, "change", () => {
+      slot.unit = el.unit.value;
+      updateSizeUI(slot);
+    });
+    on(el.dpi, "input", () => {
+      const dpi = parseInt(el.dpi.value, 10);
+      if (!(dpi >= 50 && dpi <= 1200)) return;
+      slot.dpi = dpi;
+      // keep the printed size the user typed: the pixels follow the new DPI
+      const w = parseFloat(el.w.value),
+        h = parseFloat(el.h.value);
+      if (slot.unit !== "px") {
+        if (w > 0) slot.size.w = toPx(w, slot.unit, dpi);
+        if (h > 0) slot.size.h = toPx(h, slot.unit, dpi);
+      }
+      sizeChanged("wh");
+    });
+    on(el.dpi, "change", () => (el.dpi.value = slot.dpi));
+    on(el.match, "click", () => {
+      if (!slot.bmp) return;
+      const ar = slot.view.rot % 180 ? slot.bmp.h / slot.bmp.w : slot.bmp.w / slot.bmp.h;
+      let w = slot.size.w,
+        h = Math.round(w / ar);
+      if (h < SIZE_MIN || h > SIZE_MAX) {
+        h = clamp(h, SIZE_MIN, SIZE_MAX);
+        w = clamp(Math.round(h * ar), SIZE_MIN, SIZE_MAX);
+      }
+      slot.size = { w, h };
+      if (slot.ratio) slot.ratio = w / h;
+      Object.assign(slot.view, { zoom: 1, px: 0, py: 0 });
+      sizeChanged();
+    });
+    on(el.sizeReset, "click", () => {
+      const base = slotBase(slot);
+      slot.size = { w: base.w, h: base.h };
+      if (slot.ratio) slot.ratio = base.w / base.h;
+      sizeChanged();
+    });
+    [el.fmt, el.minKb, el.maxKb].forEach((c) =>
       on(c, "change", () => {
         updateSlotSummary(slot);
         invalidateResults();
@@ -798,37 +971,49 @@
     );
   }
 
+  function updateSizeUI(slot, skip = "") {
+    const { el, size, unit, dpi } = slot;
+    if (!skip.includes("w")) el.w.value = fromPx(size.w, unit, dpi);
+    if (!skip.includes("h")) el.h.value = fromPx(size.h, unit, dpi);
+    el.w.step = el.h.step = unit === "px" ? "1" : "any";
+    el.unit.value = unit;
+    el.dpiField.hidden = unit === "px";
+    el.lock.setAttribute("aria-pressed", String(!!slot.ratio));
+    el.lock.title = slot.ratio ? "Proportions locked — click to unlock" : "Keep proportions";
+    el.px.hidden = unit === "px";
+    el.px.textContent = `= ${size.w} × ${size.h} px`;
+    el.match.hidden = !slot.bmp;
+    const base = slotBase(slot);
+    el.sizeReset.hidden = base.w === size.w && base.h === size.h;
+    el.sizeReset.textContent = `Reset to ${base.w} × ${base.h} px`;
+    updateSlotSummary(slot);
+  }
   function updateSlotSummary(slot) {
-    const fmt = slot.el.fmt.value;
-    const max = parseFloat(slot.el.maxKb.value);
-    const dims = slotSpecDims(slot);
-    let limit = "no size limit";
-    if (max > 0) limit = `up to ${max} KB`;
-    else if (dims.maxKb) limit = kbRange(dims);
-    slot.el.summary.textContent = `Save as ${fmtLabel(fmt)} · ${limit}`;
+    const { el, size, unit, dpi } = slot;
+    const dims = unit === "px" ? `${size.w} × ${size.h} px` : `${fromPx(size.w, unit, dpi)} × ${fromPx(size.h, unit, dpi)} ${unit}`;
+    const limit = kbRange({ minKb: parseFloat(el.minKb.value) || 0, maxKb: parseFloat(el.maxKb.value) || 0 });
+    el.summary.textContent = [dims, fmtLabel(el.fmt.value), limit].filter(Boolean).join(" · ");
   }
   function applySlotSpec(slot, def, resetOutputs) {
     slot.def = def;
     slot.el.title.textContent = def.name;
     slot.el.flabel.textContent = def.name;
-    slot.el.badge.textContent = def.required ? "Required" : "Optional";
     slot.el.hint.textContent = def.hint || "";
     slot.el.hint.hidden = !def.hint;
     if (resetOutputs) {
+      Object.assign(slot, { size: { w: def.spec.w, h: def.spec.h }, unit: "px", ratio: null });
       slot.el.fmt.value = normFmt(def.spec.format);
+      slot.el.minKb.value = def.spec.minKb || "";
       slot.el.maxKb.value = def.spec.maxKb || "";
-      slot.el.maxKb.placeholder = def.spec.maxKb ? (def.spec.minKb ? `${def.spec.minKb}–${def.spec.maxKb}` : String(def.spec.maxKb)) : "auto";
       if (!slot.file) {
         slot.view = defaultView(def.defaultMode);
         slot.el.segs.forEach((b) => b.setAttribute("aria-pressed", b.dataset.mode === def.defaultMode));
       }
     }
-    updateSlotSummary(slot);
+    updateSizeUI(slot);
   }
   function syncSlots(resetOutputs) {
-    const spec = currentSpec();
-    let defs = slotDefs(spec);
-    if (!defs.length) defs = slotDefs({ photo: { w: 200, h: 240, format: "jpg" }, sign: { w: 240, h: 80, format: "png" }, extras: [] });
+    const defs = slotDefs(currentSpec());
     const keep = new Set(defs.map((d) => d.key));
     for (const [key, slot] of Array.from(slots)) {
       if (!keep.has(key)) {
@@ -851,15 +1036,12 @@
     slots.forEach((slot) => drawEditor(slot));
     renderLive();
   }
-  function slotSpecDims(slot) {
+  // the exam's (or the default) size for a slot, which Reset returns to
+  function slotBase(slot) {
     const spec = currentSpec();
-    if (spec) {
-      if (slot.key === "photo") return spec.photo;
-      if (slot.key === "sign") return spec.sign;
-      const e = (spec.extras || []).find((x) => x.key === slot.key);
-      if (e) return e;
-    }
-    return slot.def.spec;
+    if (slot.key === "photo") return spec.photo;
+    if (slot.key === "sign") return spec.sign;
+    return (spec.extras || []).find((x) => x.key === slot.key) || slot.def.spec;
   }
 
   function drawEditor(slot) {
@@ -869,11 +1051,10 @@
       return;
     }
     el.editor.hidden = false;
-    const spec = slotSpecDims(slot);
     const stage = el.canvas.closest(".editor-stage");
     const maxW = Math.max(120, Math.min((stage.clientWidth || 360) - 24, window.innerWidth - 64, 420));
     const maxH = Math.min(320, Math.round(window.innerHeight * 0.34));
-    const aspect = spec.w / spec.h;
+    const aspect = slot.size.w / slot.size.h;
     let cw = maxW,
       ch = cw / aspect;
     if (ch > maxH) {
@@ -886,8 +1067,12 @@
     renderFrame(el.canvas, slot.bmp, Math.round(cw * dpr), Math.round(ch * dpr), slot.view, slot.bg);
     slot.cssW = cw;
     slot.cssH = ch;
-    el.zoom.value = slot.view.zoom;
-    el.zoomVal.textContent = slot.view.zoom.toFixed(1) + "×";
+    const pct = Math.round(slot.view.zoom * 100);
+    el.zoom.value = Math.log2(slot.view.zoom);
+    el.zoom.setAttribute("aria-valuetext", pct + "%");
+    if (document.activeElement !== el.zoomVal) el.zoomVal.value = pct;
+    el.zoomOut.disabled = slot.view.zoom <= ZOOM_MIN;
+    el.zoomIn.disabled = slot.view.zoom >= ZOOM_MAX;
   }
 
   // live output: quick downscaled previews while editing, a cleaned pass shortly after
@@ -928,12 +1113,11 @@
   function renderLive(withClean = false) {
     clearTimeout(liveTimer);
     liveTimer = setTimeout(() => {
-      const spec = currentSpec();
       slots.forEach((slot) => {
-        const dims = slotSpecDims(slot);
-        slot.el.fdims.textContent = spec ? `${dims.w} × ${dims.h} px` : "—";
+        const { w, h } = slot.size;
+        slot.el.fdims.textContent = `${w} × ${h} px`;
         slot.el.frame.classList.toggle("empty", !slot.bmp);
-        const pv = previewDims(dims.w, dims.h);
+        const pv = previewDims(w, h);
         if (!slot.bmp) {
           paintPlaceholder(slot.el.out, pv.w, pv.h, slot.def.name);
           return;
@@ -971,7 +1155,7 @@
       st.innerHTML = `${icon("check")}Added`;
     } else {
       st.className = "frame-state";
-      st.innerHTML = `${icon("circle")}No file yet`;
+      st.innerHTML = `${icon("circle")}Not added`;
     }
   }
 
@@ -1006,7 +1190,10 @@
       return;
     }
     slot.view = defaultView(slot.view.mode);
+    // the first file in a slot opens its size controls, so the size is never a hidden setting
+    if (!slot.opened) slot.el.options.open = slot.opened = true;
     invalidateResults();
+    updateSizeUI(slot);
     drawEditor(slot);
     renderLive();
   }
@@ -1020,6 +1207,7 @@
     slot.el.drop.classList.remove("has-file");
     slot.el.thumb.removeAttribute("src");
     slot.el.editor.hidden = true;
+    slot.el.match.hidden = true;
     if (!silent) {
       invalidateResults();
       renderLive();
@@ -1127,36 +1315,35 @@
   });
 
   /* ---------- readiness, action bar ---------- */
-  function requiredMissing() {
-    const missing = [];
-    slots.forEach((slot) => {
-      if (slot.def.required && !slot.bmp) missing.push(slot);
-    });
-    return missing;
+  // every slot is optional: whatever has been added gets processed
+  const addedSlots = () => Array.from(slots.values()).filter((s) => s.file);
+  function processLabel() {
+    const added = addedSlots();
+    const n = added.length + (idSlot.file ? 1 : 0);
+    if (n === 1 && added.length === 1 && added[0].def.kind !== "extra") return "Process " + (added[0].key === "sign" ? "signature" : "photo");
+    return n > 1 ? `Process ${n} files` : "Process";
   }
   function updateReadiness() {
     const spec = currentSpec();
     if (readinessEl) {
-      readinessEl.className = "readiness" + (spec ? " ok" : "");
-      readinessEl.innerHTML = spec ? `${icon("circle-check")}${esc(spec.name)}` : `${icon("circle")}No exam chosen`;
+      readinessEl.className = "readiness" + (spec.free ? "" : " ok");
+      readinessEl.innerHTML = spec.free ? `${icon("sliders")}Your own sizes` : `${icon("circle-check")}${esc(spec.name)} sizes`;
     }
     slots.forEach(setFrameState);
     updateDock();
   }
   function dockState() {
     if (state.results.length) return "download";
-    if (!currentSpec()) return "exam";
-    if (requiredMissing().length) return "photo";
+    if (!addedSlots().length && !idSlot.file) return "add";
     return "process";
   }
   function updateDock() {
+    if (processBtn && !state.results.length && !state.processing && !processBtn.dataset.loading) processBtn.textContent = processLabel();
     if (!dockCta) return;
     const s = dockState();
-    const missing = requiredMissing()[0];
     const map = {
-      exam: ["crop", "Choose exam"],
-      photo: ["upload", "Add " + (missing ? missing.def.name.toLowerCase() : "photo")],
-      process: ["check", "Process"],
+      add: ["upload", "Add a file"],
+      process: ["check", processLabel()],
       download: [SHARE_FILES ? "share" : "download", SHARE_FILES ? "Share files" : "Download all"],
     };
     dockCtaIcon.querySelector("use").setAttribute("href", "#i-" + map[s][0]);
@@ -1166,16 +1353,7 @@
     const s = dockState();
     if (s === "download") downloadAll();
     else if (s === "process") processAll();
-    else if (s === "photo") {
-      const missing = requiredMissing()[0];
-      if (missing) {
-        scrollToEl(missing.el.block, { focus: false });
-        missing.el.input.click();
-      }
-    } else {
-      scrollToEl("#templateField", { focus: false });
-      setTimeout(openPicker, 300);
-    }
+    else scrollToEl(slotsHost, { focus: false });
   });
   // action bar shows while the Studio is on screen and no text field has focus
   const studioSection = $("studio");
@@ -1235,20 +1413,22 @@
   }
 
   /* ---------- template selection ---------- */
+  // "" and Custom both mean no exam: each file keeps sizes the user sets
   function selectTemplate(key, opts = {}) {
-    if (!hasTpl(key)) key = "";
+    const wantedCustom = hasTpl(key) && !!TEMPLATES[key].custom;
+    if (isFreeKey(key)) key = "";
     const changed = key !== state.templateKey;
     state.templateKey = key;
     const spec = currentSpec();
     const t = key ? TEMPLATES[key] : null;
     templateBtnLabel.textContent = t ? t.name : "Choose your exam";
-    templateBtnSub.textContent = t ? (t.custom ? "Enter your own pixel sizes" : `${catName(t.category)} · ${t.org}`) : "SSC, Railways, Banking, UPSC, NEET, passport…";
+    templateBtnSub.textContent = t ? `${catName(t.category)} · ${t.org}` : "Fills in the sizes for SSC, IBPS, NEET, passport…";
     if (templateChange) templateChange.hidden = !t;
+    if (templateClear) templateClear.hidden = !t;
     templateHint.innerHTML = describeSpec(spec);
-    customBox.hidden = !(t && t.custom);
     document.querySelectorAll(".template-card").forEach((c) => c.classList.toggle("selected", c.dataset.key === key));
     updateAnatomy(spec);
-    syncSlots(changed && !!t);
+    syncSlots(changed);
     if (changed) invalidateResults();
     if (key) {
       try {
@@ -1259,25 +1439,22 @@
     }
     renderPickerList(templatePopSearch.value);
     if (opts.scroll) scrollToEl("#studio", { focus: false });
+    if (opts.scroll && wantedCustom) toast("Set any width, height and KB under each file.", "info");
   }
   function updateAnatomy(spec) {
-    const p = spec ? spec.photo : { w: 200, h: 240, maxKb: 50, format: "jpg" };
-    const s = spec ? spec.sign : { w: 240, h: 80 };
+    const p = spec.free ? { w: 200, h: 240, maxKb: 50, format: "jpg" } : spec.photo;
+    const s = spec.free ? { w: 240, h: 80 } : spec.sign;
     const set = (k, v) => document.querySelectorAll(`[data-an="${k}"]`).forEach((el) => (el.textContent = v));
-    set("prefix", spec ? "" : "Example (SSC): ");
+    set("prefix", spec.free ? "Example (SSC): " : "");
     set("width", String(p.w));
     set("height", String(p.h));
     set("sig", `${s.w} × ${s.h} px`);
     set("kb", p.maxKb ? `≤ ${p.maxKb} KB as ${fmtLabel(normFmt(p.format))}` : `${fmtLabel(normFmt(p.format))}, no fixed limit`);
   }
-  [customW, customH, customSW, customSH].forEach((el) =>
-    on(el, "input", () => {
-      templateHint.innerHTML = describeSpec(currentSpec());
-      updateAnatomy(currentSpec());
-      syncSlots(false);
-      invalidateResults();
-    }),
-  );
+  on(templateClear, "click", () => {
+    selectTemplate("");
+    templateBtn.focus();
+  });
 
   /* ---------- picker (searchable combobox) ---------- */
   let pickerOpen = false,
@@ -1290,17 +1467,18 @@
   }
   function renderPickerList(filter = "") {
     const f = filter.trim().toLowerCase();
-    const groups = [...CATEGORIES.map((c) => c.id), "custom"];
+    const groups = ["custom", ...CATEGORIES.map((c) => c.id)];
     let html = "";
     let any = false;
     groups.forEach((cat) => {
       const entries = Object.entries(TEMPLATES).filter(([, t]) => (t.category || "custom") === cat && matches(t, f));
       if (!entries.length) return;
       any = true;
-      html += `<div class="picker-group" role="group" aria-label="${esc(catName(cat))}"><div class="picker-group-name" aria-hidden="true">${esc(catName(cat))}</div>`;
+      const group = cat === "custom" ? "No exam" : catName(cat);
+      html += `<div class="picker-group" role="group" aria-label="${esc(group)}"><div class="picker-group-name" aria-hidden="true">${esc(group)}</div>`;
       entries.forEach(([key, t]) => {
         const dims = t.custom ? "any size" : `${t.photo.w}×${t.photo.h} · ${t.sign.w}×${t.sign.h}`;
-        const sel = key === state.templateKey;
+        const sel = t.custom ? !state.templateKey : key === state.templateKey;
         html += `<button type="button" tabindex="-1" class="picker-item ${sel ? "selected" : ""}" role="option" id="opt-${key}" data-key="${key}" aria-selected="${sel}"><span>${esc(t.name)}</span><small>${dims}</small></button>`;
       });
       html += "</div>";
@@ -1448,7 +1626,7 @@
   /* ---------- processing ---------- */
   function setProcessMode(hasResults) {
     if (!processBtn) return;
-    processBtn.innerHTML = hasResults ? (SHARE_FILES ? `${icon("share")}Share files` : `${icon("download")}Download all`) : "Process";
+    processBtn.innerHTML = hasResults ? (SHARE_FILES ? `${icon("share")}Share files` : `${icon("download")}Download all`) : esc(processLabel());
     processBtn.title = hasResults ? "" : "Ctrl + Enter";
     if (processAgain) processAgain.hidden = !hasResults;
     if (zipRow) zipRow.hidden = coarse || !hasResults || state.results.length < 2;
@@ -1470,24 +1648,31 @@
   const baseName = (slot) => (slot.key === "photo" ? "photo" : slot.key === "sign" ? "signature" : slot.key);
 
   async function encodeSlot(slot) {
-    const dims = slotSpecDims(slot);
+    const { w, h } = slot.size;
     const fmt = slot.el.fmt.value;
-    const maxBytes = kbOf(slot.el.maxKb) || (dims.maxKb || 0) * 1024;
-    const minBytes = (dims.minKb || 0) * 1024;
+    const maxBytes = kbOf(slot.el.maxKb);
+    const minBytes = kbOf(slot.el.minKb);
+    // sizes typed in cm, mm or inches carry their DPI into the file, so it prints at that size
+    const dpi = slot.unit === "px" ? 0 : slot.dpi;
     const canvas = document.createElement("canvas");
     if (slot.def.clean) canvas.getContext("2d", { willReadFrequently: true });
-    renderFrame(canvas, slot.bmp, dims.w, dims.h, slot.view, slot.bg);
+    renderFrame(canvas, slot.bmp, w, h, slot.view, slot.bg);
     if (slot.el.clean && slot.el.clean.checked) cleanSignature(canvas);
-    const base = `${baseName(slot)}_${dims.w}x${dims.h}`;
+    const base = `${baseName(slot)}_${w}x${h}`;
     const common = { key: slot.key, label: slot.def.name, before: slot.file.size, min: minBytes, max: maxBytes };
     if (fmt === "pdf") {
       let quality;
       if (maxBytes) ({ quality } = await encodeUnderLimit(canvas, "image/jpeg", Math.max(1024, maxBytes - 2048)));
-      const file = await canvasToPDF(canvas, `${base}.pdf`, { btn: processBtn, quality });
+      const page = dpi ? { mmW: (w / dpi) * 25.4, mmH: (h / dpi) * 25.4 } : {};
+      const file = await canvasToPDF(canvas, `${base}.pdf`, { btn: processBtn, quality, ...page });
       return { ...common, file, over: !!maxBytes && file.size > maxBytes, under: !!minBytes && file.size < minBytes, padded: false };
     }
     const mime = fmt === "png" ? "image/png" : "image/jpeg";
-    const { blob, over, under, padded } = await encodeUnderLimit(canvas, mime, maxBytes, minBytes);
+    let { blob, over, under, padded } = await encodeUnderLimit(canvas, mime, maxBytes, minBytes);
+    if (dpi) {
+      blob = await withDpi(blob, dpi);
+      over = !!maxBytes && blob.size > maxBytes;
+    }
     return { ...common, file: new File([blob], `${base}.${extFor(fmt)}`, { type: mime }), over, under, padded };
   }
   async function processId() {
@@ -1555,22 +1740,22 @@
   }
   async function processAll() {
     if (state.processing) return;
-    const spec = currentSpec();
-    if (!spec) {
-      setStatus(statusEl, "Choose an exam first.", "err");
-      scrollToEl("#templateField", { focus: false });
-      setTimeout(openPicker, 0);
+    const added = addedSlots();
+    if (!added.length && !idSlot.file) {
+      setStatus(statusEl, "Add a photo or a signature first — either one is enough.", "err");
+      scrollToEl(slotsHost, { focus: false });
       return;
     }
-    const loading = Array.from(slots.values()).some((s) => s.file && !s.bmp) || (idSlot.file && isImage(idSlot.file) && !idSlot.bmp);
+    const loading = added.some((s) => !s.bmp) || (idSlot.file && isImage(idSlot.file) && !idSlot.bmp);
     if (loading) {
       setStatus(statusEl, "Still reading your file — try again in a moment.", "busy");
       return;
     }
-    const missing = requiredMissing();
-    if (missing.length) {
-      setStatus(statusEl, `Add the ${missing.map((s) => s.def.name.toLowerCase()).join(" and ")} first.`, "err");
-      scrollToEl(missing[0].el.block, { focus: false });
+    const badRange = added.find((s) => kbOf(s.el.minKb) && kbOf(s.el.maxKb) && kbOf(s.el.minKb) > kbOf(s.el.maxKb));
+    if (badRange) {
+      setStatus(statusEl, `${badRange.def.name}: Min KB is larger than Max KB.`, "err");
+      badRange.el.options.open = true;
+      scrollToEl(badRange.el.options, { focus: false, block: "center" });
       return;
     }
     state.processing = true;
@@ -1605,9 +1790,9 @@
       const padded = out.filter((r) => r.padded);
       if (over) {
         const isPng = over.file.type === "image/png";
-        setStatus(statusEl, `${over.label} is ${kb(over.file.size)} KB but the limit is ${kb(over.max)} KB. ${isPng ? "PNG cannot be shrunk — save it as JPG instead." : "Try a plainer background or a smaller source image."}`, "err");
+        setStatus(statusEl, `${over.label} is ${kb(over.file.size)} KB but the limit is ${kb(over.max)} KB. ${isPng ? "PNG cannot be shrunk — save it as JPG instead." : "Try a plainer background, a smaller width and height, or a higher Max KB."}`, "err");
       } else if (under) {
-        setStatus(statusEl, `${under.label} is ${kb(under.file.size)} KB but the portal wants at least ${kb(under.min)} KB. A larger or sharper source image helps.`, "warn");
+        setStatus(statusEl, `${under.label} is ${kb(under.file.size)} KB, under the ${kb(under.min)} KB minimum. Save it as JPG or PNG, or lower Min KB.`, "warn");
       } else if (padded.length) {
         const names = padded.map((r) => r.label).join(" and ");
         setStatus(statusEl, `Done — ${out.length} file${out.length > 1 ? "s" : ""} ready. ${names} ${padded.length > 1 ? "were" : "was"} below the minimum size, so ${padded.length > 1 ? "they were" : "it was"} topped up to it.`, "ok");
@@ -1621,6 +1806,7 @@
       state.processing = false;
       processBtn.disabled = false;
       if (dockCta) dockCta.disabled = false;
+      updateDock();
     }
   }
   const slug = (s) =>
@@ -2504,7 +2690,7 @@
     setTimeout(() => scrollToEl("#templateField", { focus: false }), 50);
   } else {
     selectTemplate("");
-    if (hasTpl(remembered)) {
+    if (!isFreeKey(remembered)) {
       const lu = $("lastUsed");
       if (lu) {
         $("lastUsedName").textContent = TEMPLATES[remembered].name;

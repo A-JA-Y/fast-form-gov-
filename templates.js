@@ -427,7 +427,6 @@
 
     /* ---------------- Passport, PAN & Visa ---------------- */
     passport_in: {
-      signOptional: true,
       name: "Indian Passport (Passport Seva)",
       org: "Ministry of External Affairs",
       category: "documents",
@@ -437,7 +436,6 @@
       note: "Plain white background, neutral expression, no glasses glare.",
     },
     us_visa: {
-      signOptional: true,
       name: "US Visa (DS-160)",
       org: "US Department of State",
       category: "documents",
@@ -447,7 +445,6 @@
       note: "Square, 600–1200 px, plain white background, under 240 KB.",
     },
     schengen: {
-      signOptional: true,
       name: "Schengen / UK visa (35 × 45 mm)",
       org: "ICAO passport-photo standard",
       category: "documents",
@@ -466,7 +463,6 @@
       verify: true,
     },
     passport: {
-      signOptional: true,
       name: "Passport / Visa 2 × 2 in",
       org: "600 × 600 px at 300 DPI",
       category: "documents",
@@ -475,7 +471,6 @@
       sign: P(300, 100, "png"),
     },
     mm3545: {
-      signOptional: true,
       name: "35 × 45 mm ID photo",
       org: "413 × 531 px at 300 DPI",
       category: "documents",
@@ -486,8 +481,8 @@
       note: "PNG files cannot be shrunk to a KB target. Check the notice for a size limit.",
     },
     custom: {
-      name: "Custom",
-      org: "Enter your own pixel sizes",
+      name: "Custom size",
+      org: "Any width, height and KB you need",
       category: "custom",
       tags: ["custom", "any"],
       custom: true,
