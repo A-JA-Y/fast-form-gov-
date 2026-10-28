@@ -967,7 +967,7 @@ main {
 }
 /* script.js fills these after the first paint; reserve their height so nothing jumps (CLS) */
 .js #slotsHost:empty {
-  min-height: 460px;
+  min-height: 488px;
 }
 .js #outputFrames:empty {
   min-height: min(393px, calc(60vw + 76px));
@@ -977,12 +977,12 @@ main {
 }
 @media (max-width: 480px) {
   .js #slotsHost:empty {
-    min-height: 478px;
+    min-height: 506px;
   }
 }
 @media (hover: hover) and (pointer: fine) {
   .js #slotsHost:empty {
-    min-height: 503px;
+    min-height: 531px;
   }
 }
 @media (min-width: 1081px) {
@@ -1167,11 +1167,17 @@ main {
   font-weight: 600;
   color: var(--ink-2);
 }
-.custom-box {
-  margin-top: 16px;
+.block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
 }
-.custom-box .row-4 {
-  margin-top: 0;
+.block-head .linklike {
+  font-size: 13px;
+}
+.label .muted {
+  font-weight: 400;
 }
 .dropzone {
   position: relative;
@@ -1343,14 +1349,17 @@ main {
 }
 .editor-zoom {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto 92px;
+  gap: 8px;
   align-items: center;
 }
-.editor-zoom .mono {
-  min-width: 36px;
+.zoom-pct input {
   text-align: right;
-  color: var(--ink-2);
+  padding-left: 8px;
+  padding-right: 28px;
+}
+.zoom-pct span {
+  right: 10px;
 }
 .editor-actions {
   display: flex;
@@ -1361,32 +1370,103 @@ main {
 .editor-actions .spacer {
   flex: 1;
 }
+.btn-sm .ic {
+  width: 16px;
+  height: 16px;
+}
 .slot-options {
   margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 .slot-options summary {
   list-style: none;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 32px;
+  min-height: 44px;
+  padding: 0 12px;
   font-size: 13px;
   font-weight: 500;
   color: var(--ink-2);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
+  -webkit-tap-highlight-color: transparent;
 }
 .slot-options summary::-webkit-details-marker {
   display: none;
 }
+.slot-options summary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+@media (hover: hover) and (pointer: fine) {
+  .slot-options summary:hover {
+    background: var(--surface-2);
+  }
+}
+.slot-options[open] summary {
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.so-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.so-sum {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .slot-options summary .chev {
+  color: var(--muted);
   transition: transform 120ms;
 }
 .slot-options[open] summary .chev {
   transform: rotate(180deg);
 }
-.slot-options .row-2 {
+.so-body {
+  padding: 4px 12px 14px;
+}
+.so-body .row-3 {
+  margin-top: 12px;
+}
+.size-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 96px;
+  gap: 12px 8px;
+  align-items: end;
   margin-top: 10px;
+}
+.size-row:has(> .dpi-field:not([hidden])) {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 96px 88px;
+}
+.lock-btn {
+  width: 40px;
+  height: 40px;
+}
+.lock-btn[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.size-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.size-links:not(:has(> :not([hidden]))) {
+  display: none;
 }
 .row-toggle {
   width: 100%;
@@ -2436,6 +2516,25 @@ main {
   }
   .editor-actions .spacer {
     display: none;
+  }
+  .editor-zoom {
+    grid-template-columns: auto minmax(0, 1fr) auto 88px;
+  }
+  .so-body .fmt-field {
+    grid-column: 1 / -1;
+  }
+  .size-row,
+  .size-row:has(> .dpi-field:not([hidden])) {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+  .unit-field {
+    grid-column: 1;
+  }
+  .dpi-field {
+    grid-column: 3;
+  }
+  .so-sum {
+    font-size: 11.5px;
   }
   .merge-item .mi-view {
     display: none;
