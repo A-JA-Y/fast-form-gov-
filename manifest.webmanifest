@@ -1,7 +1,7 @@
 {
   "name": "GovForms – Exam photo & signature resizer",
   "short_name": "GovForms",
-  "description": "Resize exam photos and signatures to the exact pixel size and KB limit for SSC, RRB, IBPS, UPSC, NEET and more. Runs in your browser.",
+  "description": "Compress PDFs to any size (100 KB, 200 KB, 1 MB) and resize exam photos and signatures to the exact pixel size and KB limit for SSC, RRB, IBPS, UPSC, NEET and more. Runs in your browser.",
   "id": "./",
   "start_url": "./?source=pwa",
   "scope": "./",
@@ -9,7 +9,11 @@
   "background_color": "#f5f6f8",
   "theme_color": "#f5f6f8",
   "lang": "en-IN",
-  "categories": ["productivity", "utilities", "education"],
+  "categories": [
+    "productivity",
+    "utilities",
+    "education"
+  ],
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -37,6 +41,16 @@
     }
   ],
   "shortcuts": [
+    {
+      "name": "Compress PDF",
+      "url": "./?source=pwa#compress-pdf",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
     {
       "name": "Format photo",
       "url": "./?source=pwa#studio",

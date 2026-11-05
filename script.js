@@ -105,10 +105,12 @@
   const fmtLabel = (f) => (f === "png" ? "PNG" : f === "pdf" ? "PDF" : "JPG");
 
   /* ---------- lazy libraries ---------- */
+  const PDFJS_BASE = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
   const LIBS = {
     jspdf: { url: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js", ready: () => !!(window.jspdf && window.jspdf.jsPDF) },
     pdflib: { url: "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js", ready: () => !!window.PDFLib },
     jszip: { url: "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", ready: () => !!window.JSZip },
+    pdfjs: { url: PDFJS_BASE + "pdf.min.js", ready: () => !!(window.pdfjsLib && window.pdfjsLib.getDocument) },
   };
   const libPromises = {};
   function ensureLib(name, btn, label = "Loading PDF support…") {
@@ -1223,7 +1225,6 @@
   });
   function updateIdControls() {
     const pdf = !!idSlot.file && !idSlot.bmp;
-    if (idMaxKbField) idMaxKbField.hidden = pdf;
     if (idFormat) {
       const opt = idFormat.querySelector('option[value="pdf"]');
       if (opt) opt.disabled = pdf;
@@ -1286,7 +1287,7 @@
   });
   on(document.querySelector('[data-view="id"]'), "click", () => openViewer(idSlot.file, "ID document"));
   on(document.querySelector('[data-clear="id"]'), "click", () => clearId());
-  ["sheetDrop", "compDrop", "mergeDrop"].forEach((id) => {
+  ["sheetDrop", "compDrop", "pdfDrop", "mergeDrop"].forEach((id) => {
     on($(id), "pointerenter", () => (state.lastSlot = "tool"));
     on($(id), "pointerleave", () => {
       if (state.lastSlot === "tool") state.lastSlot = null;
@@ -1393,7 +1394,7 @@
   });
   // dock active item
   const dockItems = Array.from(document.querySelectorAll(".dock-item[data-dock]"));
-  const DOCK_OWNER = { studio: "studio", rules: "studio", templates: "templates", tools: "tools", news: "news", faq: "news" };
+  const DOCK_OWNER = { studio: "studio", compress: "compress", rules: "studio", templates: "templates", tools: "tools", news: "news", faq: "news" };
   if (dockItems.length && "IntersectionObserver" in window) {
     const io = new IntersectionObserver(
       (entries) =>
@@ -1698,6 +1699,13 @@
         const { blob, over } = await encodeUnderLimit(c, "image/jpeg", maxBytes);
         return { ...common, file: new File([blob], "id_document.jpg", { type: "image/jpeg" }), over };
       }
+    }
+    if (isPdf(idSlot.file) && maxBytes && idSlot.file.size > maxBytes) {
+      const r = await compressPdfToTarget(idSlot.file, maxBytes, {
+        btn: processBtn,
+        onProgress: (msg) => setStatus(statusEl, "ID document: " + msg, "busy"),
+      });
+      return { ...common, file: new File([r.bytes], "id_" + idSlot.file.name.replace(/\.pdf$/i, "") + ".pdf", { type: "application/pdf" }), over: r.over };
     }
     const name = /\.[a-z0-9]+$/i.test(idSlot.file.name) ? idSlot.file.name : idSlot.file.name + ".bin";
     return { ...common, file: new File([idSlot.file], "id_" + name, { type: idSlot.file.type }), over: false };
@@ -2337,12 +2345,369 @@
   on(sheetJpgBtn, "click", () => exportSheet("jpg"));
   on(sheetPdfBtn, "click", () => exportSheet("pdf"));
 
+  /* ---------- PDF compression to a target size ---------- */
+  // Two passes. A lossless re-save (object streams) keeps text and vectors. When that is not small enough, every page is
+  // drawn with pdf.js and stored as a JPEG, and the resolution and quality are searched for the sharpest file under the limit.
+  const PDF_QS = [0.92, 0.82, 0.72, 0.62, 0.52, 0.44, 0.36, 0.28, 0.2];
+  const PDF_REF = 4; // the "readable" quality (0.52): the search aims for it, and prefers a lower resolution over going below it
+  const PDF_LAST = PDF_QS.length - 1;
+  const PDF_MAX_DPI = 220,
+    PDF_MIN_DPI = 24;
+  const PDF_MAX_SIDE = 4096,
+    PDF_MAX_AREA = 16e6;
+
+  async function openPdfDoc(file, btn) {
+    await ensureLib("pdfjs", btn);
+    const lib = window.pdfjsLib;
+    if (!lib.GlobalWorkerOptions.workerSrc) lib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + "pdf.worker.min.js";
+    try {
+      // isEvalSupported off: fonts are drawn without generated code (the safe path since CVE-2024-4367)
+      return await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+    } catch (err) {
+      const n = err && err.name;
+      if (n === "PasswordException") throw new Error(`${file.name} is password-protected. Remove the password first (print or save it as a new PDF), then compress it.`);
+      if (n === "InvalidPDFException" || n === "FormatError" || n === "MissingPDFException") throw new Error(`${file.name} could not be read as a PDF.`);
+      throw err;
+    }
+  }
+  function toGray(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) d[i] = d[i + 1] = d[i + 2] = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8;
+    ctx.putImageData(img, 0, 0);
+  }
+  async function renderPdfPage(page, dpi, canvas, ctx, gray) {
+    const base = page.getViewport({ scale: 1 });
+    const scale = Math.min(dpi / 72, PDF_MAX_SIDE / Math.max(base.width, base.height), Math.sqrt(PDF_MAX_AREA / (base.width * base.height)));
+    const vp = page.getViewport({ scale });
+    canvas.width = Math.max(1, Math.round(vp.width));
+    canvas.height = Math.max(1, Math.round(vp.height));
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // the print intent draws filled-in form fields and skips annotations marked not to print
+    await page.render({ canvasContext: ctx, viewport: vp, intent: "print" }).promise;
+    if (gray) toGray(ctx, canvas.width, canvas.height);
+    return { wPt: base.width, hPt: base.height, dpi: Math.round((canvas.width / base.width) * 72) };
+  }
+  // one render per page at this DPI, encoded at every quality still in the running; a quality drops out once its
+  // running total passes the budget, and the pass stops early when even the lowest quality cannot fit
+  async function rasterPass(doc, dpi, gray, budget, onProgress, mustFinish) {
+    const n = doc.numPages;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: gray });
+    const totals = PDF_QS.map(() => 0);
+    const blobs = PDF_QS.map(() => []);
+    const pages = [];
+    let effDpi = dpi;
+    for (let i = 1; i <= n; i++) {
+      onProgress(n > 1 ? `Compressing page ${i} of ${n} at ${dpi} DPI…` : `Compressing at ${dpi} DPI…`);
+      const page = await doc.getPage(i);
+      const info = await renderPdfPage(page, dpi, canvas, ctx, gray);
+      page.cleanup();
+      effDpi = Math.min(effDpi, info.dpi);
+      pages.push(info);
+      for (let q = 0; q < PDF_QS.length; q++) {
+        if (!blobs[q] && q !== PDF_REF) continue;
+        const b = await canvasToBlob(canvas, "image/jpeg", PDF_QS[q]);
+        totals[q] += b.size;
+        if (blobs[q]) blobs[q].push(b);
+        if (totals[q] > budget && q !== PDF_LAST) blobs[q] = null;
+      }
+      if (totals[PDF_LAST] > budget && !mustFinish && i < n) return { complete: false, ref: (totals[PDF_REF] * n) / i, effDpi };
+    }
+    canvas.width = canvas.height = 1;
+    return { complete: true, totals, blobs, pages, effDpi, ref: totals[PDF_REF] };
+  }
+  async function buildJpegPdf(pages, blobs) {
+    const out = await PDFLib.PDFDocument.create();
+    out.setProducer("GovForms");
+    out.setCreator("GovForms");
+    for (let i = 0; i < blobs.length; i++) {
+      const img = await out.embedJpg(new Uint8Array(await blobs[i].arrayBuffer()));
+      const { wPt, hPt } = pages[i];
+      out.addPage([wPt, hPt]).drawImage(img, { x: 0, y: 0, width: wPt, height: hPt });
+    }
+    return out.save({ useObjectStreams: true });
+  }
+  async function deflate(bytes) {
+    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate"));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  // lossless: Flate-compress streams stored without a filter, then re-save with object streams
+  async function squeezePdf(srcBytes) {
+    const { PDFDocument, PDFRawStream, PDFName } = PDFLib;
+    const doc = await PDFDocument.load(srcBytes, { ignoreEncryption: true, updateMetadata: false });
+    if (doc.isEncrypted) return null;
+    if (typeof CompressionStream === "function") {
+      for (const [ref, obj] of doc.context.enumerateIndirectObjects()) {
+        if (!(obj instanceof PDFRawStream) || obj.dict.has(PDFName.of("Filter")) || obj.contents.length < 256) continue;
+        const packed = await deflate(obj.contents);
+        if (packed.length >= obj.contents.length * 0.9) continue;
+        const dict = obj.dict.clone(doc.context);
+        dict.set(PDFName.of("Filter"), PDFName.of("FlateDecode"));
+        dict.delete(PDFName.of("DecodeParms"));
+        doc.context.assign(ref, PDFRawStream.of(dict, packed));
+      }
+    }
+    return { bytes: await doc.save({ useObjectStreams: true }), pages: doc.getPageCount() };
+  }
+  async function compressPdfToTarget(file, target, opts = {}) {
+    const { gray = false, onProgress = () => {}, btn = null } = opts;
+    await ensureLib("pdflib", btn);
+    const srcBytes = new Uint8Array(await file.arrayBuffer());
+    let lossless = null;
+    if (!gray) {
+      if (file.size <= target) return { bytes: srcBytes, method: "original", over: false };
+      onProgress("Trying a lossless squeeze first…");
+      try {
+        const sq = await squeezePdf(srcBytes);
+        if (sq && sq.bytes.length < srcBytes.length) {
+          lossless = sq;
+          if (sq.bytes.length <= target) return { bytes: sq.bytes, method: "lossless", over: false, pages: sq.pages };
+        }
+      } catch (e) {
+        /* unreadable for pdf-lib: the raster pass below still works */
+      }
+    }
+    onProgress("Reading the PDF…");
+    const doc = await openPdfDoc(file, btn);
+    try {
+      const n = doc.numPages;
+      let areaIn2 = 0;
+      for (let i = 1; i <= n; i++) {
+        const v = (await doc.getPage(i)).getViewport({ scale: 1 });
+        areaIn2 += (v.width / 72) * (v.height / 72);
+      }
+      // pdf-lib adds about 1 KB per file and a few hundred bytes per page around the images
+      const budget = Math.max(target - (1000 + 420 * n), 400 * n);
+      // first guess: a typical document page is ~0.12 bytes per pixel as a JPEG at the reference quality
+      let dpi = clamp(Math.round(Math.sqrt(budget / (areaIn2 * 0.12))), PDF_MIN_DPI, 150);
+      let good = null,
+        fallback = null;
+      const tried = new Set();
+      for (let attempt = 0; attempt < 7; attempt++) {
+        tried.add(dpi);
+        const atMin = dpi <= PDF_MIN_DPI;
+        const r = await rasterPass(doc, dpi, gray, budget, onProgress, atMin);
+        const fits = r.complete ? PDF_QS.findIndex((_, i) => r.totals[i] <= budget) : -1;
+        let next = null;
+        if (fits >= 0 && fits <= PDF_REF) {
+          if (!good || r.effDpi > good.r.effDpi) good = { r, qi: fits };
+          // plenty of room at the top quality: try a sharper resolution
+          if (fits === 0 && r.totals[0] < budget * 0.7 && dpi < PDF_MAX_DPI && r.effDpi >= dpi - 1) next = Math.min(PDF_MAX_DPI, Math.round(dpi * Math.sqrt(budget / r.totals[0]) * 0.95));
+          if (next !== null && next < dpi * 1.08) next = null;
+        } else {
+          if (fits >= 0 && (!fallback || r.effDpi > fallback.r.effDpi)) fallback = { r, qi: fits };
+          if (good) break; // a sharper attempt overshot: keep the one that fitted
+          if (atMin) {
+            if (!fallback && r.complete) fallback = { r, qi: PDF_LAST };
+            break;
+          }
+          next = Math.max(PDF_MIN_DPI, Math.round(dpi * Math.sqrt(budget / r.ref) * 0.93));
+          if (next >= dpi) next = Math.max(PDF_MIN_DPI, Math.round(dpi * 0.8));
+        }
+        if (next === null || tried.has(next)) break;
+        dpi = next;
+      }
+      let choice = good || fallback;
+      if (!choice) {
+        const r = await rasterPass(doc, PDF_MIN_DPI, gray, budget, onProgress, true);
+        const fits = PDF_QS.findIndex((_, i) => r.totals[i] <= budget);
+        choice = { r, qi: fits >= 0 ? fits : PDF_LAST };
+      }
+      onProgress("Building the PDF…");
+      let qi = choice.qi;
+      let bytes = await buildJpegPdf(choice.r.pages, choice.r.blobs[qi]);
+      // the overhead estimate was short: step the quality down until it fits
+      while (bytes.length > target && qi < PDF_LAST && choice.r.blobs[qi + 1]) {
+        qi++;
+        bytes = await buildJpegPdf(choice.r.pages, choice.r.blobs[qi]);
+      }
+      const over = bytes.length > target;
+      // nothing fits: hand back the smallest file, preferring one that keeps the text
+      if (over && lossless && lossless.bytes.length <= bytes.length) return { bytes: lossless.bytes, method: "lossless", over: true, pages: n };
+      if (over && !gray && srcBytes.length <= bytes.length) return { bytes: srcBytes, method: "original", over: true, pages: n };
+      return { bytes, method: "raster", dpi: choice.r.effDpi, quality: PDF_QS[qi], gray, over, pages: n };
+    } finally {
+      doc.destroy();
+    }
+  }
+
+  /* ---------- compress PDF tool ---------- */
+  const pdfc = { file: null, out: null, pages: 0, token: null, busy: false, ver: 0 };
+  const pdfBtn = $("pdfBtn"),
+    pdfDownloadBtn = $("pdfDownloadBtn"),
+    pdfStatus = $("pdfStatus"),
+    pdfTarget = $("pdfTarget"),
+    pdfUnit = $("pdfUnit"),
+    pdfGray = $("pdfGray"),
+    pdfPresets = $("pdfPresets");
+  const MB = 1024 * 1024;
+  const pdfTargetBytes = () => {
+    const v = parseFloat(pdfTarget && pdfTarget.value);
+    return Number.isFinite(v) && v > 0 ? Math.round(v * (pdfUnit.value === "mb" ? MB : 1024)) : 0;
+  };
+  const fmtLimit = (b) => (b >= MB && (b * 10) % MB === 0 ? `${+(b / MB).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`);
+  function syncPdfPresets() {
+    if (!pdfPresets) return;
+    const k = pdfTargetBytes() / 1024;
+    pdfPresets.querySelectorAll("[data-kb]").forEach((b) => b.setAttribute("aria-pressed", String(Math.abs(+b.dataset.kb - k) < 0.5)));
+  }
+  function invalidatePdf() {
+    pdfc.ver++;
+    if (!pdfc.out) return;
+    pdfc.out = null;
+    pdfDownloadBtn.disabled = true;
+    $("pdfResult").hidden = true;
+    $("pdfMeter").hidden = true;
+    if (!pdfc.busy) setStatus(pdfStatus, "Settings changed — press Compress PDF again.");
+  }
+  function clearPdf(silent) {
+    pdfc.file = pdfc.out = pdfc.token = null;
+    pdfc.pages = 0;
+    pdfc.ver++;
+    $("pdfMeta").hidden = true;
+    $("pdfDrop").classList.remove("has-file");
+    $("pdfThumb").removeAttribute("src");
+    $("pdfResult").hidden = true;
+    $("pdfMeter").hidden = true;
+    pdfBtn.disabled = true;
+    pdfDownloadBtn.disabled = true;
+    if (!silent) setStatus(pdfStatus, "Add a PDF and choose the size limit.");
+  }
+  async function setPdfFile(file) {
+    if (!file) return;
+    if (isImage(file)) {
+      selectCompressTab("compress-image");
+      return setCompFile(file);
+    }
+    if (!isPdf(file)) return toast("Please choose a PDF file.", "err");
+    if (file.size > 200 * MB) return toast("That PDF is over 200 MB. Choose a smaller one.", "err");
+    clearPdf(true);
+    const token = (pdfc.token = {});
+    pdfc.file = file;
+    $("pdfName").textContent = file.name;
+    $("pdfSize").textContent = formatFileSize(file.size);
+    $("pdfThumb").src = placeholderThumb("PDF");
+    $("pdfMeta").hidden = false;
+    $("pdfDrop").classList.add("has-file");
+    pdfBtn.disabled = false;
+    setStatus(pdfStatus, `${formatFileSize(file.size)} — choose the limit and press Compress PDF.`);
+    // page count and a first-page thumbnail
+    try {
+      const doc = await openPdfDoc(file);
+      try {
+        if (pdfc.token !== token) return;
+        const n = (pdfc.pages = doc.numPages);
+        $("pdfSize").textContent = `${formatFileSize(file.size)} · ${n} page${n > 1 ? "s" : ""}`;
+        const page = await doc.getPage(1);
+        const base = page.getViewport({ scale: 1 });
+        const vp = page.getViewport({ scale: 160 / Math.max(base.width, base.height) });
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(vp.width));
+        c.height = Math.max(1, Math.round(vp.height));
+        const ctx = c.getContext("2d", { alpha: false });
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, c.width, c.height);
+        await page.render({ canvasContext: ctx, viewport: vp, intent: "print" }).promise;
+        if (pdfc.token === token) $("pdfThumb").src = c.toDataURL("image/jpeg", 0.8);
+      } finally {
+        doc.destroy();
+      }
+    } catch (err) {
+      if (pdfc.token === token) setStatus(pdfStatus, err.message, "err");
+    }
+  }
+  setupDropzone($("pdfDrop"), $("pdfFile"), (files) => setPdfFile(files[0]));
+  on(document.querySelector('[data-clear="pdf"]'), "click", () => clearPdf());
+  on(document.querySelector('[data-view="pdf"]'), "click", () => openViewer(pdfc.out || pdfc.file, pdfc.out ? "Compressed PDF" : "PDF"));
+  on(pdfPresets, "click", (e) => {
+    const b = e.target.closest("[data-kb]");
+    if (!b) return;
+    const k = +b.dataset.kb;
+    if (k >= 1024 && k % 1024 === 0) {
+      pdfTarget.value = k / 1024;
+      pdfUnit.value = "mb";
+    } else {
+      pdfTarget.value = k;
+      pdfUnit.value = "kb";
+    }
+    syncPdfPresets();
+    invalidatePdf();
+  });
+  on(pdfTarget, "input", () => {
+    syncPdfPresets();
+    invalidatePdf();
+  });
+  on(pdfUnit, "change", () => {
+    syncPdfPresets();
+    invalidatePdf();
+  });
+  on(pdfGray, "change", invalidatePdf);
+  on(pdfBtn, "click", async () => {
+    if (!pdfc.file || pdfc.busy) return;
+    const target = pdfTargetBytes();
+    if (target < 1024) {
+      setStatus(pdfStatus, "Enter a size limit of at least 1 KB.", "err");
+      pdfTarget.focus();
+      return;
+    }
+    const { file, token } = pdfc;
+    const ver = pdfc.ver;
+    const gray = !!(pdfGray && pdfGray.checked);
+    pdfc.busy = true;
+    pdfBtn.disabled = true;
+    pdfDownloadBtn.disabled = true;
+    setStatus(pdfStatus, "Compressing…", "busy");
+    try {
+      const r = await compressPdfToTarget(file, target, { gray, btn: pdfBtn, onProgress: (m) => pdfc.token === token && setStatus(pdfStatus, m, "busy") });
+      if (pdfc.token !== token) return;
+      if (pdfc.ver !== ver) {
+        setStatus(pdfStatus, "Settings changed while compressing — press Compress PDF again.", "warn");
+        return;
+      }
+      const base = file.name.replace(/\.pdf$/i, "");
+      pdfc.out = r.method === "original" ? file : new File([r.bytes], `${base}_compressed.pdf`, { type: "application/pdf" });
+      const after = pdfc.out.size;
+      const n = r.pages || pdfc.pages;
+      $("pdfBefore").textContent = formatFileSize(file.size);
+      $("pdfAfter").textContent = formatFileSize(after);
+      $("pdfLimit").textContent = fmtLimit(target);
+      $("pdfPages").textContent = n ? String(n) : "—";
+      $("pdfMethod").textContent =
+        r.method === "original" ? "Unchanged" : r.method === "lossless" ? "Lossless · text kept" : `${r.dpi} DPI · ${Math.round(r.quality * 100)}% quality${r.gray ? " · B&W" : ""}`;
+      $("pdfResult").hidden = false;
+      const fill = $("pdfMeterFill");
+      fill.style.width = Math.min(100, (after / target) * 100).toFixed(1) + "%";
+      $("pdfMeter").classList.toggle("over", r.over);
+      $("pdfMeterText").textContent = `${formatFileSize(after)} of ${fmtLimit(target)}`;
+      $("pdfMeter").hidden = false;
+      pdfDownloadBtn.disabled = false;
+      const pct = ((file.size - after) / file.size) * 100;
+      if (r.over)
+        setStatus(pdfStatus, `Could not get under ${fmtLimit(target)} — the smallest version is ${formatFileSize(after)}. Try Black & white, a higher limit, or split the file.`, "err");
+      else if (r.method === "original") setStatus(pdfStatus, "Already under the limit — the original is kept as is.", "ok");
+      else setStatus(pdfStatus, `Done — ${Math.floor(pct)}% smaller and under ${fmtLimit(target)}.`, "ok");
+    } catch (err) {
+      console.error(err);
+      if (pdfc.token === token) setStatus(pdfStatus, "Error: " + err.message, "err");
+    } finally {
+      pdfc.busy = false;
+      pdfBtn.disabled = !pdfc.file;
+    }
+  });
+  on(pdfDownloadBtn, "click", () => pdfc.out && downloadFile(pdfc.out));
+
   /* ---------- quick compress ---------- */
   const comp = { file: null, bmp: null, url: null, out: null };
   const compBtn = $("compBtn"),
     compDownloadBtn = $("compDownloadBtn"),
     compStatus = $("compStatus");
   async function setCompFile(file) {
+    if (isPdf(file)) {
+      selectCompressTab("compress-pdf");
+      return setPdfFile(file);
+    }
     if (!isImage(file)) return toast("Please choose an image file.", "err");
     clearComp(true);
     const token = (comp.pending = {});
@@ -2429,46 +2794,54 @@
   });
   on(compDownloadBtn, "click", () => comp.out && downloadFile(comp.out));
 
-  /* ---------- tools tabs + hash routing ---------- */
-  const TABS = ["sheet", "compress", "merge"];
-  function selectTab(name, focus) {
-    if (!TABS.includes(name)) return;
-    TABS.forEach((t) => {
-      const tab = $("tab-" + t),
-        panel = $(t);
-      const active = t === name;
-      if (tab) {
-        tab.setAttribute("aria-selected", active);
-        tab.tabIndex = active ? 0 : -1;
-        if (active && focus) tab.focus();
-      }
-      if (panel) panel.hidden = !active;
-    });
-    if (name === "sheet") refreshSheet();
-  }
-  const tablist = document.querySelector(".tabs");
-  on(tablist, "click", (e) => {
-    const tab = e.target.closest("[data-tab]");
-    if (tab) selectTab(tab.dataset.tab);
-  });
-  on(tablist, "keydown", (e) => {
-    const i = TABS.indexOf((document.activeElement.dataset || {}).tab);
-    if (i < 0) return;
-    let next = null;
-    if (e.key === "ArrowRight") next = (i + 1) % TABS.length;
-    if (e.key === "ArrowLeft") next = (i - 1 + TABS.length) % TABS.length;
-    if (e.key === "Home") next = 0;
-    if (e.key === "End") next = TABS.length - 1;
-    if (next !== null) {
-      e.preventDefault();
-      selectTab(TABS[next], true);
+  /* ---------- tab groups + hash routing ---------- */
+  function setupTabs(list, onSelect) {
+    const names = list ? Array.from(list.querySelectorAll("[data-tab]")).map((t) => t.dataset.tab) : [];
+    function select(name, focus) {
+      if (!names.includes(name)) return;
+      names.forEach((t) => {
+        const tab = $("tab-" + t),
+          panel = $(t);
+        const active = t === name;
+        if (tab) {
+          tab.setAttribute("aria-selected", active);
+          tab.tabIndex = active ? 0 : -1;
+          if (active && focus) tab.focus();
+        }
+        if (panel) panel.hidden = !active;
+      });
+      if (onSelect) onSelect(name);
     }
-  });
+    select.names = names;
+    on(list, "click", (e) => {
+      const tab = e.target.closest("[data-tab]");
+      if (tab) select(tab.dataset.tab);
+    });
+    on(list, "keydown", (e) => {
+      const i = names.indexOf((document.activeElement.dataset || {}).tab);
+      if (i < 0) return;
+      let next = null;
+      if (e.key === "ArrowRight") next = (i + 1) % names.length;
+      if (e.key === "ArrowLeft") next = (i - 1 + names.length) % names.length;
+      if (e.key === "Home") next = 0;
+      if (e.key === "End") next = names.length - 1;
+      if (next !== null) {
+        e.preventDefault();
+        select(names[next], true);
+      }
+    });
+    return select;
+  }
+  const selectTab = setupTabs(document.querySelector('[data-tabs="tools"]'), (name) => name === "sheet" && refreshSheet());
+  const selectCompressTab = setupTabs(document.querySelector('[data-tabs="compress"]'));
   function routeHash() {
     const h = location.hash.slice(1);
-    if (TABS.includes(h)) {
+    if (selectTab.names.includes(h)) {
       selectTab(h);
       scrollToEl("#tools", { focus: false });
+    } else if (selectCompressTab.names.includes(h)) {
+      selectCompressTab(h);
+      scrollToEl("#compress", { focus: false });
     }
   }
   window.addEventListener("hashchange", routeHash);
@@ -2729,5 +3102,8 @@
     state,
     news,
     selectTab,
+    selectCompressTab,
+    setPdfFile,
+    compressPdfToTarget,
   };
 })();
