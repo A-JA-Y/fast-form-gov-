@@ -1,6 +1,7 @@
-# GovForms — exam photo & signature resizer
+# GovForms — PDF compressor & exam photo / signature resizer
 
-A small, installable web app that formats exam photos, signatures, thumb
+A small, installable web app that compresses PDFs to the exact size a form
+asks for, and formats exam photos, signatures, thumb
 impressions and ID documents to the exact pixel size and KB range a government
 portal asks for. Everything runs in the browser; nothing is uploaded.
 
@@ -8,6 +9,16 @@ Built by **Amit Kumar** and **[Ajay Kumar](https://portfolio-astro-two.vercel.ap
 
 ## What it does
 
+- **Compress PDF to any size (featured)** — add a PDF, type the limit (or tap
+  50 KB, 100 KB, 200 KB … 2 MB) and get the best-quality file under it. A
+  lossless pass runs first (Flate-compresses unfiltered streams and re-saves
+  with object streams), so text stays selectable when that is enough.
+  Otherwise each page is rendered with pdf.js and stored as a JPEG, searching
+  resolution (24–220 DPI) and quality for the sharpest result that fits. An
+  optional black-and-white mode makes scans much smaller. Files that cannot
+  reach the limit are flagged with the smallest size possible. The same engine
+  shrinks a PDF ID document to its Max KB in the studio. Images get the same
+  treatment under **Compress image**.
 - **Pick an exam (optional)** — 40 templates across SSC, Railways, Banking &
   Insurance, UPSC & State PSC, Defence & Police, Entrance & Teaching, and
   Passport / PAN / Visa fill in the sizes for you. Search by name or board.
@@ -28,8 +39,8 @@ Built by **Amit Kumar** and **[Ajay Kumar](https://portfolio-astro-two.vercel.ap
   JPG, JPEG, PNG or PDF, with an optional ID document (image or PDF).
 - **Download** — individually, as one ZIP, or via the share sheet on phones.
 - **Tools** — passport photo sheet (A4, A5, Letter, 4×6 at 300 DPI, with cut
-  guides, JPEG or PDF), quick compress under a KB target, and merge images and
-  PDFs into one PDF (EXIF orientation respected).
+  guides, JPEG or PDF) and merge images and PDFs into one PDF (EXIF
+  orientation respected).
 - **Exam news** — a live list of notifications, admit cards and results,
   refreshed every few minutes, with links to the official boards.
 - **Installable** — add it to the home screen on Android, iOS or desktop; the
@@ -98,9 +109,16 @@ fast-form-gov/
 ## Technical notes
 
 - Vanilla HTML / CSS / JavaScript. No framework, no bundler, no runtime
-  dependencies beyond three lazy-loaded libraries: jsPDF (single-image PDFs and
-  photo sheets), pdf-lib (merging) and JSZip (bundled downloads), served from
-  cdnjs with CORS so the service worker can cache them.
+  dependencies beyond four lazy-loaded libraries: jsPDF (single-image PDFs and
+  photo sheets), pdf-lib (merging and building compressed PDFs), pdf.js 3.11
+  (rendering pages for compression, with `isEvalSupported: false`) and JSZip
+  (bundled downloads), served from cdnjs with CORS so the service worker can
+  cache them.
+- PDF compression renders one page at a time into a reused canvas (capped at
+  4096 px a side and 16 MP), encodes each page at every candidate quality in
+  one pass, drops a quality as soon as its running total passes the budget and
+  stops a pass early when even the lowest quality cannot fit, so memory stays
+  close to the target size.
 - Canvas API for cropping, rotation, progressive downscaling and encoding.
   Photos and signatures are decoded at up to 2600 px on the longest side; the
   compress, merge and ID paths keep full resolution.
@@ -127,8 +145,15 @@ only fetches its fonts, its libraries and the news feed.
 
 ## Version
 
-**Current version**: 6.1
+**Current version**: 6.2
 
+- v6.2 — **Compress PDF to any size**, now the featured tool: its own section
+  under the studio with a "New" banner, a highlighted nav link, a dock tab and
+  an app shortcut. Type a limit or tap a preset; a lossless pass keeps text
+  selectable when it is enough, otherwise pages are rasterised at the highest
+  resolution and quality that fit, with an optional black-and-white mode and a
+  size meter. PDF ID documents in the studio now honour Max KB. Image
+  compression moved next to it as **Compress image**.
 - v6.1 — The exam is optional and no file is required: add just a signature
   (or just a photo) and process it. Each file gets an **Output size** panel
   with width and height in px, cm, mm or inches, a DPI, a proportion lock,
