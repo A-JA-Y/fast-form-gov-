@@ -1,34 +1,328 @@
 {
-  "updatedAt": "2026-11-26T10:57:40.522Z",
+  "updatedAt": "2026-11-27T10:55:37.772Z",
   "source": "Google News RSS (India edition)",
   "items": [
     {
-      "title": "JEE Main 2027: Application Registration Ends Today, Check Details",
-      "link": "https://news.google.com/rss/articles/CBMizwFBVV95cUxNVmRJMmpfWHVzb29OZk9HV1JlUkYxNmZqSmJGOTVLcXJURDdJZktSLWFLN0NBLXVLQ2x4aTY1ZzNfUDJmUXJpM3lRcllmSC16WE9CSGhSYVVQN1ZpTXdiSW9SQmhoNUhGWUFoa2ZhbmFKUE1pVUxBUzBkT0dNeW1BUy02TThEZnU2YzVaRkhKemFpOE9WV3pqUmRGaFR0aGJtQmx5VThQVm5EaERwRE9fYUVQaWdndEhta1M0R2VINnl1ZkEzcTYtRUdrazg2VVE?oc=5",
-      "source": "Sakshi Education",
-      "date": "2026-11-26T10:14:15.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "Top NITs for 85 Percentile in JEE Main 2027: Target Branch, Cutoff, Rank & Marks Needed",
-      "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxQa1pPbERuQU5NZDN4amlXUjBRV0poc0VRNHRaNWNBazhqQlB1elNXVGcxem9oUk44bF9DdHplbTVuSGF2NHRXb3lITUJrODZHWmdUTVp0VGFnQ1MtSUVEYjV2RXJGZkJHSzJ4NldCN0tqSXY5TFV6aUx2RGxYUmxGZHExTUlkMHRwZGUtLVFDTXRYS2V2djJ3QlYyNHFQSjFWcmZ1bA?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-26T10:02:17.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "SSC CPO Admit Card 2026 Out at ssc.gov.in, Download Hall Ticket and Call Letter PDF",
-      "link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9DNEpvbmREUGRKS2ZVNUlaZWU1cnBNZFB2TWhEbjYxbF81Sk8xS3BWa2l5VlVoX0Q1RF9rTzl5OUFRQnhLU2ViclpWUnNOeWVGUWNEV1l3Mnd4SHZHcWdlbGNaTWlyeldHWGtxRHRnOA?oc=5",
+      "title": "RRB NTPC Application Status 2026 Out at rrbapply.gov.in, Check CEN 06/2026 Accepted or Rejected",
+      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPSFEwNl9IaE5BZmpmNnJnQ1QxMWZYRWxQSkM3T1NSTjFmRTFmMzFUQTVTdW5fRlBPZDI5ZW5ZSlUwTFptWWtzdExpVU9rRVpKaTVRUnYtMWQ0aGppRzk2U0RfZ2pKUE9rMUVLbEtINE4tLTV5QkZBby1JOUxwOWhqb3kwU0RmeE5ZbVR3YnotSHQ?oc=5",
       "source": "Adda247",
-      "date": "2026-11-26T09:53:08.000Z",
+      "date": "2026-11-27T10:31:09.000Z",
       "category": "ssc"
     },
     {
-      "title": "Agniveer Scheme's Big Revelation: 80% of 19,000 Army Recruits Wanted to Stay, Government Changes Rules",
-      "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNWlZBd0lRcHVvUG81ZWN5dVFHeFNJc3VxWjl5ampZMmJveThDNUlVREZJb3VmVDlyREhkZ0dxZVRvWFFha0NNOV9peTJwTzNfd0hFdjZQN25nZVZMQjBtbXZHbVBIUnZNUHhvcnd3M1d1cGYzT3RQYnJUVi10V2EtVVZ3REhaSjVLdmhtVmF0UQ?oc=5",
-      "source": "The United Indian",
-      "date": "2026-11-26T09:49:36.000Z",
+      "title": "Gujarat Police Vacancy 2026 Out For 13,152, Apply Online Starts For LRD & Other Posts at gprb.gujarat.gov.in",
+      "link": "https://news.google.com/rss/articles/CBMiekFVX3lxTE9XOGRLTXJZbGlRT2tSV1dCMS1raEVWVV9DZWNIOGJ0TER4T1JuTXh0N1J2OWpqTXZUQUYyM3VMRS1seGlnU0xWM2Z4TEQzUzFRb2ZXRHlhOU9ybk9qYWZHcEpNRm1LV2RySFUzZ3drVWQ5YjZQVGo1X3l3?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T09:28:27.000Z",
       "category": "defence"
+    },
+    {
+      "title": "UGC NET City Intimation Slip 2026 Out, Download Link @ugcnet.nta.nic.in",
+      "link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxQVVlmR1dTZlpVV3B2cWJpLXMzVGNTR09WQ0NsR3p5TUFYai1hRS1RakVVVmZQUG4zRld0YnVlZ1lvV2oxOFUxMUNUQlcxOEtRdi02MjlSRUxPT2JadjRpUTZXOFNJU2RNWHlpQUh6aFZJMzFPNmV6djJyLXpndXV6R2s2cGdUZkVh?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T09:18:39.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "AP Police SI Notification 2026 Out For 378 Civil, AR & SPF Posts, Apply Online Starts On 27 Nov",
+      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxPYkZSc0h3OXMwZkxXZkdtekswWHFZUFY1WWNqeDExa082MlRLTUNPV0toSUtyZWtPdkNwdGRFMUpON2ZtNU95cDJzTE4tVndabkJaRzdRajhMc2loWE4wb1BjT05IV1p5TW9PNG0yamNhYmI0UFl4NzZYRWRyODNmME1n?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T09:00:10.000Z",
+      "category": "defence"
+    },
+    {
+      "title": "Karnataka PU Lecturer Recruitment 2026 OUT, Apply for 778 Posts, Eligibility and Last Date",
+      "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxOWVU0VXJXdDJLMnBMYTdmTEh4cFdpVks4aWw1ei1acVQtdjdpRFRtYmM1QUdUSGpMVEdLbi1WN2x3bGFJZExPMm9pMzZKaElZMFdlTThfQ2pKUWFqQjJIVjlHclpsSE1tWXk5NU9sdy1LaUxjRGVnRTJZTU02dXNtMzFBV3NVbndJa1E?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T08:56:26.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "Exim Bank Recruitment 2026 Out for Management Trainee and Manager Posts",
+      "link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE9oOXYxUHVaX1VYQ2w1cVhRWjZXOVc3Zk5iVUhtTGNUWEwyaGp0ZTlZS1huTm9KaVpnSWZUVTZlMVVHWEoyWXNhQndzVzJTemJpaTRmOEZQZUQ0NnZ3a3F4V1k5WUZ4QQ?oc=5",
+      "source": "Bankersadda",
+      "date": "2026-11-27T08:55:35.000Z",
+      "category": "banking"
+    },
+    {
+      "title": "Total Registration in JEE Main 2027 Till Now - Check How Many People Registered for JEE",
+      "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPUmhlYmZVSlFsNUdON0FQMUZYSUkyU2EwUXA3MHo4SWhGZ1JRVWJfRGwybW5MSlRpYzN4SkZveExkRFZTcERKMUtGLTFzczJ1THctU0dWWkhBclAxMHh3VkIwM2EyZzhfVHljdm15NkJjNER2RHRkdWpGa0dQb21iX250MmUtUQ?oc=5",
+      "source": "Careers360",
+      "date": "2026-11-27T08:39:50.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "Assam Rifles Recruitment 2026 Out, Apply Online for 354 Technical & Tradesman Posts",
+      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTFB5bmZYMTRMeFduaUtNb2Ewb0FoZGhfekpoSHh6cVdyXzlwY0hmc2RKV1hJRGNkdnRUMWZ0b3lHamR1ZVo5MGRJbm5ZcXA4TGVQM3hDbjZDZ2dFY25UY0NSaEZzZGtOUnpQZUhjMjBiVVc5cXdkUlRFTkJCWQ?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T08:28:03.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "Allahabad High Court RO ARO Exam City Slip 2026 OUT: जारी हुई आरओ और एआरओ की सिटी स्लिप, ये रहा Direct Link",
+      "link": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxQSkZ1aFFiZk56QjVQRGZLQkhkclFidlJ2YUctdko3ZmNWZmJscFdOSTZIQkJnQzk0MFJwQXJUTm9fZkNjNDVEQlk2U09razVkNDhrdWlGMEpoVG9iOFhZNmJjZGhqcTRUandjclJWTGRmNmpGSWlKYk9YTmw2cmdtZFFSUUhaODlWdm1RRllkZjNmV3JacEJtYmVmZW1xSUd6U1FxRFhta0k0XzdkY184aTNLSkZ2bFN6RUdRWmVvdlpNRjJDV3UyRS1RZkUwUVJqbFdfOVVJSi1RTFh4OWVZSEg3QmpVbTBX0gHvAUFVX3lxTE13ZmJla0FzUVA3aVVvWHVtSHlleWtVbzZlNTZfTUNUQ0RpLVZOUlVRRnQ0UVAyTnJXX1JpbmpqV0dYb1NheEdDTFdtYWlNdlNZSC1FOFhUeWgtSkY3dWk0Vmx6cm05YXRaWi1EdVpnbkFhbzhaNkNNX0t1eUxRWnR2R0NTeU1ycTNOenVianhxMC04LVlRbVgxVkNtYnZxZ0psYmk5b1F6dUI1UkFzTG5xOEFFQ0ZFb2hTN1dmREE1Q3dyakRSeEtIWV9vRTlEYzVNeVkybGdPRlpMbVQxbkdfeHRpWHhEZ0w4eUMtdDd3?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-27T08:15:30.000Z",
+      "category": "general"
+    },
+    {
+      "title": "GSSSB Laboratory Technician Recruitment 2026: Notification Out for 227 Vacancies, Check Eligibility and Other Details Here",
+      "link": "https://news.google.com/rss/articles/CBMihAJBVV95cUxORUM0cVhMOFBHY3piTHNmRld0TmlQMHZQelQ1NU92NTZMNE1jNndRVXRaQmpFM1pvX0NLVlB6aHdnZmdTZkctSzF5dmdRY0NoSmN0clBLWDFPZXlwZXpqMktkVVI0dk5PbndyVDBVZ1cwa3k0cUtTSmNFQWl0VF9rR0w4SEFyamZkUHRYYnBBNU1tcVNXVWhoRzRVbFVqcm5TR09uNkFka2xkRktLM01SdmJDYUpEWDRYakd4NHVIQkh3YXN2X1VneDdjLWx3UVJKSUlEd1Zoc2JBYWNtQ0l4cTJuVWhhb2x6dGVzZkFSYUVnSEtYbExNZzRxODZCZVAyM0VnadIBhAJBVV95cUxORUM0cVhMOFBHY3piTHNmRld0TmlQMHZQelQ1NU92NTZMNE1jNndRVXRaQmpFM1pvX0NLVlB6aHdnZmdTZkctSzF5dmdRY0NoSmN0clBLWDFPZXlwZXpqMktkVVI0dk5PbndyVDBVZ1cwa3k0cUtTSmNFQWl0VF9rR0w4SEFyamZkUHRYYnBBNU1tcVNXVWhoRzRVbFVqcm5TR09uNkFka2xkRktLM01SdmJDYUpEWDRYakd4NHVIQkh3YXN2X1VneDdjLWx3UVJKSUlEd1Zoc2JBYWNtQ0l4cTJuVWhhb2x6dGVzZkFSYUVnSEtYbExNZzRxODZCZVAyM0VnaQ?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-27T08:10:06.000Z",
+      "category": "general"
+    },
+    {
+      "title": "Telangana Assistant Professor Vacancy 2026 OUT for 526 Posts, Notification on 1 December",
+      "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPWTZ5UmVVdHpVSVlCQUN5blYxaE95RGh5YW9PUjVjNUZ5NS1wUGMyc0RwMmFzdUk5bThVa0R2M2Ffd1ZpQ2wtZVlHX3VzVW9Oc0lYVE4wenUwSVdvbTByMl8zSFFabW5nYzNsS05zcnh2WDcwbzBtemk2dDhwS3JUVHVtTVNJaVN0YkpBVzB3eTNReDVjNHc?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T08:09:53.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "BPSC Agriculture Department Recruitment 2026: Notification Out for 147 Posts; Check Eligibility and Other Details",
+      "link": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxOdWt1NmE2bi1xV3AxaUlSM1JzQWNRUTlTcjhXdy1ZWDIzemliMEtuWHBaT3JNYTZkU24zeGpHU2FVUUFMVldnazVlYXR6SVF1SHJXTUhOWTZwbDlQNkhnYnBJVUs0R013b0dCbEdLdy1UYjI0RngySk1BSU5iMVlnWFQwNnp2el9EdFN1ZWw1eVVaUXFMc1RjVGlEZ0phVGh1TncwOGJBcnAwS0wxRkNhX0NVbjBveTdFQXRpYVdxeXpCWWdKRGtTdXdxYk1jcEo0M0NHMDF1eHF2aVlvYnVNYXRORFBoMXU2dC1wZk1JN2NmTkpyMUxOVnVxZGQtZ9IB_gFBVV95cUxOdWt1NmE2bi1xV3AxaUlSM1JzQWNRUTlTcjhXdy1ZWDIzemliMEtuWHBaT3JNYTZkU24zeGpHU2FVUUFMVldnazVlYXR6SVF1SHJXTUhOWTZwbDlQNkhnYnBJVUs0R013b0dCbEdLdy1UYjI0RngySk1BSU5iMVlnWFQwNnp2el9EdFN1ZWw1eVVaUXFMc1RjVGlEZ0phVGh1TncwOGJBcnAwS0wxRkNhX0NVbjBveTdFQXRpYVdxeXpCWWdKRGtTdXdxYk1jcEo0M0NHMDF1eHF2aVlvYnVNYXRORFBoMXU2dC1wZk1JN2NmTkpyMUxOVnVxZGQtZw?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-27T08:08:42.000Z",
+      "category": "general"
+    },
+    {
+      "title": "AP Police Constable Notification 2026 Out for 1,156 Vacancies; Check Eligibility, Exam Date",
+      "link": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxQY1dVUnJpWUFMTThPQWcwVEU2RHZrTjVsRGJsd3c1UmF2bVFBNEhHLVJnUWNpeGlzcThwMDZ6ZHQ2REZTbVFsU1hJcmtDcUFIZUZaT2U2VlVYSVNlNFhXbTVXOUVNWVlEQ1dIN2dlVTVPNFFaZTNIcF9MaE9wa3MzVEpMcjdCQ3hXLU4zdzhCeGhYN05zaHJqRTBhVHB2QWhpb0pjM25Dbmdlb2xLTTFGRm83RGpQNTlJZFk4dkFhZ242QnFDSDViQjUyMERpMU8yTmxkQkdvR0FBaG5peW1fcjhnaTdIUXlnb2FLRzhLWXNhSy1ZbnJZ0gH8AUFVX3lxTFA5Q1BxWEc1eUQtY0RFcXFEclRVRWdKOWZaaUVoekRiUF81ZU5ULW1JMng5cmxKMUtNcEdzWllhNEEzUGotbWptU05kY2R1OHlkeDdmRjhCLUwyNTdOVUhTYmFuUHNsYklCN1NWQWgtMzhGNl9BaTl1ZVl6OFFjZ1RQcG1IQjNpLUFhc1RucnZfMlJBa2Y4QmhHN0JuS2lFc1ZxbFhrRlFpNUg4TlczbFZvUWxaalk4UEhOS19wLVRsNmFIZ3p3alVkUXdCakQzRm9GV04yVlFYQUVKenJIemNibE5famhKbENzU0ZaR1hFaUpQQkpSTzM0T1FnRA?oc=5",
+      "source": "Telegraph India",
+      "date": "2026-11-27T07:50:21.000Z",
+      "category": "defence"
+    },
+    {
+      "title": "Current Affairs for 27 November 2026",
+      "link": "https://news.google.com/rss/articles/CBMidEFVX3lxTFBXSGZHV2dtUUtBN1l1S19HSnp6SGJENFR1LTFtWjFQOXUwV1djbHpzeWx1VW54a3lzZXN3aElOOFIzM3hrYWJJUVJFUzBsWGZ6dEc3NlVBLXBscmkxQ3pKVUhOUTlXd3FDa2NiOFZHV3ZvcEZ5?oc=5",
+      "source": "Sanskriti IAS",
+      "date": "2026-11-27T07:41:22.000Z",
+      "category": "upsc"
+    },
+    {
+      "title": "CTET Exam Pattern 2026, Paper 1 and 2 Weightage, Marking Scheme and Duration",
+      "link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE4yVUMzNWJZeWNLY2gtbnowcUxvRWEyQVFrNXBrdGVycTBrWFhDVU50YVZudENseVpiWnZmSjE0OGxyaHU0QzN0cDhlb2poRzFVLXZEcWZCNUdDOHJuenR5Z01PRUdRUjVzQ2JzT2g1Zw?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T07:32:33.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "NTA JEE Mains Correction Window 2027 (Activated): Editable Fields, Steps to Correct Application Form",
+      "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNYk1tU2NPbDhCeEI4NTd1T0pYZnBxUzBiTU5zVTZybmY5eWZyeXZvMUFXZ3BFNm1IQmJqVlh4bGcxd2dnam9FWU9wb2ViY09aZGltNE5VSzlraW5SOXNuam9EZXNydzBxVDVOa0d5LWVUaGVmdFdCNnAwdDBPeG5GSXRDLTFoOU9iNGs4T3pDN25XSXFvRVpqcHU1LUJ4X0xPWXc?oc=5",
+      "source": "Shiksha.com",
+      "date": "2026-11-27T07:14:26.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "SBI Clerk Mains Expected Cut Off 2026, Check State wise Cut Off Marks",
+      "link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE5JQWJiSndrMDZ6VnJORkRPeU9Eb2E0WGlWWTZMaE1XellDSHkyd3Jrc2xPdkNVZkRlXzdaSmxOYWN3NENkSFRQVkNtYWpBNmpIb1Z5MDNkNHhkNVhKUjhwWkd6MTVFMWtSaTU1dWl3WDhMVU03?oc=5",
+      "source": "Bankersadda",
+      "date": "2026-11-27T07:13:30.000Z",
+      "category": "banking"
+    },
+    {
+      "title": "AP Police Constable Notification 2026 Out for 1156 Posts, Online Form Starts Today",
+      "link": "https://news.google.com/rss/articles/CBMieEFVX3lxTE8zVGJWY0pDSjF4cVY5Rzd6N0g5TFgyclhQMDJzd2NZd1ZGR2tXUFVxU09fM0VLSGxfc1QwRmdvTG1zZ25XelB6SW5HeHIwckZYUjBhSmNDUUQ3eDhBcEN2Zks4TE1XLU9tLVVQczQzb2ZYYklKSEtycQ?oc=5",
+      "source": "Career Power",
+      "date": "2026-11-27T06:53:31.000Z",
+      "category": "defence"
+    },
+    {
+      "title": "WBPSC Clerkship Exam Date 2026 Out at psc.wb.gov.in, Check Exam Schedule & Admit Card Dates",
+      "link": "https://news.google.com/rss/articles/CBMifkFVX3lxTE83T2tlUHJEa3JHZXZkUW55dUllVlg1a29wXzdyUG43N2E3dzdzVzZ0aG1xOUZpQ2xTd2g5N1FnX1hjc25tamltVUF0MkNrYW1xWUxTamd1VFN0eW9iM1htUnlxaEZTVy1abVFOYVY5M1VGNE96NTFCQlBfTDdzdw?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T06:39:34.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "JK Bank Recruitment 2026 Out, Apply Online Ends Today For 1,397 PO and Clerk Vacancies",
+      "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE85WWZaNEUwY3JBWE9kcF9PY3RyT2hQelVGU2lhNlFsRU0yUkNmXzNaLUJzUUlyZmpVVlhtYVhQWWtLenBPZjM3TDhWWmZnQjlVUHpraWV6QmtKMFVaWmRVTnpCbkw0aXh4T2NRaA?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T06:35:34.000Z",
+      "category": "banking"
+    },
+    {
+      "title": "JEE Main 2027: Name, date of birth, category among details allowed for correction",
+      "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxOYm1nMG9IR0JSenRBT2ZVQWF6UUlfZ0t4amhfTHBySEhTdUZLaHZaYTRzbTBXaUxnZHZoNGtwTWxPRFBGamhVM3Q1S2luSUtBd1hoU29iNlE3eEkyM2NBWG56b2NrVGt4Q1RYR3dET1oyZHhXU050bEFVOGQ4Tko4Xzg5NjhqOWdCbzFtS3NvN0dieTNHSUhlVVFkWEtERTRGX3pnMF91aE5jUnhjc3laRE1Pd0Nsam5ORTRnNWFLbkVVVmRrbWhYVHlTb9IB0AFBVV95cUxNTmROYWxGaWNWYTZMcGJSYnZYZTNwaDRmQzEtd2ZPaGxQWlg3M2RuYk5XUklaSGpmUzZiQWFlbDF2bURHTkJWZ0VYWTh1YWZadF9UcEJaX1BqU3NXZ3dsT3VaSXZzaVNVaWlaa1FNaFlVcUZFdUJnYnZCLVcwbVRkTzVTT1JBSXRKUFRLbDR0Y0pzZEdsWldKc3lPcVprM1pVTFoxVmV3UWFnWkNQUnVwZDM3cWUtTWkxRG96QTdzWkgxRTdUdk0xN1pmVW15X3Nv?oc=5",
+      "source": "Careers360",
+      "date": "2026-11-27T06:13:37.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "CET Admit Card 2026 Out, Check Shift Timing, Exam Date & CET 12th Level Hall Ticket PDF",
+      "link": "https://news.google.com/rss/articles/CBMickFVX3lxTE9RUkZDS1B4OXllTWE1Y1NnQURtMnp3Nm5GV1NMeGI0WWthdzJ1R1JZZ0gtemk3M3NaMmZibWdkVFUwOWwtR2xPaFNVcHAyWE9Zc1p4U29DOS1WeUNrZzNnMzZmTmxWQTJqZkotb0Z4cHVBdw?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T05:56:56.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "IBPS RRB Clerk PET Call Letter 2026 Out, Download Admit Card at ibps.in |",
+      "link": "https://news.google.com/rss/articles/CBMickFVX3lxTE5xcVoyS1R3N3ZwVFZNY2Y3MlZWMDN0R3dLbV9xaEJlZmt6X2U3enNRQVI4VTRaTTRpcS0wY1JGTDNTazIxVWZUNk1aUjAteGxJcGlvNmFQa2dVSGlRQUFsV2lVTEUzOVZQUC10RFFjcDVSUQ?oc=5",
+      "source": "Bankersadda",
+      "date": "2026-11-27T05:33:22.000Z",
+      "category": "banking"
+    },
+    {
+      "title": "APPSC Assistant Professor Hall Ticket 2026 Out at psc.ap.gov.in, Download PDF",
+      "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOQ0VlY01ZU1BWUEJRZ2s2UGhDQUs2T3pOWm1WeTlSTEF6SUVVYjM3YTJsb29xb0d5aERsQ2FfVVVwdll1ZTk0QkxzMkhZV0M1UGpyYktTbHJXTjJ6RXZFVFA1UkxWb3oydHE3dVhQT3dYTGgzRFlOenBGdDZFVnJXVVNKZG0yUjdXRjJBemJrcFhCS1lm?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T05:27:09.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "UPPSC PCS Exam City 2026 Out Today at uppsc.up.gov.in, Download City Initmation Slip",
+      "link": "https://news.google.com/rss/articles/CBMiakFVX3lxTE1xNURJWEJuTVVwbml5TkdKMjRrenhvWmNRNVNYbjVnNTlUdHZDR0xhSVJObERneDV0ZUlGamZUVUJubFVZLUVMNFRlVk1zbWtaak9VcE9GU2lHeTN5bkRrSGY2bDAtaVhzQkE?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-27T04:42:38.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "CHANGING ASPIRATIONS: Vacancy numbers, wider career choices alter UPSC Interview shortlist",
+      "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNNnlZWUR2bjhNWjdGS3NZQ0todlJ3OTg0bEVKWUZNRWlZWEQ0T0JrSGdrWVlUTXF3dUhrbjF6YmhHSzJwVHBNX2hmUS16OE4zOE1Sb3NpU21oTVdlb2xvd2tJVlRyYmNQeFVXOEMxSnRaZzFQUmptY3c5VWZfWlIwalczb29EYi1LRWVBQnM3SmZuREU2TlItWTVvaFNXZjRpSWVkbVJHY2daSy1pOGFoVnk2QkRqcXpVWThUOWJoU3U1WDF0QWpsYg?oc=5",
+      "source": "Education Times",
+      "date": "2026-11-27T04:42:00.000Z",
+      "category": "upsc"
+    },
+    {
+      "title": "AP Police Recruitment 2026: Application Process Begins For 2100+ SI, Constable, Firemen And Other Posts, Check Eligibility",
+      "link": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxOaVhVR1pYUS1SVEl3d25yLU5icndWcTJMNHU0bGZrbHZHcjdELWZKcmlQcWNYa19JWHNaZ1RXLTdtdmtjZmdNbHJJdml4eFgtbi05azBGR1JhSlhXdkhDM1dwMnd6YkxLc2g5SUVsa2lpam1obUdXajJUaEc4ME1nVDdWQ1gycWlkbGVHUXNjTG9tMnVXLWFXVmtpeTBqd0JZdHRLXzAzaUdiSjJaTTdlX0FPV2xMdEdnUGJvWGlfYmJCaGtMTVNscEtFTk93YjdKdmNHZU45UXpSOE5VbFJVeGJqS3ZtaVHSAe4BQVVfeXFMT3M4VjREaDlIZjB1RDM3eUpWRHpnRWRrR19nOVdPV1V0cThJdVBxRXZEQ2drYmFLd24yQWhOQ1ROcjBDQ1k4WmYyMzQ5TGZ1a3ZNNU9wRTVwMTNoVi1kY204YzNIMmROdXh6SnNqYjRFWmtUOHFzSmFWcmp5ZFlJNjJ0QjJLNkowaE9HWGFnTFRxdUt1akIxamMwcFJsMGgwalBlU2ZIOHhsREE4OTlZSnVXaGFkUDRvdkRaNm0xRWxvZlI1UWc0anQ5RDUzZEhyNGNMLTRhalNicUxGTExKUkp5OERBbFU3cmExZlVnUQ?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-27T03:40:17.000Z",
+      "category": "defence"
+    },
+    {
+      "title": "GATE 2027 Branch-Wise Exam Date and Shift Timings: Check Schedule",
+      "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOQy1Ed0xTRXVmdGZCT09qRE1jMUs2VEFXZTk4V2Y5enhFOVhORC15cDNDczdXd1N6SE9MZENSRHMyM1ZSTTlXSVVpblIxOFR4UlZ1VTBiUFlyc05wVE9yM2pfSHN4Tm91dEFBbUdoWXl1c1ROSldyQkUyWmFEX1ZERnlodDRlT0dreXhvS1JlR1pfYWJxRldtVg?oc=5",
+      "source": "Careers360",
+      "date": "2026-11-27T03:37:00.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "How Many Candidates Applied for JEE Mains 2027: Total Registrations Till Now in Session 1; Check Latest Update",
+      "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxQbDUtTEdUS0x3d1BiRU5BV0tYN3ZLdVpoQVF0ZHBKeDJkSlUyV29PMUNzUnVuWDEza2NaUXd4eTZyZEhxdTYweUFRcmpmQmdOa1RhZWthUVN4Nk9NSndkSzZIZUdfLXZJRFdUeHF5YTFKdXRzWjFzMV9Ec0VuVGNnVnA0YTgybjRWWnc5VXlLTmJWakZrS090a3piWXNLV0FjMzIyQllTNDBrN28?oc=5",
+      "source": "Shiksha.com",
+      "date": "2026-11-27T03:06:07.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "AP Police Constable Recruitment 2026: Applications open today at slprb.ap.gov.in for 1,156 vacancies",
+      "link": "https://news.google.com/rss/articles/CBMihgJBVV95cUxOcC1vUmFsQUw5VGRqOGItRHBLQWY0YVkwcllQS1ZmODhhY1JsUy1PVjFwR2dySXdpWW5vdDZPUkxGdEljMXc3ekdVZEZUampBMkZlYVJZbkdPVUh2QXhtbl9yejlnN0dzUGUzUHZnY3hZdGxxdnp4X2J4WjRnblRzLVF4TzRrVUJwVjVnM2lsYjJueS0zakJORWpESlRLVUJPai01SVBfRHNsOS1iRXRBZ3o2a25KOHkxZXNiTWlCT2xIdVpOMWl6Z1oyZ1hpeGFNLW9QNUY4UElwVmJaNG1oU1lBamRRWUs4a1NmdGtYVU13bVotTkZSbUdKVFFnejl2bUFjczB30gGLAkFVX3lxTE91SkpMV0FZZ3RiZW5mWlJPUTQ1SDJ2Rk82RU5YZ1YtTmw4akdQRm5NSHQ5MVdtYVBLcXlBUEdFaFdkc2JDd0l4ZGlqN0trRXp4aEhHdU00aC1jSEtveVNqWjJXVVZEUXNaQmU4bVdSdThCMjlMZ1I5NURqLXB6R3NSOVpwd1ZmQ3dRUklzOC1hY0FKVXZSTmZOcUt3M0NzYlFDdy1WMWUtNVdZTGRQOFZCeGt6R29tckdxOVpsR3lhQkJjdWx3djBvTkl0enIzT0FiU0JBZkJMZHFuZXg3VklLaF9rRlhsU19ySVVpbXFncmJqbjk1LUNjWXI1a0w4amdFVTdFX0w4MHZLcw?oc=5",
+      "source": "The Times of India",
+      "date": "2026-11-27T02:25:00.000Z",
+      "category": "banking"
+    },
+    {
+      "title": "JEE Mains 2027 Registration Last Date Session 1 is Nov 26 With Late Fee - Apply Before Deadline",
+      "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPOHZBSms0QlJEN1ZuMnZCTHRvYzFZZk93cnFkV3EtbVBIMnNGak1IbE0wUkg4djZtTU9NZ21wcHQwbzU3UV94Q09CSXVWWjB4ODBRdEpoTkpRSFJUa0Rlb25Kak5LN29meDFGWFZCbjlFQWhpTURhbGZLM0Z6bE9Va1Z2alVvbjMzNUp6WTFoR1ViOXRqVlE?oc=5",
+      "source": "Careers360",
+      "date": "2026-11-27T01:51:10.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "AP Police Recruitment 2026:Apply for 1,534 Police SI & Constable Posts – Check Vacancy Details",
+      "link": "https://news.google.com/rss/articles/CBMi_AFBVV95cUxNS1FWSGFxLXZfU21HcGRSaUhIa0tJUTBOa0U2MnI2Q2lrYlpjRTdwbFpRa0FwVDl0T1R1TGtMck9UaUl4Q2w4WEJ0WUFpa1BBSUZOaS1YUGM3Q09ZRmdnTE5NU0M1TUppR0pQM28tS1gwUjJ1UlhkRHJSM1JzXzlpbXVyX0pLUG1rYzBQQmlDMEphME5pSVY1WGFnTWlhWHZyejBudmtlQTlyNWJ6ZHBzN0dHVUIzOGs1NWVvWFNITl8yNTdWaVl3a1BwQm5TVDdkeXNHSnEzZXZ3Mm5CLWp6WGVFRXVPVEFmdHR1MWZIYnY5c3dLX3EyRUh6WVY?oc=5",
+      "source": "Sakshi Education",
+      "date": "2026-11-27T01:17:32.000Z",
+      "category": "defence"
+    },
+    {
+      "title": "JEE Main 2027 Registration: Will It Break All Previous Records?",
+      "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQOXVLbTVnbjV4N3pzdnJpTElmZExmOHZHem1WZkdKaEdVTDZRMzd3d2hXNk1SbUlDRFprNUlyM0RrdExuSFp1ZjEzWU40MV9NM3VPeERRYXU1N2hBa3J1SWtfTTlpU0duWVdWaXRwWUNaYUFZaWdocmVUNExHMHFmSUtJMjNxQ2RNWEtOYlQ0VGxzTWlJNVJmUDhhMk9XNGJmZEtHRURaaGpSbUhjUEJ4c1h3?oc=5",
+      "source": "Careers360",
+      "date": "2026-11-26T19:35:55.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "AP police recruitment: 1,534 vacancies for SI and constable posts; applications open till Dec 16",
+      "link": "https://news.google.com/rss/articles/CBMi0AJBVV95cUxQbzZjMjhmSE54WHFiS1hnaU1CSnd1SVdLVlJQMXBHdHRYTUFFRk1iMjBsMmhzbjNpMGhoVU1oM1Z0QXVkeHpFdUY3R191OWVfektxSF9VejBXb1RLRlhxbC04cmF0dU5Ubm5xZFpQVlNpWnYzT05DR3hJejZ3RmdveGl5TWlpc1Z4ODYtRVluTVVvdHBlbUk2dGFXbGdRQ3hLOTdyRjZmS2d4Zkdxd0VsdTVYaFBueDdKT1NzdjNDUW1SVWIyaml6OExadXpHWEJaUHZrMXg4aGFoTG53OEcyQ0xsbEhBQ0lsU3JkTFpWYTQycWFlaFNSb05zdGxSbmdldTlnMmMwSmQ2TC1wbkxaaTFiSUItRnV6YTZ4V2lORUlFcTZBM1NBQW01UHVHQjFSZW5kLUt4NkdneFNQNlBqMklWbXFQN0lfTzJYdHYzUng?oc=5",
+      "source": "The Times of India",
+      "date": "2026-11-26T17:44:00.000Z",
+      "category": "defence"
+    },
+    {
+      "title": "Telangana Govt. Announced 25000+ Posts Across Various Departments For Upcoming Year",
+      "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxQcnE5VkgwYncwNTMwN2JXMnJvT3E1ZFA1cmFTbVRvdi1rUWJBN2pjMEdLSlFOSlJSX1RDTll2YUwtYTNSMlhFeEI2MFMzcXh6c2lMdk94N283YndVNjI2a1pLSWZ0VzJ5a0FnZUluTE5XOGNjQTFCdmRSaGdLOFNXQTQ3UHpvd0p2YkxraHc2cU5Bc1VGN1pGVG5kcEZnc016a3YwRFZ5QmlBQmRiN3plYmRGNkJiOGlLLTJUTUl3NA?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-26T16:29:17.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "Gujarat Police Recruitment 2026: Apply Online Begins for 13152 for Lokrakshak Posts; Check Vacancy & Direct Link Here",
+      "link": "https://news.google.com/rss/articles/CBMigAJBVV95cUxQNW11bUt5aFVUbF9UcGhPUm01c1JrdGhNVlc1OE44aWxxOXNOdFlOdVlLVHN4SkI1dGpJMmliY2ZwZWJ5SHNkRnpjU1I2Q0FnU0k1TEl3MF9ZUnlPVW1sengzektwMGRhM2szN2pkcXFvWVk5b01kay1ZQTNKQndRYzZJeVJLaDFHeW5YVU94emlzMXhIYUFENF92dlBHampOWUpHMVV3cWRjUG1IdlBZRWNTTG1EaFB0YXZ6YXlMOU90QUFtN2dDeHdPTmRySWthVXQ3QXp2RENqSVZEUFlSaGw0X1Zzd3gwNUtuZUlSTlRPS3MwTm9rVjNLT0pTZ21I0gGHAkFVX3lxTE1fdTdhSGZvQzRKWlBGT0lac3o1UTRuUDdlbGI4S0ZmVkJIY0RIMTR5MDZrRGJLSzNlQ2tTXzV5cFFQUm00QVF1U2p6SmNIVWdkUVFmRnpsUWFfRHMyVUthNGRmWDVBelRDSE40TkFHSEJzMXNySXowRi1BOTdab0JVVnVmbmNIUmhLd0dTbEt3SzdSaEtIdGdsMVdEUjBvS3FPU3lfNWVfblNRbXZaX2FZS25HUjQ1Wnpoa2REcmpmT3ZBclRaUkhQRGdNR3lmVlcwVzhGM2lEWlAtdHFEakZYLTdzVGdLU1FVUS1ncFJ5engzUTdMRy1oXzBRUnFtOGVGanBoQldJ?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-26T15:33:05.000Z",
+      "category": "defence"
+    },
+    {
+      "title": "BPSC Agriculture Department Recruitment 2026 Notification Out For 147 Posts, Apply Online",
+      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQNklubHM0dzhHTUJ1LWFWQnRjZXZzeUNXdjFWRTZwMjNGcWpEbGVsNF9MSlE0bzRoc3hwYnNyaVBvU0F3QzdYOHNoTUJIbWpKQVVQdmVMMkdqWEtjTWtBWmFOa1d0TlBZaEtfVmkwd2tZakQ1YjZyWkREZnNqdEphbGUyNWMtWXVXSlZhRkwweVo?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-26T13:48:19.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "CONCOR Exam Date 2026 Out for 77 Management Trainee and Assistant Officer Posts",
+      "link": "https://news.google.com/rss/articles/CBMiY0FVX3lxTFBSdWd5SUFCN29ObVJrSmNlMUdoQlJfMGZzQW5QaWxycUpiMWhVaFlqY09ISmRTczM0MDZnZ0dCR1p1ek1veU1ZUVZUWEd6cnBfNGJvTlRkMzhhOU5kWlZNd2laMA?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-26T13:28:16.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "Current Affairs for 26 November 2026",
+      "link": "https://news.google.com/rss/articles/CBMidEFVX3lxTFBCZXdZekhsLWFSREFvdm5LcDlkRFJEaEVacFFlSGZPem12c1QzeGFCekVkcTd5SFg1MnROU2hSUkdhcGFBWkhHdS1TN2JSbUZ5bUdsRmxNenhxUGRtNWxUOWRhVDR6YWhId1UtYkdMYW81Y0NS?oc=5",
+      "source": "Sanskriti IAS",
+      "date": "2026-11-26T12:42:48.000Z",
+      "category": "upsc"
+    },
+    {
+      "title": "JSSC JTAACCE Eligibility Criteria 2026, Educational Qualification, TET Requirement & Age Limit",
+      "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxNa2VpZ3phT1lqSk12dWN4dGtZSVJEQ1JoT1NLSkhPRDVRanBNSVZPNDFWTW42eGZwb2VocUh6WnB2OWtORWRPTUF2Tng5TUdkNXNFOEMzOEIxOHZaWFFKWThkZlpzcTc5SXBPVGNzcW1LYUdYdlFsNnBYSmk5SVhGMmFRaw?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-26T12:18:53.000Z",
+      "category": "entrance"
+    },
+    {
+      "title": "UP Anganwadi Recruitment 2026: Apply Online for Worker, Helper, & Sahayika Posts; Check Eligibility, Vacancy & Direct Link Here",
+      "link": "https://news.google.com/rss/articles/CBMi_wFBVV95cUxPMjF6NkNWM1RwU0J6d1JFeDJJZU5waXJ2WENJWm56cXBPbFVXVldzUW1fSGtLaFZMSkNwU2xaMjg1ZWhYLTFkQTJ3QTJyOUhtbWZFbVZrSThQQkdHMTFsQUdkdGs3b1FIc1FyUFRzYmtQa2ktaGJ6RjVwRkdtVHlTdE5iZXNfWTA3UmhZUFVocmdRQ2hMdU1GSHdQSDRtcWZ2d3ZScU5aYkRGZ1pCdWV2aXhBWVZtanQ0aW4xc3B2T1pjcWNRNUdWZlBfdDVxUVdfV1cxVDFyQ0JGMTAxT21TS1JhTUFPUlExTnVMYVMtOUVNRUQ0dVpBVjlJY3IzTjjSAf8BQVVfeXFMTzIxejZDVjNUcFNCendSRXgySWVOcGlydlhDSVpuenFwT2xVV1ZXc1FtX0hrS2hWTEpDcFNsWjI4NWVoWC0xZEEyd0EycjlIbW1mRW1Wa0k4UEJHRzExbEFHZHRrN29RSHNRclBUc2JrUGtpLWhiekY1cEZHbVR5U3ROYmVzX1kwN1JoWVBVaHJnUUNoTHVNRkh3UEg0bXFmdnd2UnFOWmJERmdaQnVldml4QVlWbWp0NGluMXNwdk9aY3FjUTVHVmZQX3Q1cVFXX1dXMVQxckNCRjEwMU9tU0tSYU1BT1JRMU51TGFTLTlFTUVENHVaQVY5SWNyM044?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-26T11:57:12.000Z",
+      "category": "general"
+    },
+    {
+      "title": "SBI Announces Recruitment of 1,540 Junior Associates",
+      "link": "https://news.google.com/rss/articles/CBMizwFBVV95cUxNNklFNDJYalZ1aGFTSS14Z09ZOUI3c2dKbUJINTZsNkRNSHhDOGNJbElETFQxODVkM0M2cW5IT1pDblZYOFptckhDNjZ2Y01Lby1xZ0VtOWhNQVFjcTUzUkdSMUdyM3JrNTR5UTQ0VlJDVXk5UVlXN0R6bU9pTTZJeVNpOGoyTFNnRFlIc1J2Q2VzSHY3c2VuZ0tlamJtLTFEMGpQUWR5RnlHV0JRMjB4RFVXeGJFMDY1UEhVSHlzbnhwRU1mMUFST1NhOF9qWUU?oc=5",
+      "source": "Utkarsh Classes",
+      "date": "2026-11-26T11:51:51.000Z",
+      "category": "banking"
+    },
+    {
+      "title": "SSC CPO Expected Cut-Off 2026: Check Category-Wise Qualifying Marks & Previous Year Trends",
+      "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQcmlqdDBLVm9nSzFXbFZqYU9VTEh6eEdDaWRGbWNZNmVfUzcweHp5VTVyZXlsLUJQVXgtS0Y4ZUg2VHZRUlhqZGlsY1B4dnlPakRudXdrZlFmMXZFMDlHNzNFeWU5OW5fMlRyRXhaZ00tTmUydk45UDlhMkx2N3NXbDFTVFdqSXB0bXNMbFVuQjBPa0VDa1FnQVVFMV9WU0pud3BGSlZ5QVZXb2NKVjlVMlJleDRFYzg0b2ZpR0Z6R0V0ZFNE0gHLAUFVX3lxTFBvY25jOWxkU2pwN0ZrQ0xoaUEyUno3SFZUZHJ1MTVjSUlpeTJJdDJqWDRIa1pxbUxtUVNHQ2JDYmtsYTRYU0tBbE82eF8tcVRocnktS21DVEc4UnFYcDM2cUxES3lIcFZwYVR1QlF3RDFYNEQ2R1hVVWkwX3pWOFE5WWxwRVRVa29iMVRNRUhVaVRwYTdETER6Z0ZEVENDUUd0Q0ZUblFpLW03Q1RtckFNdTJuNTJ6WjlEczhmRUVxbnExMDVqVUJpdFFn?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-26T11:33:14.000Z",
+      "category": "ssc"
+    },
+    {
+      "title": "Maharashtra Talathi Recruitment 2026: Last Date to Apply Online November 27, 2026; Check Eligibility, Fee & Exam Date",
+      "link": "https://news.google.com/rss/articles/CBMi-AFBVV95cUxPcFJzN3gtX2l3am9ZUklXTDM0Si1Xbm1Ec2d1cTFjQ0xjM0lBUDNEUWQ2d3VRRDJSUzY4WHN0RGxjaFJPb2llZVZ6R2hWbVlSSHlWMVpvUC11MzZkNHRjSi1WQjFHa0FIaHlCVVQ2YXRHY08teVZjODV6NkxvVUYtYkQxMFVIN0pVVTZxdVBhQ0FWLVRJTEVEdmt5OGJLWHFXamJBYW9pdlVpdXNCcV9yZmJ5eE9HWWJURHR3QmtUcEM1UlVtYWl1M3pfZmNtZ0JJNC1yM2dDZWpXdk5Sd2JmOU9jbVYtY01nNmRHSEwzZTBqR3B3VUdvX9IB-AFBVV95cUxPcFJzN3gtX2l3am9ZUklXTDM0Si1Xbm1Ec2d1cTFjQ0xjM0lBUDNEUWQ2d3VRRDJSUzY4WHN0RGxjaFJPb2llZVZ6R2hWbVlSSHlWMVpvUC11MzZkNHRjSi1WQjFHa0FIaHlCVVQ2YXRHY08teVZjODV6NkxvVUYtYkQxMFVIN0pVVTZxdVBhQ0FWLVRJTEVEdmt5OGJLWHFXamJBYW9pdlVpdXNCcV9yZmJ5eE9HWWJURHR3QmtUcEM1UlVtYWl1M3pfZmNtZ0JJNC1yM2dDZWpXdk5Sd2JmOU9jbVYtY01nNmRHSEwzZTBqR3B3VUdvXw?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-26T11:29:41.000Z",
+      "category": "general"
+    },
+    {
+      "title": "BPSC AEDO Recruitment 2026 Notification OUT For 935 Posts; Check Important Date & Other Details Here",
+      "link": "https://news.google.com/rss/articles/CBMigAJBVV95cUxPSUo1M2hZel93QlpxVkdMb3BkNm4wNGh0blFUUmcxOG1JTnJyNG1SUC1heFNjRmwzQWM3Q01UOXRpUVFVYUxWSFFOSXRzWE1lYUJoMktPaHE3OEhFQnhuNnpmQTNRU2FvN0w2cmFUcVNQbUl4dXdKR291NU1sUGdiS1VUNWtVM2NtV1BRS1RhbjVOaUFYNlBmVkNfOWoyR3RJR2YtMVBwcGhjWmZxbU9kREE1VUtYWWJ6NGJUVlctSTFndjdFU3JHejI3V3Vhb3FTbzkyVk1vZmp4R1RxdzJXWnBhbVZzU1duaXp0Z09oYWFjTFYzbWxaYXNxeTBaaU420gGAAkFVX3lxTE9JSjUzaFl6X3dCWnFWR0xvcGQ2bjA0aHRuUVRSZzE4bUlOcnI0bVJQLWF4U2NGbDNBYzdDTVQ5dGlRUVVhTFZIUU5JdHNYTWVhQmgyS09ocTc4SEVCeG42emZBM1FTYW83TDZyYVRxU1BtSXh1d0pHb3U1TWxQZ2JLVVQ1a1UzY21XUFFLVGFuNU5pQVg2UGZWQ185ajJHdElHZi0xUHBwaGNaZnFtT2REQTVVS1hZYno0YlRWVy1JMWd2N0VTckd6MjdXdWFvcVNvOTJWTW9manhHVHF3MldacGFtVnNTV25penRnT2hhYWNMVjNtbFphc3F5MFppTjY?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-26T10:29:15.000Z",
+      "category": "general"
+    },
+    {
+      "title": "BPSC AEDO Recruitment 2026 Notification Out For 935 Posts, Apply Online",
+      "link": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBpbFVGRlE5N1V1Q3RyV3hIMlhTN2Q0SHQ4c1AyelNVbFhPX1NwamY3ci1vVkZFZjlPOU5PbHBibGE1Z2VuSGpOTDBiUzBKYng3QUlnMGtVN0wwQzNBSjJvZE5vX1B6N3JqREduVTNtRHo?oc=5",
+      "source": "Adda247",
+      "date": "2026-11-26T10:11:20.000Z",
+      "category": "ssc"
     },
     {
       "title": "Kerala PSC Recruitment 2026 - Apply Online for 39 Field Supervisor, LD Clerk and More Posts",
@@ -38,94 +332,24 @@
       "category": "upsc"
     },
     {
-      "title": "RSSB CET Exam City 2026 Out @recruitment.rajasthan.gov.in, Check 12th level City Intimation, Shift Timings",
-      "link": "https://news.google.com/rss/articles/CBMieEFVX3lxTE1FaFhqd0ZPVGxNRFQ2NUNMQzZXR0RNWkVQSzFIcVBZY0dZNE53QTFWR2psakdRVlV1STMxNWJCLXU3LTRFcGFvb2NES2hfZHQ0OGd0SlFWMEJlN0FfU1R2LUZKdi1mb2c3UGw5eVpwdFFCeUNMSE9pRQ?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T09:29:18.000Z",
-      "category": "railway"
-    },
-    {
-      "title": "UKSSSC Police Constable Recruitment 2026 Notification OUT for 1694 पुलिस, पीएसी, & More Posts, Apply Online",
-      "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPd0JPZEVobXZ2QlZkZDhMSWwxLVJKLXBxa19xZFh3V1pNcTRIeHQ3VndqdE4tOWo1RS1TNnNnNzZ1UnlmX0hWLVEzY0RfQnp3LVhObVFTM1Z3LWZhTWppdk02clV0bndhZ0MzUzNuWjhpV1dCbUxTZHNLb3FZVlZBSENaUTBxSUVyTnZF?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T09:27:03.000Z",
+      "title": "SSC CHSL 2026 Tier 1 From December 3: Admit Card, Scribe",
+      "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxNWHZSMm9meC1BR2ZZdFp4SU5kTTh0VmxzOHZ0VVU5VF9VaEhCdGY2OHRxOVpfTkdSbE5icGE1STRWQlBWcGdiNUwzR19PaWFLcktaWXBraXU0VFpZdUdyQmhXOWhlTzNaZnY5VEEtR0xET3B4bWxiUUtyenBMOUUtVWFBRURYY28?oc=5",
+      "source": "AglaSem News",
+      "date": "2026-11-26T09:30:00.000Z",
       "category": "ssc"
     },
     {
-      "title": "APPSC Assistant Professor Hall Ticket 2026 Out at psc.ap.gov.in, Download PDF",
-      "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOQ0VlY01ZU1BWUEJRZ2s2UGhDQUs2T3pOWm1WeTlSTEF6SUVVYjM3YTJsb29xb0d5aERsQ2FfVVVwdll1ZTk0QkxzMkhZV0M1UGpyYktTbHJXTjJ6RXZFVFA1UkxWb3oydHE3dVhQT3dYTGgzRFlOenBGdDZFVnJXVVNKZG0yUjdXRjJBemJrcFhCS1lm?oc=5",
+      "title": "Bihar Pharmacist Recruitment 2026: 45,000 Pharmacists and Drug Inspectors to Be Recruit Soon",
+      "link": "https://news.google.com/rss/articles/CBMiekFVX3lxTE5POXAtam1PcHYyNm1PLUxoUU1CWklVTTZWd3EydlZxQVNpNzA1U1NGUGpQZXN5Vm9qWGpvVDVoYTVDMHFjR0NsaThQUHVTanV4cXdrbU41bVhLQXk1S20zcTY5UFlZZXVXbmwyRy1YcV9Vb2ZyMjFNZEZB?oc=5",
       "source": "Adda247",
-      "date": "2026-11-26T09:19:41.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "RRB Railway Station Master Apply Online Ends Today, Fill Form Before Link Expires",
-      "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxQdHhibWVtVllydDdrR3JMSFBnMUVzdGFNaGR2OF9fSFpCT0JEMWJCME56RDZIQmZ1M1A3ak1waTNLVW8xWEpzLWl3WW83LUV0VEl4bWZuRm9fOVZnUEFNQjNaMmVsUXRwb01EMXpkNDcwc3EzcE9DM2RPWExKcXlKNA?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T09:15:20.000Z",
-      "category": "railway"
-    },
-    {
-      "title": "MPSC Group C Recruitment 2026 Notification Out for 16,797 Posts, Apply Online Till 27 November",
-      "link": "https://news.google.com/rss/articles/CBMifEFVX3lxTE1oUy1xMDJyck80QXdPWl9RaDVYSWRsVV9BbjRXd254bUk5NFlOTHdjN2dCcDgwMmpoNFFZWUg2bjcxVTg3aWFaaFpKd21ld3NEX3lLbnNIUlZwSUV5NERtRmFpYkxpVEZyTjhfVmtybGJ6OG9TYzNQbVlrb2Q?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T09:15:19.000Z",
-      "category": "upsc"
-    },
-    {
-      "title": "BITSAT Registration 2027 Date Expected Soon; Check Documents Required for Application Form",
-      "link": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxObzhZRklWa3RIa1NtMnk2MVBwOUhLci1lWFN4YXJBSFRYT3NvQ1dONHBFa2F5OTVKV2syRGMtRnUtV05GWlp3ckZkYktEajRjQUJseEtrZjVhMHNnTUZHXzd2SlhGem52eVhDT1pVTXV3VFVfbmU4VTdTX1liQkFJbVhEdFRPMHlWZnJTTWsyODBKZFVIQkxtcU9BR2ZYenQ3djJTbGdFY3dFUkhhUU1mTU9DalF0WVRCWE9KYy1JWkdOb1pLY1RVak1QYVJkNzAtZGZ6NzRjSFJsQmFt?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-26T09:00:51.000Z",
-      "category": "entrance"
+      "date": "2026-11-26T08:34:11.000Z",
+      "category": "ssc"
     },
     {
       "title": "GATE 2027 Mock Test Link Activated at gate2027.iitm.ac.in: Know Pattern and Difficulty Level",
       "link": "https://news.google.com/rss/articles/CBMi3wFBVV95cUxOUVk1QWRPNXZ5andFVnRvYW9PbUJVV2lJTmdlNGtEZGpyRGEtM1FOVVFsRFNHMVY2S1pjXzB1TW1SektkdG1fenZFT0huTk9TZUg1QkN1WTZkU19mVE9qZnhsSTJ3SDNvUmItXzVTeWk1RWFVZ1pLR1dFM2o2NG5yalJUWkZUNzc5Y0pSbVdURjh3a1JvVF9CZGNyRWtneGl3alVOOWV6S01TZi1zTnZPUjlibWljX3kwWGVPQVFLUlk3YVc4QkFCTHNmSWN5U2VLSFk0Q3g0Vm93SGpxVXhn?oc=5",
       "source": "Shiksha.com",
       "date": "2026-11-26T08:28:54.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "Telangana Assistant Professor Vacancy 2026 OUT for 526 Posts, Notification on 1 December",
-      "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPWTZ5UmVVdHpVSVlCQUN5blYxaE95RGh5YW9PUjVjNUZ5NS1wUGMyc0RwMmFzdUk5bThVa0R2M2Ffd1ZpQ2wtZVlHX3VzVW9Oc0lYVE4wenUwSVdvbTByMl8zSFFabW5nYzNsS05zcnh2WDcwbzBtemk2dDhwS3JUVHVtTVNJaVN0YkpBVzB3eTNReDVjNHc?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T08:26:58.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "Exim Bank Recruitment 2026 Out for Management Trainee and Manager Posts",
-      "link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE9oOXYxUHVaX1VYQ2w1cVhRWjZXOVc3Zk5iVUhtTGNUWEwyaGp0ZTlZS1huTm9KaVpnSWZUVTZlMVVHWEoyWXNhQndzVzJTemJpaTRmOEZQZUQ0NnZ3a3F4V1k5WUZ4QQ?oc=5",
-      "source": "Bankersadda",
-      "date": "2026-11-26T08:24:04.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "RSSB CET 12th Level Admit Card 2026 Out Today at recruitment.rajasthan.gov.in, Download Hall Ticket PDF",
-      "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE9xanVCUU9aMlRNRFFDb2dxeDlsM21oT0xwaWVfV2liOHhzMWR5QjRhWm13SDFSY1VqeDRHRGF1bkxVNFRaVXdoSkkyV0JnQU96WTBKYU9HMFVNWDVQTG9pUUNZazhjelc2Y2pxWEpqRlN2UGc?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T08:23:36.000Z",
-      "category": "railway"
-    },
-    {
-      "title": "KGBV Recruitment 2026 OUT for 132 Vacancies, Check Eligibility and Apply Dates",
-      "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE9MZHBTY1c4Z1J0LWxuVkZoOWh5dTZUVkp0RDBPRnM2NVAyUlY0TVZJejJEa0oxX1RCSUlDU08tdWJRalVyRnU4bTBhYjFHWk0tQlVGSmNmUGkzR09yOUN1ZFFXUXBoZHRzV0Z0dl9qdmtPaDQ?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T08:12:35.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "JK Bank Recruitment 2026 Out, Apply Online Ends Today For 1,397 PO and Clerk Vacancies",
-      "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE85WWZaNEUwY3JBWE9kcF9PY3RyT2hQelVGU2lhNlFsRU0yUkNmXzNaLUJzUUlyZmpVVlhtYVhQWWtLenBPZjM3TDhWWmZnQjlVUHpraWV6QmtKMFVaWmRVTnpCbkw0aXh4T2NRaA?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T08:08:43.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "UGC NET City Intimation Slip December 2026 Out, Steps to Download",
-      "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxNVTVxcWlDWWFsMlctWjU5TnZmLWNCSFpkUVI4dWlXUVk3LVU4dzF6N0Jqd0RzV0R2a2tnam5PNkNjSlROdERJd1ZGUWZuWk5vYlE4dEt1Z2JUdnl5WHRkMEZuelU3OWJ0N0FSWGJwUzhpcmVXSnlQbVgzUVE5Y0pXcTFHNDVPUXFLZlJBbDZIR2ZIOTh6Q1RoNmxGRzBieTd5dFowSzJR?oc=5",
-      "source": "ummid.com",
-      "date": "2026-11-26T07:40:00.000Z",
       "category": "entrance"
     },
     {
@@ -150,39 +374,25 @@
       "category": "banking"
     },
     {
-      "title": "NEST 2027 Notification Expected Soon; Check Tentative Registration Dates for NISER & CEBS Admission",
-      "link": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxPdXZuRV9NRjl4TFBxNmQ1Q2pPajBYWkp0R2w3eUVuMFhmX0FuNWF0NTNER2tiVmxDTkRPY0FDRWlDSzUwNUc4ZndlVXE5YldlYnRXbTJ3OXlHX1VZY2lkRXZXUHdDTjNEUmJXRXRhMDNkMy1QbVphV2luQkF1N1VESERCcVRVcW9hak54V3M4S3dfa3RkdS1kNUFvTVhPd2t2czRtQTB1LVBReWI3TTd0TWU2VWM3YkNrNENWZWZseWtqcTRmSlNOcHhQUDc2ZnN3Rzc4V0pkV1lGWlFvZWlpRA?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-26T07:26:49.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "Top IIITs for 90 Percentile in JEE Mains 2027",
-      "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPVV9OZ1FlUENSZklNUjByZVg1ZXpzSEVrZDhBaVF4QjBDd0hBLVFnbGVTRk04UWdWVkJ5bVduWkdkU2lYeURqSDB2NXh1VEtobEx3dVdCbXA4ZmV6bFE1Wm1XdmtuNGtieklrQVluMXdCbU9NTURuQXRXTnVlcTgwQ2pvZk1JeXhGN0lKU0hBTVJaVXR3ZEt1RFQtV1ZCeXFCamE3djJoYw?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-26T07:19:08.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "CUET PG Application Process 2027 to Begin Soon; Check Last Year's Registration Statistics",
-      "link": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxQWHdfRHpZVjkxTF9VMUFJR2VmcGE2RVo1QV9CS21hSV9fekVwdE5HZ1JDY2V1MDNwOHlUUnFDYXBNZzFYczQydGZfWGNEVHBNZDFDNWczWmFhQTBBWjhDNWN5UDBENlJ5UHlUM1NkSlhpN1hGNjRfdVpCSlFFckh3RDM4STJGRm1SZ1l1dWJxdThBT21fMUc2LVlibzVUQnVGMWVhYVZGeXA4aG9uNERuX2gtQ01TaHdfSzlid3l1TWZ5VEhmWG15eEJDNWpjalptU21tM1Fn?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-26T07:18:33.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "NTA to Start JEE Main 2027 Form Correction Tomorrow; Know Editing Which Details Will Incur Extra Fee",
-      "link": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxQckhPd2hWbnZudGp3S2JNNnh6SDVIRkpHNWNZU0dsN3FvdWc3ZVZxaFdHZzd4WHlibnVDck9RZkFmMXozNlB1NC1DOElBQUFfRlpaaE1qcktlZFFrb2kwcXRZLThZQWNBRi1sOURMeHJ1X0RsU1lPaHItZmFZVW5FRkp4cjhCWGduRU9GNmRWekZ1VEgtLUNtQTdHNFBqRzZETUdCX3U3OUFDcFBoTlM3ckMzVXZtX3BhZ1E4dDVyRi1fVXktREFKRFRhZElfaFlpeTNOcnhtOXZHaFRTanUySVExaUxHUGJJcnc?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-26T07:09:42.000Z",
-      "category": "entrance"
-    },
-    {
       "title": "NDA Admission Requirements: 79th Regular Course Form, JAMB, Age and Dates",
       "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5GODhCMDVaWXBtZ0ZnUXd3UjhUYm9pMGhJdjFtcEZUcmltUnBBeTNDM2swV3lJaGcwUk1FWFNJM1VKazFFSjZRTlNRTXpRbWw2Q1dXQm45Qk5nb2NtWU94NUxybU1mZlllNDgw?oc=5",
       "source": "Envanter Medya",
       "date": "2026-11-26T07:00:00.000Z",
       "category": "defence"
+    },
+    {
+      "title": "CSPDCL Recruitment 2026 Last Date Extended, Apply for 1,501 Vacancies Till December 3",
+      "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxNd3VPZEVzZ0F6Q0czamhQY1VLN2ZJMEY5TFdfVHliRkNZeFh1dnpVMUQ1QXdHRXdoaWlVM1hHZDVuRG1WNXV3d2xOdVVTOTVGUml1Y3R4bHlxdGVYd2ZPbWY3WjBGcUxKTV90MU8yemhucGZBUGt0RkNoaUVVOGZvSG1jQVJuSjF1aHJuRGlPNjdNdTY4RURWaEpBSWo3Q3FzR1Z1QlVxU3EzYm5LU0Eyal8yTC1EakVrUmFibW0yTGQ3RlZQcko3QnY2TDhoTDY0TEw40gHTAUFVX3lxTE13dU9kRXNnQXpDRzNqaFBjVUs3ZkkwRjlMV19UeWJGQ1l4WHV2elUxRDVBd0dFd2hpaVUzWEdkNW5EbVY1dXd3bE51VVM5NUZSaXVjdHhseXF0ZVh3Zk9tZjdaMEZxTEpNX3QxTzJ6aG5wZkFQa3RGQ2hpRVU4Zm9IbWNBUm5KMXVocm5EaU82N011NjhFRFZoSkFJajdDcXNHVnVCVXFTcTNibktTQTJqXzJMLURqRWtSYWJtbTJMZDdGVlBySjdCdjZMOGhMNjRMTDg?oc=5",
+      "source": "Jagran Josh",
+      "date": "2026-11-26T06:45:31.000Z",
+      "category": "general"
+    },
+    {
+      "title": "JEE Main 2027 Session 1 registration closing soon: 15.69 lakh forms submitted, last date with late fee...",
+      "link": "https://news.google.com/rss/articles/CBMi-wFBVV95cUxNZlpMSG5rSmlsWmtqNUFwLU9QZVVhX0VpTV9TOVZCTDFvX2IzZVgtOVB3NUxQaUtVR0t3VU5jc3l6dXFqSmJlU3RBbzBaVTg5MVh6QlJ5NE1SY0VYdGxCT0lxZVJyREw3VVhfX2tKemczVE1VNkZuRmUxRGVJQUFOZTU1UGcxaHlkZU9qYTVFdlQyWHl3WTBOaF9IenRIcmxjdHl2Nk9sU1c0UUNWdVpPU2xlV1RndHAtVFRkdTYwVm8wLVRUUGlkQzMzUEtiVVdvaUh6WEF6U1hsU0FaRUhtbkpMbTh6X0hXd2tIM19GdTFaNHNzOEN4bU9rSdIBgAJBVV95cUxOYl9jejFsLV8xNlhDQXJCMy1iSlZBU3ZjUTRRUGNXZzI5dWR1WEtZcjdQZl9YWWRNY2xZWmNXUUlkMEJyZ0VMdXBuOGtrYzZlek82am0tSUQ3UHZBcG15dXFlVVgycU14THhoWDA2OWxWS2lxVlhYMDJlbmdVMklfa19RdFdIZUZGS3pCZU1xTUZGNDB2S2JselRUZTE2YjF1WUhkV2drcFJ5eHhHb1hEdWxmaHl0bXZzdFZONjBqRFZDTmUtVjBGWEFFM2RqTzIxbURoNmdtaWxTTXFWVDc4T0xRQ2hpMDgtMndBT1BJd1NmS3BrVVRTajl5MmhJYmZx?oc=5",
+      "source": "Moneycontrol.com",
+      "date": "2026-11-26T06:37:53.000Z",
+      "category": "entrance"
     },
     {
       "title": "SBI Clerk Mains Result 2026 OUT: Download Junior Associate Merit List PDF at sbi.bank.in",
@@ -206,18 +416,18 @@
       "category": "railway"
     },
     {
-      "title": "SSC CHSL Exam City 2026 Out, Check Tier 1 City Intimation Slip and Exam Location",
-      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxPM1pnRE44Z0VJcWw1ODVnVU5Cc3FRbkpVaFJvTElIUUpzQTlnb0RGc29pZWwzOGhKSkVDeGlEamQ3cVV2ZXJsX0d4WnhmYXRKd0F3MHVINjFTc3d5elZlUHpzeXVKU1lEYnh1MXVERy1HVEZ3bFhMZFpoSFhmREtGc3NR?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T06:08:17.000Z",
-      "category": "ssc"
-    },
-    {
       "title": "RRB NTPC Graduate Application Status 2026 Released",
       "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxQMEUydm1LR0tfd085ZWRyendkcTY1Q2pPXzk5Y3YwTUZ0VEh0eno4OWR0VTFiTXVLX0dTeFEwcGRxckxYbUlmQVFoeVp6YXJZWjF3VVN6VzBmRGVzb2FIbjcwNVJNWkxLb29BT0NuVjZJMHhrQ0NJNWtGUkk2b245T1VHX3padlJmcEVtQWlpMzc5cHREMHdIeVc4VUkxTkl6WFd5cDdHOE1zc1pnMkgw?oc=5",
       "source": "KollegeApply News",
       "date": "2026-11-26T06:05:46.000Z",
       "category": "railway"
+    },
+    {
+      "title": "Ex-Keralam CS V Venu is new SEIAA Chairman",
+      "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxQZGN5Z0FLSmxNbk9vN1JMeHZmSDRhczNSN3FNSXBaY09ES1VFWHhKZzlLV3JFNkpMUEwyVWliUlR6Mk80RzA2dWRxRFFUS0hLbUZoZUlOOC03WmRkbXdvV082MUtTLS1sdEtBRHhsSXN0amtIWmtpLUQ0TE4xTkZJYWw0aHV0Z0tmNFdNaVlaV0lGdXd1WGt5ZU5DaDFidm5xazVWSnVPS211OTVXZXBMcHVmTFhrMm8?oc=5",
+      "source": "Legend Officers",
+      "date": "2026-11-26T05:55:22.000Z",
+      "category": "upsc"
     },
     {
       "title": "Christ University Entrance Test 2027 Registration for April Session to Begin Soon",
@@ -227,25 +437,18 @@
       "category": "entrance"
     },
     {
-      "title": "NEET PG 2026 Round 3 Counselling Registration Begins @mcc.nic.in Today; Check MD, MS Admission Dates",
-      "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxPSVNSSXhwNU1hN1UxTnVpazBFc2JnV1U3QW15cHZSSHZhUXRzOW52bDlYd1VzZ2NKTW9WVHdnZEVLa2hCTzExY3g2eDNOa2pvc3J5MElUVV9MZG9qSzFMbWRUb2t4aEc1Qkh6aGpXUzVPZkgwNkhDdzAyekwwaWtiNTFFVzdabzRQZjhFbVduV25KcGJpWkdaRmhrZzZUakxOdy1qdHlsQ01aZnhXQW5nd0hJUzg4dmlPUnN4U0dudi1MUnAyaEE4RnpTa1lkYXNvb2piSVRHQ3YwOElXQXp6VldOT1FDU2x3TXJGcmZ0UVlNZ2xVZjd2N0RFUU15RkRocURUZnJ0cDAybjY1LWUw?oc=5",
+      "title": "JEE Main 2027 Registration Closes Today; Check Details That Cannot Be Edited During Form Correction",
+      "link": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxOeGZkM0cyaXZsTkRHLW5rLUJxMmgwN1BPWjliTlZ5bDFvbDg0MV9jUXp0bWhjSHQwYm02TS1yR2tPdXFremRrOVJoWlFDa1VDemZlVWZyNkhBNEpMLXF1TUtXaE5iVTVuR2VtLU1HQWdjQWVKVmQ3RHJ0dk8tWC1ibTFPeUdZVXY2djJUX2l5QWJIVW13c0ZZenFwRmlsM09wV1lJa0wxQWRmYnFIeTJ1ZTdPcVhXcGFsRDJtNkt3NFJHV0pXMXMtdXQ2NGVZbFc3SEdwbThQcG9QZnN3bFQ5TzlqZktOM19o?oc=5",
       "source": "Shiksha.com",
-      "date": "2026-11-26T05:45:20.000Z",
+      "date": "2026-11-26T05:46:47.000Z",
       "category": "entrance"
     },
     {
       "title": "UKSSSC SI Recruitment 2026 Notification Out for 200 Sub Inspector Posts, Check Eligibility and Other Details Here",
-      "link": "https://news.google.com/rss/articles/CBMi7gFBVV95cUxNRnNrVU43dXQxdUZZZG5uaHRoZmhpLVpYbHE4bkhlYkNvRmVSMW5LOVJuSDhQb0xTMVhjTEhCNmNydG9SY01jYmdTWkxvTWw4WDB1VF9za2FmR3hEMG44VGQ3RW9hWFJSbmhWeGR2UVpkQnNTVVZYX29BZVFhVUltUFljNlJOOXpoNmg4cTRMZmtjWG5jU0U3SkpBS3NTODc5dzlqNUVkbzVIZzgxWFJTVVBYUmFKaWxEeHNINTN4QWU0eDN5ZExicUVycmNNVjVyVUhwQllJa2Rmc1NLS3hDT1haS1JseDFxYl9rRzl30gH0AUFVX3lxTFA3a0lzRVRWLXdjUWlpOTFGLUZVVTJBZ0Fya3RfbmJCVHR1eF9CWjd4ZVpYdDZlRl8wNXAzUmpRbnUwRjBENmtNb2wtUnlSTU9wNnhjZzU5aEdWWUVhMEdKX3d2eTFwR2FmeHRJVG00emcxQWRacjRhellmdTJYZ3lzanBBWXZlNU5jODVXVmJrMms1Q2dPcXdoeVlEeXhBTkhwYXo3LXVOQWhGNWwzQWFvLVJmNDdndlBFODhxMkh0cjI5QXpxLW03dkJiZFYwUklEcGIwM01FUlU3OTJwcV93WEJKZ3BPSzdtY1p5Q3JXVFJXa1E?oc=5",
+      "link": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxQN2tJc0VUVi13Y1FpaTkxRi1GVVUyQWdBcmt0X25iQlR0dXhfQlo3eGVaWHQ2ZUZfMDVwM1JqUW51MEYwRDZrTW9sLVJ5Uk1PcDZ4Y2c1OWhHVllFYTBHSl93dnkxcEdhZnh0SVRtNHpnMUFkWnI0YXpZZnUyWGd5c2pwQVl2ZTVOYzg1V1ZiazJrNUNnT3F3aHlZRHl4QU5IcGF6Ny11TkFoRjVsM0Fhby1SZjQ3Z3ZQRTg4cTJIdHIyOUF6cS1tN3ZCYmRWMFJJRHBiMDNNRVJVNzkycHFfd1hCSmdwT0s3bWNaeUNyV1RSV2tR0gH0AUFVX3lxTFA3a0lzRVRWLXdjUWlpOTFGLUZVVTJBZ0Fya3RfbmJCVHR1eF9CWjd4ZVpYdDZlRl8wNXAzUmpRbnUwRjBENmtNb2wtUnlSTU9wNnhjZzU5aEdWWUVhMEdKX3d2eTFwR2FmeHRJVG00emcxQWRacjRhellmdTJYZ3lzanBBWXZlNU5jODVXVmJrMms1Q2dPcXdoeVlEeXhBTkhwYXo3LXVOQWhGNWwzQWFvLVJmNDdndlBFODhxMkh0cjI5QXpxLW03dkJiZFYwUklEcGIwM01FUlU3OTJwcV93WEJKZ3BPSzdtY1p5Q3JXVFJXa1E?oc=5",
       "source": "Jagran Josh",
       "date": "2026-11-26T05:29:13.000Z",
-      "category": "ssc"
-    },
-    {
-      "title": "SBI Clerk Mains 1st Shift Exam Analysis 2026 (26 November) Starts, Check Difficulty Level and Good Attempts",
-      "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxOQ2dZcTJvSnhyQUtablNQMG9hZDZQbXdEdUY0Y2xhY3BIdjJ1WTFtM1diYXJNelQ1SkR0VjJnZ2ZFUlRTei1VOHhmRGJwNmR5SmpfckNVVVNXcldJVDJFTUxUdUZSQzJCOEJOMUViU1VoMFlHeG1Qb1BwemFmNktjdlR6UDZ4MGNLSFpjS2xmT2V1WFNPcmpj?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T05:28:02.000Z",
-      "category": "banking"
+      "category": "general"
     },
     {
       "title": "JEE Main 2027 registration deadline today, correction window opens tomorrow",
@@ -262,25 +465,11 @@
       "category": "railway"
     },
     {
-      "title": "Important JEE Main 2027 Chemistry Chapters to Score 99 Percentile",
-      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQWHhZWXR3VEpUZkFOLUNOd0d5a3E2SUF0S0p6TXdiTF8zUGVWbFl5a1p0bU1MeXdMem1qTUxsaXhCT3pISFU4MS1Rdi00bExXWDlfSEh2RU9BV2lsNy1EV2RKa2ozT21sVUctdzNkeTJHZ3ZBdWY4VmQxa0NDQzItcFRQM3VYNXFJb0Z1c1o0OURZbTk0UTRoUnRiVUJFU1BMSVY1eDNCeHdibzhDR2d1dTVzTjhzZnE3YkNJSjhiZ2FEUQ?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-26T04:57:01.000Z",
-      "category": "entrance"
-    },
-    {
       "title": "SBI Clerk Mains Result 2026 Out for Special Recruitment Drive: Check Link, Selection Status",
       "link": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxQT2dKYUxNNWMycUlZOGxsekdLRDItZ0VhVmJ0ZXFxbXBnVm1uZXNnUFNSNElCNlhMNGxQZmIzWjBWcGE0ejhxMTBsQWNHMktkZEJYMWxXNktwUTJSNERvY2tiMjNQaHhKeWQ0c19fc1RjZzEzOEd4QlJJeUJtZUowMGd6ZFhOOGxCYVlfOGdpNF85MFJhaVQ2ZXlELWYzLXFSdnpkX3M0VDNGcnBmTGJMTm44dXVJeHVvSzhVc2k5aGg0UFBhQ1FXTzJnQWR5UnJFUjRMcUg5T1hpR3NPdXR3eTF4cGVIODBjcDZLM9IB7AFBVV95cUxQT2dKYUxNNWMycUlZOGxsekdLRDItZ0VhVmJ0ZXFxbXBnVm1uZXNnUFNSNElCNlhMNGxQZmIzWjBWcGE0ejhxMTBsQWNHMktkZEJYMWxXNktwUTJSNERvY2tiMjNQaHhKeWQ0c19fc1RjZzEzOEd4QlJJeUJtZUowMGd6ZFhOOGxCYVlfOGdpNF85MFJhaVQ2ZXlELWYzLXFSdnpkX3M0VDNGcnBmTGJMTm44dXVJeHVvSzhVc2k5aGg0UFBhQ1FXTzJnQWR5UnJFUjRMcUg5T1hpR3NPdXR3eTF4cGVIODBjcDZLMw?oc=5",
       "source": "Telegraph India",
       "date": "2026-11-26T04:49:09.000Z",
       "category": "banking"
-    },
-    {
-      "title": "Odisha Police CPSE 2026 Exam Date OUT at ousssc.odisha.gov.in; check subject-wise dates and Shift Timings",
-      "link": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxQMGk5b1FsMUtLdVpXV05scWJybURUamNnX0xIdXR2WHd2V2dvNjR0bm5VaXZhNXFpcC1KVWxwdEVuS25BalVqUzFtODV1a2FqRll0eWpuSXJwLVJNRmctZTBBUmxZVUNxSk4tcGtIMGlWY29nakpSUjBSUWhTQ2JUUEhuU3c4QlJxRDRrT0pTRzlNMWhmampmZDZJQ1ZEUXdPTXU5OHhYdndhYXN1dlpTN0pFVkFFMUtyd2QxbUZLaWMwR1g1dWZwT2RGT3pyWWFYSW1UUjFZZkp0aElmXzY0T3JPU2VONjdn0gHvAUFVX3lxTFBRaXdGN0dPVjM4UkpUd0F2Q3dGY0YzN1dPcWZmYkNUR00zMVBOMTBEOFVBbzlKMnRuWXRpRzRsSkpWMF9LRUpVdF9DaWpReE9UcENhaV9pQlAwTmxtcGJNOXVicFZqdzhmbnhiUHB0dHBXVjBEcDN2R3NSdjVNZXVwUnQ5cGJxVDBiYUk3ZEo3SnY1cXBISzY3VWFoN29HOW9yTnYwdkRETG55QnBPTE1DcHBiYzlZcWlOWDdCaG5lNW90WFBoTVcxQzM1VjNwZHNkbC0zdEkta2p5b2toZFdGN0xYdWFQdUM1RnhRdC1n?oc=5",
-      "source": "Jagran Josh",
-      "date": "2026-11-26T04:47:25.000Z",
-      "category": "general"
     },
     {
       "title": "APPSC AEE Recruitment 2026 Last Date Extended - Apply Online for 503 Assistant Executive Engineer Posts",
@@ -290,13 +479,6 @@
       "category": "upsc"
     },
     {
-      "title": "RRB NTPC Application Status 2026 Out at rrbapply.gov.in, Check CEN 06/2026 Accepted or Rejected",
-      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPSFEwNl9IaE5BZmpmNnJnQ1QxMWZYRWxQSkM3T1NSTjFmRTFmMzFUQTVTdW5fRlBPZDI5ZW5ZSlUwTFptWWtzdExpVU9rRVpKaTVRUnYtMWQ0aGppRzk2U0RfZ2pKUE9rMUVLbEtINE4tLTV5QkZBby1JOUxwOWhqb3kwU0RmeE5ZbVR3YnotSHQ?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T04:05:58.000Z",
-      "category": "railway"
-    },
-    {
       "title": "UKSSSC Police Constable Vacancy 2026 Out, Apply Online Starts for 1694 Posts",
       "link": "https://news.google.com/rss/articles/CBMifEFVX3lxTE9Cem5Id3l2NWNTNy1yVmE3SkZZbmdFUVk5aEV1UVdoVjJCX2J1VmpsajFXS0ZxemlFMjE1RzF3R2RBSE9HRlBmNzdlak9RTThMcnVCY04zbFBTem95SDBpZWVtSGpqVWR6X1FSRkxwTlo1dVZodXFqZXVjY1A?oc=5",
       "source": "Career Power",
@@ -304,15 +486,8 @@
       "category": "defence"
     },
     {
-      "title": "RRB Station Master Recruitment 2026 Out, Last Date to Apply Is 25 November For 1265 Vacancies",
-      "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOT2lXaFFWb1oxdHRwZGRZQUhhXzg2YTc1aUdwSGhHSENVd0w3VWd3eFJUSks2ejVDMkFXYmNFc0hkTTZfR0JlOUVmNUZjS1NiTFlxT0Zva3loR2kzckZBOEJ0M1pkRDREbTFuUUhhSm9xSEUxYnBqYmJHQTluc19SOFkxUQ?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T04:01:50.000Z",
-      "category": "railway"
-    },
-    {
-      "title": "JEE Main 2027: Registration Begins, Exam Schedule (Out), Eligibility, Syllabus, Exam Pattern",
-      "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBnU0ZEMG5feGE3VmpPNlg4UWt5aTZ5U2s2Z3FUNk1vbEoyUjFTUWM5bkxvQ0VEVHBJNzM3ZUdlcFMtWWhnd1p1bEZuakhmOHdIM2ZNWGZqdWgxNXR6VXlMR2l3UTRGNkhz?oc=5",
+      "title": "NEET 2027 Exam Date: Expected Date, Registration, Application Form Fill Up Date",
+      "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE85RDRvVko2Njc4aTNScjdkUmx0cHVLMXQzTzVWb0V6Z2JvdmNjSEdhczJLQW5Kd3VXNTRUZU4tLVFKRlE3c29qUHpINXp0YnExeDEzZy1xSlFWZkI4eGZKUXNRSnJNak5VbUtTXw?oc=5",
       "source": "Careers360",
       "date": "2026-11-26T03:08:00.000Z",
       "category": "entrance"
@@ -325,186 +500,11 @@
       "category": "banking"
     },
     {
-      "title": "Indian Bank Apprentice Recruitment 2026, Today is Last Date To Apply For 1500 Vacancies",
-      "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxQTkY4LXFreHVXVnlqMDlFTXVmRmpiNVhzdUVmakh4OHJpYXJDYm9Hd3B0T3dDbFI5RzdZY2RWd0lsMkVBT0lscTJmWDhneVpDZ1VLMEpWOUNkTUJzcXptM1JDS1dmekwwTVJ6YXQ3QVZLMUFrQXBLVEIzT0xBZHljTw?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-26T02:37:25.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "NEET PG 2026 Round 3 Counselling: Registration & Choice Filling Timeline",
-      "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxOWWdUUGlzQXhLSDM2WDAxdmVrTlIzX0Nra0JWMFVWaFVfVjk0MVhONGhaQ3UxTFVyMEJuZldQWE9yZDZNTlN4S0FjSG1QMlR6OEoxRll4MG1xaDJEV0FEQjFfQnQxLTBJT3NpTFBRVWNZNHVJQTViZzVmVFpXQVE0VHJFSzFoNWR4aGpXMnVoOTU0cm5FU0ZjZU5R?oc=5",
-      "source": "medadmit.in",
-      "date": "2026-11-26T02:28:51.000Z",
-      "category": "entrance"
-    },
-    {
       "title": "SBI Clerk Backlog Mains Result 2026 declared, 1,540 candidates provisionally selected; check roll number",
-      "link": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxQX2pLR0FhRHZQbUpKbDktMnVlNDNKcnl5NGpETHdzMWJaWGNxQ0JoeHNiZUI2S05CSVFPMmsta3FLYk9rTkpQcGFZREg3OU5qOC1CdGU4Mk1ENEVMYk1HRDNUd3dHM0xsY2htYjlULUpETVVxTVpqNGxGa1IyV2xtYjJKeTRyWEE3YjV6b1hXdkZHNzZaME1uZmdfT0Q0SF83VVZkTEtMdG9DUWI1QXlFTm9Mc20zbjdSbGpqam1IMGhJV0NFdXNYamNyOWpjbXZlWm5zQ0VVc1BhUUhpeEwxRmhaVXBCd3RFUUJ0ZVhLN3hfZ2FhWGU40gH3AUFVX3lxTFBfaktHQWFEdlBtSkpsOS0ydWU0M0pyeXk0akRMd3MxYlpYY3FDQmh4c2JlQjZLTkJJUU8yay1rcUtiT2tOSlBwYVlESDc5Tmo4LUJ0ZTgyTUQ0RUxiTUdEM1R3d0czTGxjaG1iOVQtSkRNVXFNWmo0bEZrUjJXbG1iMkp5NHJYQTdiNXpvWFd2Rkc3NlowTW5mZ19PRDRIXzdVVmRMS0x0b0NRYjVBeUVOb0xzbTNuN1JsampqbUgwaElXQ0V1c1hqY3I5amNtdmVabnNDRVVzUGFRSGl4TDFGaFpVcEJ3dEVRQnRlWEs3eF9nYWFYZTg?oc=5",
+      "link": "https://news.google.com/rss/articles/CBMi8gFBVV95cUxPTW03TzB0b250Qm5EZkhVSW1DcjdJMG1TeHJUSXBuYXZmVkdMOUxFN1FjSEtycUdXSENMaERuZklSWFZnaC1JbW9lQm1WbHU2cUpOeWVRSWxjay1UWUtfZFlJWmx6WHRaZzhJR2FFMW1GWXYyMTQ1dnNwZElTdV9pNDlrTHZBS2N1ZHBFZkhvXzlqRlRjR1l5ejJ2dF9DMXZzUzd4Y2UzenFuOXZXM3VfQlFzRG1WRDNwVFBsY1FYcEJwcGxRR2poX21KWWlyS1JzZmhjWUlpeFdZcXpJTmpRTkZxOUFFRklwMFVrWkVQa21ZZ9IB9wFBVV95cUxQX2pLR0FhRHZQbUpKbDktMnVlNDNKcnl5NGpETHdzMWJaWGNxQ0JoeHNiZUI2S05CSVFPMmsta3FLYk9rTkpQcGFZREg3OU5qOC1CdGU4Mk1ENEVMYk1HRDNUd3dHM0xsY2htYjlULUpETVVxTVpqNGxGa1IyV2xtYjJKeTRyWEE3YjV6b1hXdkZHNzZaME1uZmdfT0Q0SF83VVZkTEtMdG9DUWI1QXlFTm9Mc20zbjdSbGpqam1IMGhJV0NFdXNYamNyOWpjbXZlWm5zQ0VVc1BhUUhpeEwxRmhaVXBCd3RFUUJ0ZVhLN3hfZ2FhWGU4?oc=5",
       "source": "The Times of India",
       "date": "2026-11-26T02:21:00.000Z",
       "category": "banking"
-    },
-    {
-      "title": "JEE Main 2027 Session 1 Registration with Late Fee Closes Today! Direct Link Here to Apply",
-      "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxNS094UUpnQXlUUVo3UFJweDE3d3V6ZHBpZUNMVV85TXRWRE04UU1Xc1h4YTNGbl9JbHBrMkRKazFySkxXU3ZocEo1alZDeWdjYVFnUnNDeUxRNDJ4ZExMNXhaOE4xaFlZdTFjSUpGU0R4Z184SXh1M0tHNHNyOFo0NGxRcFZ5QkZIYmdoRVVDVS14Zw?oc=5",
-      "source": "KollegeApply News",
-      "date": "2026-11-26T02:05:28.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "JEE Mains 2027 Registration Last Date Session 1 is Nov 26 With Late Fee - Apply Before Deadline",
-      "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPOHZBSms0QlJEN1ZuMnZCTHRvYzFZZk93cnFkV3EtbVBIMnNGak1IbE0wUkg4djZtTU9NZ21wcHQwbzU3UV94Q09CSXVWWjB4ODBRdEpoTkpRSFJUa0Rlb25Kak5LN29meDFGWFZCbjlFQWhpTURhbGZLM0Z6bE9Va1Z2alVvbjMzNUp6WTFoR1ViOXRqVlE?oc=5",
-      "source": "Careers360",
-      "date": "2026-11-25T22:24:03.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "CTET Exam Pattern 2026, Paper 1 and 2 Weightage, Marking Scheme and Duration",
-      "link": "https://news.google.com/rss/articles/CBMib0FVX3lxTE4yVUMzNWJZeWNLY2gtbnowcUxvRWEyQVFrNXBrdGVycTBrWFhDVU50YVZudENseVpiWnZmSjE0OGxyaHU0QzN0cDhlb2poRzFVLXZEcWZCNUdDOHJuenR5Z01PRUdRUjVzQ2JzT2g1Zw?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-25T22:19:54.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "Bank of Baroda Recruitment 2026 Out, Last To Apply Extended for 837 Posts",
-      "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNUUJnNVdjTjh4VTllQkRPS1k5SlVkc3N4eWZZLWJ0dGJaNG1veU9GOWROQnNyRG9hLTVTRVNKOGoteVpoQnR1dGNldmd3NWNoR0Q5b28yTU9KWUtuOEVHZnJjVXZaZnFWZWZGV19hNnVhbFF5R19yNGNvTElUeGhPWkxJdmpxNTZhWUE?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-25T21:41:04.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "SSC CHSL Tier 2 Final Answer Key 2026 (Out), Response Sheet and Marks Available",
-      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE1DZTMtSGF5V3FEbWxvLUZyRmplRWpSTk4tX1pUakxzbDN1aVRHQ2w0dTVRa0dVSkRSWnk4a2hVbXRTazFZY0JkaFNiR2pWNGFWVk9GMzZsRGdNNXBqYjNZSlpqQW8yTGs4dVViaWtEQTJPY09md3hGVnJVRQ?oc=5",
-      "source": "PW",
-      "date": "2026-11-25T21:13:54.000Z",
-      "category": "ssc"
-    },
-    {
-      "title": "UPTET Eligibility Criteria 2026, Check Age Limit, Education Qualification",
-      "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBCVHBzdkpVUmRCVktISkYteHVtVTNKVGNuX0tpc05PeWxlVThLQ3pNb0tfSHV0U1lzSVExZ3ZJX205clNfMm1jZVJmdFBvYjYxOERQWGs2eW8ta2MzZXBrMmpqWXh4dnROemtPeWJB?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-25T20:41:05.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "IBPS Exam Date 2026 for Server Administrator, Assistant and Programming Assistant Posts",
-      "link": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBZeHRqV3o3dmZ6N3g5ZEhicGNqQVNmMWVTT2I3Vm95bDY5M3FHTGNwZWdBVjRGemJpbjIxYlNzS1k4WmhGNDlrbmxpSEtUQ0s1cFhoUGpQcnIxcl9GQWZCei1VRzVNQ0N5?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-25T19:44:26.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "BPSC TRE 4.0 Selection Process 2026, Stage-wise Process Explained",
-      "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQWldLVEFQdU1PZ012WkFodi1UYmZTM0Mtd0g1VDJZOU1qZmN5bzJBcTVsOGpjVEZiQ2QtMXdCaFVmWGpQNGlZUDFYYnEzVXktU2ZVYU9hT2ZQVFItUW0wNUV6OFBfczhMUU9XcHFfc1FvTVVqaHI1Slp5U2VZQlp2dlhTUGdmXzhCbWR3cXVUalZzckw1Y1BNNUxyVEFERGpzVWllcVZqUURtbElX?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-25T19:00:01.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "SSC MTS Exam 2026: Most Important & Repeated Questions Asked in Previous Years",
-      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQclJyZmZDOWU4RXI3QTFMcG9mMzltcjNOWU9Pck9fTUxSVFlfaHV6bFJMVVNFOWVWTHMtU01QT3FKUzdKX3FDYklyQW85d2xpMDU2RzJBQUJWVWppQTlpODludTE5UTY4YUdReFo5S2FzM2NZVXphSnhFSHVTX3hYZ2RKNkYtTTFFWkQ5Zjl5ZG5aS1ZJb3lOaEdyTl9BWlVoOEc4ZFF6a1BKc29fT2dlMUFaMWliQWlBOG84SU1Bd0lRUdIByAFBVV95cUxOOXFLOWg0NU1wUmx5M2hvbXFTUGRlcDZRa3ZCeDVtNVRCcEdXcmhPd2IzLWU4cms1TlBfR0VGRk1VRVFoQXpqT1hOYnp2SkNmZ0J4d2FmekZBZXEyVmlQandtbW4ydTZFNHNNMEpTY095WUFpN1d6ZWtacGhvdWNSSFlrekZTWTZUWmhoZVhramhJQjZiUWhzcC13MWdGN2VYVEZhaFJ3VkdEREhOR2dscGtnRXM1TEtjbEZCdzd4Rk5jR2g4YVBhTA?oc=5",
-      "source": "Jagran Josh",
-      "date": "2026-11-25T18:24:38.000Z",
-      "category": "ssc"
-    },
-    {
-      "title": "Uttarakhand Police SI Recruitment 2026 Notification OUT for 200 Vacancies, Apply Online from 1 December",
-      "link": "https://news.google.com/rss/articles/CBMiekFVX3lxTFBJd0xseXMwUWF4S29YdEZrTXpHUWY1clY1YzdJd2VmMEprWlJlSm85OGdJdExib1JGUVZpNHZxRTZ0SUFaRU9mQmxXS2l6VUV1amVDTldibFFDSzI0YktqNHVPRnpMOXROZE5pVlZhTUFYeGNqcnhZQmFR?oc=5",
-      "source": "Career Power",
-      "date": "2026-11-25T16:08:35.000Z",
-      "category": "defence"
-    },
-    {
-      "title": "SBI Clerk Mains Result 2026 Out For Backlog Vacancies, Download PDF",
-      "link": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTFBFUEUzVGUzRkRwQ0tHSDViNnA2N2VER1ZhYmg1a25WTGlVUlA2MkdXMFVNUkZuMV9JYWNSb2F2OEh4RDRWZTJ3RHBZMWdYYS0zUXA4MWdBMEZ0Z3JjOEYyQkZkYnduVWc?oc=5",
-      "source": "Bankersadda",
-      "date": "2026-11-25T15:47:38.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "Uttarakhand Police Vacancy 2026 Out, Apply for 200 UKSSSC Police SI Posts at sssc.uk.gov.in",
-      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxNc3ZpY1kyUXNhTW5vbE1HWGpWUnBzNWpUUldGRXRZdnNhWnNsNm5QbVRSTFpoUXlLaDM5dDVfRXF0NFktZWRKTURnX0hYWGpEOFkwOTBhS2t2eVFwRXV3aHhXbGpYdlJ3QS1ULVVKLWp0RkI0STdyQW5pbnN2VHBKWHVn?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-25T14:47:13.000Z",
-      "category": "ssc"
-    },
-    {
-      "title": "SSC CPO Admit Card 2026 (OUT): Download SI Tier 2 Hall Ticket PDF at ssc.gov.in",
-      "link": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxQdHlGZjFmOWhlQXpxZnAtUmJYaE1NUUtvU2N1LTJyaHJyNEp0cEdVSGZDZldraFdYU1hycUpMdGZsVXZTQ0NGaGlVRTJoN09EblBxUFJBR2dENDBidmRfY3NBcF8zMWI1YlowZndzMkFkYzhUcG5pY3k4X3VwMUlORXA3WGx6NFNqUXh6UXkyYWpzYUF6WlZycHZfbnd0WXU3Q3Vfa0VKY1p3MGN5c0FQOFlFNDNWWDRZX2JZUGVCYm5QWUYzbFRFME5ia0U1QnNlZDZWRmJFVC00bENCdGfSAeQBQVVfeXFMTW5JbkNrdXh3d2JxdmJwSWZRZGkwNUlhQU9PUi0zRzBEOWZRUmxYWS1ONnBGUjhNNkZ0TWZiN2VrT3NocGdDSndwUjlUMTVpT2E1OW1iREY5YVZmb3l0OHYzTm84SkJYdS1OeF9JeWFsY1BQcDlqWjNXd2xQVFNpSFpqWTZaT3JvYV9ZUGc5cjFGTVJDUW83ZV91cEhRUm9kcEYxX1c0R2k5djdaYUxBM1A0MkNnYlktR0NnWFVGWjB2N3p2S3hrb2k1OHdSLXpDMlBsNHNQTVNxc3laX2hMeHNBVjN0?oc=5",
-      "source": "Jagran Josh",
-      "date": "2026-11-25T14:20:08.000Z",
-      "category": "ssc"
-    },
-    {
-      "title": "SSC CHSL City Intimation Slip 2026 Out: Check Exam City, Download Link and Steps",
-      "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPeEpYanFoZVpRdjFGYW5LTXhmYTRjUXVneGdoeWQ0c2pVTjczWGlqUlV6QjV1R19qeURsRnJrT1BET0gzWVRIbXpyMl83NWZfQlBCU0hkQVNTUHR0a0NYT2JaMmRrYkx2QTh5T21OeXk3R1gzbFNyQlpmSjhEc2ZDQmR5aW5nbUQ1b2c?oc=5",
-      "source": "PW",
-      "date": "2026-11-25T14:20:04.000Z",
-      "category": "ssc"
-    },
-    {
-      "title": "GATE REAL Test 2027 by PW GATE Wallah: Registration, Exam Dates, Admit Card, Result, Fees",
-      "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE5Rbm5OUURLb0Rmd25ST0xiRVlZTkttTjZxdU9CMVJIN0lGQmNKdEg4clJDb1lGMU5MYWlwZ0Jpdmx0M0Z0SGw5NllVeFpHT0ludGZDYXN0THF2WENYaG93eGJHMk9rQl96dzFuWDlvb3JOVGotSlQ4?oc=5",
-      "source": "PW",
-      "date": "2026-11-25T13:43:48.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "RVUNL JE admit card 2026 released at ibpsreg.ibps.in: Direct link to download hall tickets here",
-      "link": "https://news.google.com/rss/articles/CBMigAJBVV95cUxQdkg1ejNvNkdhS0dfekdabHhhQjNzODJUcEdBSUdma3Z0Z2hlblc4RFJ6LU9IenRHR3pXdlMwNm4xbWQ4VUpOUmdEUW5HZ0ZFeTR3cmJIWTZ2VFhLSzNjZnlQTTRrSV9rbEhMZHFYd2NiUXc4YmQyTjNoZE8xenQ0Qi1OWWY0TFpMYi1fckdBXzlkZW5ZOVhZQkVfMUUyOUhDRlcxMEJJS3ZLRjlSbzh1NkVPbnh3RHNTdVRkbWJ0Sk1CMm91aVhQYnAyeF85Z1N4TmthLXNzNXRGWlBEMFdFZklyNThkYVNQRTNpVkg5Q1plVFdMWm9ZZktDZ3FKRFdE0gGGAkFVX3lxTE04NTVqQk1kRmczQlhjcnY0RDBwTE1oYVdsZEdsYXJaYXhjOV94OUFKRXdJWXlDajZ1cjVtby1veGc0T3FCaWRqcU5FWEZ2VEFGWEw0WU1GR1BLb21BVEtfNy14bFlfeG15Y3gya2lyYmEzdlhfaUxWaDloN3cxaGVaLTk4bUlTWnF6UEVhOHhZSDB3a055U24xUjdaQXpfVlhiZ1ZCNENkNkN3emlBZDVmQ3ktb2xnY3hXV2R4X3Q4Sk5WMjhTYVJVT3FTeE5lc2hEQ19XZ3pkMWxleHZFbVVfZE1nVWNHSU5fUGcydEM2eHFreHVHY3JMdUVDUV8zZTduVTJSWXc?oc=5",
-      "source": "The Times of India",
-      "date": "2026-11-25T13:19:00.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "UPSSSC Cane Supervisor Admit Card 2026 (OUT): Download Mains Hall Ticket PDF at upsssc.gov.in",
-      "link": "https://news.google.com/rss/articles/CBMiggJBVV95cUxNTW95ZG9wZk1BeTFNZVZHX0FiYmxsRk9sZXFQWUVfUE5fQ3dNalY3SW5mVGJWN2JJRGpSM2xUWkNwbU5hY3RSc3F1RkUwUXUtUTZIY2pqTncwUGFYYVpwNXNBb2NiMjdUUVYta2RqSVNJRTl6bG5kVnBrT3dFZkREZml3a1V5ZGp1bnNwM1d5RGViVEIzNU1ETnZIUm14QUtZVlplc09FMEwwU0J3a0VDbDU0N19ENWVTME5iX21JYzN5WWRWejhCZ0J5b0JZeFFBRUE3ekxUTDI0YU84MndJT2xlOXVSTnRvaXFLSDk5RmdYby1ZNEtONzdndGhFRDBYZnfSAYgCQVVfeXFMTW1RaGZqdkx6YWhuenJEQU81MXJEU25yMzlpOGgyaU9HMDhFQUVGS0I5cW1JSUhIaUtzaS15akUydldtWW5xNXBpUE5XVV9Td3Q0YTBjdUlGSDhuTmJmV0RZRDUzNmxISnlXTkRTZnF0YnYtcVRnbTIzd3BHNXVDTnBmaHp0RG8wX1ZjUXVpT2R4SlN1LXpxeVk5REhJX1BFLWgzdDF0aTZMajBUdzAxV2Y2bkdlQzNWTl9QemV4c2kzb0hDNFAtRVMzZ1pMQUdoUU9PT1JuWktHVllwX2dvRk04WDY2MzVZdl8wVVpKYzdqWkZQX2NXd042TVYzYlQ5V2ZTbDBvaHdm?oc=5",
-      "source": "Jagran Josh",
-      "date": "2026-11-25T13:13:21.000Z",
-      "category": "ssc"
-    },
-    {
-      "title": "Best IIITs for CSE at 99 Percentile in JEE Main 2027: Check Opening and Closing Ranks",
-      "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxPR3VKczZEV3ZaMHVZMk9UaHdRenZ6eC1oVmJBTXB2eDRJR1BTOXZiQTVRa0lwMldCUkk1TFI2RWNwMXBZa1VTMGxGcFFUdVpXNjVOVmtqWlNnYlB3cW5KN3RSX0NIYTRpd1NHa2NzTG5MZ1pDT3RTa1RXOUlVTEhENGZpWUtFdVNxTzVleGNXRUdIZG9VR3kwSnE3c01FMGdGMkN1VUJ4eUloWHA2ZndzeQ?oc=5",
-      "source": "Shiksha.com",
-      "date": "2026-11-25T13:09:14.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "JEE Main 2027 Total Registration Crosses 15.73 Lakh; Late Fee Window Till November 26 @jeemain.nta.nic.in",
-      "link": "https://news.google.com/rss/articles/CBMifkFVX3lxTFBsclloR0l3QTVfV25sSlJvTGJXbnd3S3RyR2lkZXJRMmltbTFBdkV3WTBzRDc2VDdwbkk5ODF1Z2JZOHMtZzlOTXRHMUYwVU0wR0RkS1pqSVRTNHpEX204dFBGYmVfOGh2TVdKbUNtVDJfU1pOVzBiWVotOU9TZw?oc=5",
-      "source": "Aakash",
-      "date": "2026-11-25T13:03:07.000Z",
-      "category": "entrance"
-    },
-    {
-      "title": "Current Affairs for 25 November 2026",
-      "link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE5NbkNHNmUyMkI5cVpsUGlkb240SUMwQ0dnb24xQ0hWbHF1ZHZIX0pYQkxfeVJMYlRjYjFDVnJ2d2podHd6QzdiOUhkS1FUZnBDcEZzZEtZdFgybXlyM2xxQ1RHQmZsZUFMc0twb2FsTlk5c1Nl?oc=5",
-      "source": "Sanskriti IAS",
-      "date": "2026-11-25T12:53:33.000Z",
-      "category": "upsc"
-    },
-    {
-      "title": "RRB Station Master Recruitment 2026: 1,265 Vacancies announced, apply before November 25 deadline",
-      "link": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxPZFNNZHV5dzRWZzZyUmYxbjlLZ0dUR2VWbG5oLXRoM0xHSWN3aUJKTUNBUjNEX1hjZTFERmw0a2VIQXdULUVRcnpmelZsS0JmM1hQR3h3Ql92SkJNSGVYX3IxZUxpZVg1bjNhYkZSc3ljeVpBSEMxcGRhaDlGcTBDTjAtRk54eGhTU0xfbEZVV193YThQQmFxZHJpNHlGdGVXcHlnVXI2SmRpSi1lOVNQVkpSM0d0RDJSSWZIVnhiWURnWVFtVzExTVBoWmNyV2lFaC1qVlU5VG84amZubUNyYjBURXRiWEN6YlNnUg?oc=5",
-      "source": "Education Times",
-      "date": "2026-11-25T11:56:00.000Z",
-      "category": "railway"
-    },
-    {
-      "title": "Last Minute Preparation Tips for SBI Clerk Mains 2026, Section-Wise Strategy and Exam Day Checklist",
-      "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxPUV9na2MyMzhlNzh5cFNiRmI5WGtWUDBOcXh1YThsNTRyb0UxSURhWTNRTnA0b0VBUzFMVGhpOVZOeTZfdjRjaklHY0JsTi1jaE1XVmxvTU5pa0EyNlQ2bW1ERFcydjdXMlRCVjluSlZ2YjBOaVVkaUFlaHBCLW5RWTZfR3FNU0d2b09iMHBpRG10TU0?oc=5",
-      "source": "Adda247",
-      "date": "2026-11-25T11:34:21.000Z",
-      "category": "banking"
-    },
-    {
-      "title": "UPPSC PCS 2025 Final Result, Latest Updates and Merit List Details",
-      "link": "https://news.google.com/rss/articles/CBMicEFVX3lxTE14U1Q3ZkxpSmh4bzVTMURPdFZxd1pZbVJ1c2Vza2NpTDd5Y2dqQkVyaUh6a2poaDVUN3dTTno3X2VCN0x0QXJJMk13WG9TNmRIWVRpcVRFYkVoVWs0Y3N5OE1ZY09QZjdGenU0WnBxcjI?oc=5",
-      "source": "PW",
-      "date": "2026-11-25T11:26:16.000Z",
-      "category": "upsc"
     }
   ]
 }
